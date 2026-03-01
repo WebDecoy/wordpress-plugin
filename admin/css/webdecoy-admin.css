@@ -1,0 +1,873 @@
+/**
+ * WebDecoy Admin Styles
+ *
+ * @package WebDecoy
+ */
+
+/* ==========================================================================
+   Settings Page
+   ========================================================================== */
+
+.webdecoy-settings-wrap {
+    max-width: 1200px;
+}
+
+.webdecoy-settings-wrap h1 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.webdecoy-settings-wrap h1 .dashicons {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: #2271b1;
+}
+
+/* Tabs Navigation */
+.nav-tab-wrapper {
+    margin-bottom: 20px;
+}
+
+.nav-tab-wrapper .nav-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.nav-tab-wrapper .nav-tab .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* Tab Content */
+.webdecoy-tab-content {
+    display: none;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    padding: 20px;
+}
+
+.webdecoy-tab-content.active {
+    display: block;
+}
+
+/* Form Tables */
+.webdecoy-tab-content .form-table th {
+    width: 250px;
+    padding-left: 0;
+}
+
+.webdecoy-tab-content .form-table td {
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+.webdecoy-tab-content .form-table input[type="text"],
+.webdecoy-tab-content .form-table input[type="number"],
+.webdecoy-tab-content .form-table input[type="email"],
+.webdecoy-tab-content .form-table input[type="password"],
+.webdecoy-tab-content .form-table select,
+.webdecoy-tab-content .form-table textarea {
+    width: 400px;
+    max-width: 100%;
+}
+
+.webdecoy-tab-content .form-table input[type="number"] {
+    width: 100px;
+}
+
+.webdecoy-tab-content .form-table textarea {
+    height: 100px;
+}
+
+/* Description Text */
+.webdecoy-tab-content .description {
+    display: block;
+    margin-top: 8px;
+    font-style: italic;
+    color: #646970;
+}
+
+/* ==========================================================================
+   Connection Test
+   ========================================================================== */
+
+.webdecoy-connection-test {
+    margin-top: 10px;
+}
+
+.webdecoy-connection-result {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-left: 10px;
+    font-weight: 500;
+}
+
+.webdecoy-connection-result.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.webdecoy-connection-result.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.webdecoy-connection-result .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* ==========================================================================
+   Good Bots Checkboxes
+   ========================================================================== */
+
+.webdecoy-bot-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.webdecoy-bot-category {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #f6f7f7;
+    border-radius: 4px;
+}
+
+.webdecoy-bot-category label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.webdecoy-bot-category .dashicons {
+    color: #2271b1;
+}
+
+/* ==========================================================================
+   Stats Boxes
+   ========================================================================== */
+
+.webdecoy-stats,
+.webdecoy-detection-stats,
+.webdecoy-blocked-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.webdecoy-stat-box {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 20px 30px;
+    text-align: center;
+    min-width: 150px;
+}
+
+.webdecoy-stat-box .value {
+    display: block;
+    font-size: 32px;
+    font-weight: 600;
+    color: #1d2327;
+    line-height: 1.2;
+}
+
+.webdecoy-stat-box .label {
+    display: block;
+    font-size: 13px;
+    color: #646970;
+    margin-top: 4px;
+}
+
+.webdecoy-stat-box.webdecoy-stat-danger {
+    border-color: #dc3232;
+}
+
+.webdecoy-stat-box.webdecoy-stat-danger .value {
+    color: #dc3232;
+}
+
+.webdecoy-stat-box.webdecoy-stat-success {
+    border-color: #46b450;
+}
+
+.webdecoy-stat-box.webdecoy-stat-success .value {
+    color: #46b450;
+}
+
+/* ==========================================================================
+   Threat Level Badges
+   ========================================================================== */
+
+.webdecoy-level {
+    display: inline-block;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.webdecoy-level-minimal {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.webdecoy-level-low {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.webdecoy-level-medium {
+    background: #fff8e1;
+    color: #f9a825;
+}
+
+.webdecoy-level-high {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.webdecoy-level-critical {
+    background: #b71c1c;
+    color: #fff;
+}
+
+/* ==========================================================================
+   MITRE ATT&CK Tactic Badges
+   ========================================================================== */
+
+.webdecoy-mitre {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 700;
+    font-family: monospace;
+    letter-spacing: 0.5px;
+}
+
+.webdecoy-mitre-name {
+    display: block;
+    font-size: 10px;
+    color: #646970;
+    margin-top: 2px;
+}
+
+.webdecoy-mitre-na {
+    color: #c3c4c7;
+}
+
+/* MITRE Tactic Colors */
+.webdecoy-mitre-reconnaissance {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.webdecoy-mitre-credential-access {
+    background: #fce4ec;
+    color: #c62828;
+}
+
+.webdecoy-mitre-discovery {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.webdecoy-mitre-collection {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.column-mitre { width: 110px; }
+
+/* ==========================================================================
+   Badges
+   ========================================================================== */
+
+.webdecoy-badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-weight: 500;
+}
+
+.webdecoy-badge-blocked {
+    background: #f0f0f0;
+    color: #646970;
+}
+
+.webdecoy-badge-active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.webdecoy-badge-expired {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* ==========================================================================
+   Filters & Actions Bar
+   ========================================================================== */
+
+.webdecoy-actions-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.webdecoy-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.webdecoy-filters select {
+    min-width: 150px;
+}
+
+.webdecoy-date-buttons {
+    display: flex;
+    gap: 4px;
+    margin-right: 10px;
+}
+
+.webdecoy-export-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* ==========================================================================
+   Expandable Detail Rows
+   ========================================================================== */
+
+.webdecoy-expandable-row {
+    cursor: pointer;
+}
+
+.webdecoy-expandable-row:hover td {
+    background: #f0f6fc;
+}
+
+.webdecoy-row-expanded td {
+    border-bottom: none;
+}
+
+.webdecoy-detail-row td {
+    padding: 16px 12px;
+    background: #f9f9f9;
+}
+
+.webdecoy-detail-row:hover td {
+    background: #f9f9f9;
+}
+
+.webdecoy-detection-detail {
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.webdecoy-detection-detail code {
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    word-break: break-all;
+}
+
+/* ==========================================================================
+   Tables
+   ========================================================================== */
+
+.webdecoy-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.webdecoy-table th,
+.webdecoy-table td {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.webdecoy-table th {
+    background: #f6f7f7;
+    font-weight: 600;
+}
+
+.webdecoy-table tr:hover td {
+    background: #f9f9f9;
+}
+
+.webdecoy-table code {
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+/* Column Widths */
+.column-date { width: 150px; }
+.column-ip { width: 130px; }
+.column-score { width: 60px; }
+.column-level { width: 90px; }
+.column-source { width: 130px; }
+.column-ua { width: auto; }
+.column-actions { width: 100px; }
+
+/* ==========================================================================
+   Forms
+   ========================================================================== */
+
+.webdecoy-add-block {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.webdecoy-add-block h2 {
+    margin: 0 0 15px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.webdecoy-inline-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 15px;
+}
+
+.webdecoy-inline-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.webdecoy-inline-form input[type="text"] {
+    width: 180px;
+}
+
+.webdecoy-inline-form select {
+    min-width: 120px;
+}
+
+/* ==========================================================================
+   Dashboard Widget
+   ========================================================================== */
+
+.webdecoy-widget {
+    padding: 0;
+}
+
+.webdecoy-widget-stats {
+    display: flex;
+    justify-content: space-around;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.webdecoy-stat {
+    text-align: center;
+}
+
+.webdecoy-stat-value {
+    display: block;
+    font-size: 28px;
+    font-weight: 600;
+    color: #1d2327;
+    line-height: 1.2;
+}
+
+.webdecoy-stat-value.webdecoy-stat-danger {
+    color: #dc3232;
+}
+
+.webdecoy-stat-label {
+    font-size: 12px;
+    color: #646970;
+}
+
+.webdecoy-widget-breakdown {
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.webdecoy-widget-breakdown h4 {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.webdecoy-widget-breakdown ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.webdecoy-widget-breakdown li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+}
+
+.webdecoy-widget-breakdown .webdecoy-count {
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.webdecoy-widget-actions {
+    padding-top: 15px;
+}
+
+.webdecoy-widget-actions .button {
+    margin-right: 8px;
+    margin-bottom: 8px;
+}
+
+.webdecoy-widget-notice {
+    margin-top: 15px;
+}
+
+/* ==========================================================================
+   Notices
+   ========================================================================== */
+
+.webdecoy-notice {
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.webdecoy-notice-info {
+    background: #e7f3fe;
+    border-left: 4px solid #2196f3;
+}
+
+.webdecoy-notice-warning {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+}
+
+.webdecoy-notice-success {
+    background: #d4edda;
+    border-left: 4px solid #28a745;
+}
+
+.webdecoy-notice-error {
+    background: #f8d7da;
+    border-left: 4px solid #dc3545;
+}
+
+/* ==========================================================================
+   Loading States
+   ========================================================================== */
+
+.webdecoy-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #646970;
+}
+
+.webdecoy-loading .spinner {
+    float: none;
+    margin: 0;
+}
+
+/* ==========================================================================
+   Widget Upsell
+   ========================================================================== */
+
+.webdecoy-widget-upsell {
+    padding: 12px;
+    background: #f0f4ff;
+    border-left: 3px solid #2271b1;
+    margin-top: 15px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.webdecoy-widget-upsell p {
+    margin: 0;
+}
+
+.webdecoy-widget-upsell a {
+    color: #2271b1;
+}
+
+/* ==========================================================================
+   Statistics Page
+   ========================================================================== */
+
+.webdecoy-stats-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.webdecoy-charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.webdecoy-chart-card {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.webdecoy-chart-card h3 {
+    margin: 0 0 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.webdecoy-chart-wide {
+    grid-column: 1 / -1;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media screen and (max-width: 782px) {
+    .webdecoy-charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .webdecoy-stats,
+    .webdecoy-detection-stats,
+    .webdecoy-blocked-stats {
+        flex-direction: column;
+    }
+
+    .webdecoy-stat-box {
+        width: 100%;
+    }
+
+    .webdecoy-inline-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .webdecoy-inline-form input[type="text"],
+    .webdecoy-inline-form select {
+        width: 100%;
+    }
+
+    .webdecoy-tab-content .form-table th {
+        width: auto;
+    }
+
+    .webdecoy-bot-categories {
+        grid-template-columns: 1fr;
+    }
+
+    .column-ua {
+        display: none;
+    }
+}
+
+/* ==========================================================================
+   API Key Display
+   ========================================================================== */
+
+.webdecoy-api-key-field {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.webdecoy-api-key-field input {
+    font-family: monospace;
+}
+
+.webdecoy-toggle-visibility {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: #646970;
+}
+
+.webdecoy-toggle-visibility:hover {
+    color: #2271b1;
+}
+
+/* ==========================================================================
+   Score Display
+   ========================================================================== */
+
+.webdecoy-score {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+}
+
+.webdecoy-score-low {
+    color: #46b450;
+}
+
+.webdecoy-score-medium {
+    color: #f0b849;
+}
+
+.webdecoy-score-high {
+    color: #dc3232;
+}
+
+/* ==========================================================================
+   Quick Actions
+   ========================================================================== */
+
+.webdecoy-quick-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.webdecoy-quick-actions .button-small {
+    padding: 0 8px;
+    min-height: 26px;
+    line-height: 24px;
+}
+
+/* ==========================================================================
+   Empty States
+   ========================================================================== */
+
+.webdecoy-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #646970;
+}
+
+.webdecoy-empty-state .dashicons {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #c3c4c7;
+    margin-bottom: 15px;
+}
+
+.webdecoy-empty-state h3 {
+    margin: 0 0 10px;
+    color: #1d2327;
+}
+
+.webdecoy-empty-state p {
+    margin: 0;
+}
+
+/* ==========================================================================
+   Settings Page - Inline Style Migration
+   ========================================================================== */
+
+.webdecoy-settings-wrap .ul-disc { list-style: disc; margin-left: 20px; }
+.webdecoy-settings-wrap #webdecoy-connection-status { margin-left: 10px; }
+.webdecoy-settings-wrap #webdecoy-connection-status.success { color: #46b450; }
+.webdecoy-settings-wrap #webdecoy-connection-status.error { color: #dc3232; }
+.webdecoy-settings-wrap .webdecoy-error-text { color: #dc3232; }
+
+/* API Status Badges */
+.webdecoy-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+.webdecoy-status .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+.webdecoy-status-active {
+    background: #d4edda;
+    color: #155724;
+}
+.webdecoy-status-inactive {
+    background: #f8d7da;
+    color: #721c24;
+}
+.webdecoy-status-error {
+    background: #fff3cd;
+    color: #856404;
+}
+.webdecoy-status-unknown {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+/* ==========================================================================
+   Cloud Upsell
+   ========================================================================== */
+
+.webdecoy-cloud-upsell {
+    background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
+    border: 1px solid #c3d7f5;
+    border-radius: 8px;
+    padding: 24px;
+    margin-top: 20px;
+}
+
+.webdecoy-cloud-upsell h3 {
+    margin: 0 0 12px;
+    color: #1a3a6b;
+    font-size: 16px;
+}
+
+.webdecoy-cloud-upsell p {
+    color: #3c4858;
+    margin: 0 0 12px;
+}
+
+.webdecoy-cloud-upsell ul {
+    list-style: disc;
+    margin: 0 0 16px 20px;
+    color: #3c4858;
+}
+
+.webdecoy-cloud-upsell ul li {
+    margin-bottom: 6px;
+}
+
+.webdecoy-cloud-upsell .button {
+    margin-right: 8px;
+}

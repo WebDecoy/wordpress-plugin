@@ -1,0 +1,31 @@
+# Dependencies
+/vendor/
+/sdk/vendor/
+/node_modules/
+
+# Build artifacts
+/build/
+/dist/
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Composer
+composer.lock
+
+# PHP tools cache
+.phpcs-cache
+.phpunit.result.cache
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log

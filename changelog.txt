@@ -1,0 +1,83 @@
+*** WebDecoy Bot Detection Changelog ***
+
+= 2.0.0 - 2026-03-01 =
+* Major: All detection and protection now works locally — no API key required
+* Added: Invisible proof-of-work (PoW) challenge system (SHA-256, no external service)
+* Added: Behavioral scoring for form submissions
+* Added: Statistics page with Chart.js detection trend charts
+* Added: Enhanced detections page with date filters, CSV export, bulk actions
+* Added: WebDecoy Cloud tab (optional premium features)
+* Improved: Settings page restructured — Protection tab is now first
+* Improved: Dashboard widget with subtle cloud upsell
+* Fixed: PHP 7.4 compatibility maintained
+* Changed: CDN update checker only active with WEBDECOY_SELF_HOSTED constant
+* Changed: Version bump to 2.0.0 signaling architecture change
+
+2026-01-09 - version 1.3.8
+* Fixed - Removed no_plugins trigger (deprecated in modern browsers, caused false positives)
+
+2025-12-13 - version 1.3.7
+* Update - Version bump
+
+2025-12-10 - version 1.3.6
+* Fixed - Protection hooks only activate when API key is validated as active
+* Fixed - E2E test compatibility - plugin now properly detects unconfigured state
+* Update - Form and WooCommerce protection requires active API connection
+
+2025-12-09 - version 1.3.5
+* Added - Security improvements and code hardening
+* Update - WooCommerce compatibility to 9.4
+* Fixed - Performance optimizations for detection checks
+
+2025-12-01 - version 1.3.4
+* Fixed - SDK loading path resolution
+* Fixed - Error handling for API connections
+* Fixed - Rate limiter reliability improvements
+
+2025-11-15 - version 1.3.3
+* Added - Support for custom block page templates
+* Fixed - IP blocking with automatic expiration
+* Fixed - Proxy headers handling (X-Forwarded-For)
+
+2025-11-01 - version 1.3.2
+* Update - WooCommerce High-Performance Order Storage (HPOS) compatibility
+* Fixed - Carding protection detection accuracy
+* Fixed - Dashboard widget display issues
+
+2025-10-15 - version 1.3.1
+* Added - Detection export functionality
+* Fixed - Admin UI responsiveness
+* Fixed - Timezone handling in detection logs
+
+2025-10-01 - version 1.3.0
+* Added - Bulk IP blocking/unblocking
+* Added - Enhanced good bot detection (60+ bots)
+* Update - Major performance improvements
+* Fixed - WooCommerce checkout protection
+
+2025-09-01 - version 1.2.0
+* Added - VPN/Proxy detection capabilities
+* Added - AI crawler blocking options (GPTBot, ClaudeBot)
+* Update - Enhanced browser fingerprinting
+* Fixed - Rate limiting algorithm improvements
+
+2025-08-01 - version 1.1.0
+* Added - WebRTC IP leak detection for VPN/proxy detection
+* Added - Geographic consistency checks (timezone, language mismatch)
+* Update - Bot detection with parallel async checks
+* Fixed - Fingerprinting improvements
+
+2025-07-01 - version 1.0.0
+* Added - Initial release
+* Added - Server-side bot detection
+* Added - Client-side browser fingerprinting
+* Added - Comment, login, and registration protection
+* Added - WooCommerce carding protection
+* Added - Honeypot field injection
+* Added - Rate limiting
+* Added - IP blocking with expiration
+* Added - Good bot allowlist (60+ bots)
+* Added - AI crawler detection
+* Added - Centralized WebDecoy integration
+* Added - Dashboard widget
+* Added - Detection logging and export
