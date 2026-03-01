@@ -3,7 +3,7 @@
 [![WordPress Version](https://img.shields.io/badge/WordPress-5.6%2B-blue.svg)](https://wordpress.org/)
 [![PHP Version](https://img.shields.io/badge/PHP-7.4%2B-8892BF.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPLv2%2B-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![CI](https://github.com/user/webdecoy-wordpress/actions/workflows/ci.yml/badge.svg)](https://github.com/user/webdecoy-wordpress/actions)
+[![CI](https://github.com/WebDecoy/wordpress-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/WebDecoy/wordpress-plugin/actions)
 
 Zero-configuration bot protection for WordPress. Works immediately on activation with no account, no API key, and no external dependencies. Multi-layer detection uses invisible proof-of-work challenges so legitimate visitors are never interrupted.
 
@@ -29,7 +29,7 @@ Zero-configuration bot protection for WordPress. Works immediately on activation
 
 ### Manual Installation
 
-1. Download the latest release ZIP from the [Releases](https://github.com/user/webdecoy-wordpress/releases) page
+1. Download the latest release ZIP from the [Releases](https://github.com/WebDecoy/wordpress-plugin/releases) page
 2. Go to **Plugins > Add New > Upload Plugin**
 3. Upload the ZIP file and click **Install Now**
 4. Activate the plugin
