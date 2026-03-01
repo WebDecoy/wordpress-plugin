@@ -7,14 +7,50 @@
     <exclude-pattern>vendor/</exclude-pattern>
     <exclude-pattern>node_modules/</exclude-pattern>
     <exclude-pattern>sdk/vendor/</exclude-pattern>
+    <exclude-pattern>build/</exclude-pattern>
+    <exclude-pattern>dist/</exclude-pattern>
+    <exclude-pattern>assets/</exclude-pattern>
+    <exclude-pattern>languages/</exclude-pattern>
 
     <arg name="extensions" value="php"/>
     <arg value="s"/>
 
-    <rule ref="WordPress">
+    <!-- Use WordPress extra (security + best practices) without strict formatting -->
+    <rule ref="WordPress-Extra">
         <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+        <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+    </rule>
+
+    <!-- WordPress security rules (always enforced) -->
+    <rule ref="WordPress.Security"/>
+
+    <!-- Relaxed formatting: the codebase uses PSR-style, not WordPress-style -->
+    <rule ref="Generic.WhiteSpace.DisallowTabIndent"/>
+    <exclude-pattern>*.css</exclude-pattern>
+    <exclude-pattern>*.js</exclude-pattern>
+
+    <!-- Relax formatting rules that conflict with PSR style -->
+    <rule ref="WordPress.WhiteSpace.ControlStructureSpacing">
+        <severity>0</severity>
+    </rule>
+    <rule ref="WordPress.WhiteSpace.OperatorSpacing">
+        <severity>0</severity>
+    </rule>
+    <rule ref="Squiz.Commenting.InlineComment.InvalidEndChar">
+        <severity>0</severity>
+    </rule>
+    <rule ref="WordPress.Arrays.ArrayDeclarationSpacing">
+        <severity>0</severity>
+    </rule>
+    <rule ref="WordPress.Arrays.ArrayKeySpacingRestrictions">
+        <severity>0</severity>
+    </rule>
+    <rule ref="Generic.Formatting.MultipleStatementAlignment">
+        <severity>0</severity>
+    </rule>
+    <rule ref="WordPress.WhiteSpace.PrecisionAlignment">
+        <severity>0</severity>
     </rule>
 
     <config name="minimum_supported_wp_version" value="5.6"/>
-    <config name="testVersion" value="7.4-"/>
 </ruleset>
