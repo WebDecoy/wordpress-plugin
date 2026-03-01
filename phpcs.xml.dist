@@ -48,9 +48,6 @@
     <rule ref="Generic.Formatting.MultipleStatementAlignment">
         <severity>0</severity>
     </rule>
-    <rule ref="WordPress.WhiteSpace.PrecisionAlignment">
-        <severity>0</severity>
-    </rule>
 
     <config name="minimum_supported_wp_version" value="5.6"/>
 </ruleset>

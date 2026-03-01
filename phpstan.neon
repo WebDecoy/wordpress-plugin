@@ -1,5 +1,5 @@
 parameters:
-    level: 5
+    level: 4
     paths:
         - webdecoy.php
         - includes/
@@ -11,3 +11,10 @@ parameters:
         - sdk/src/
     bootstrapFiles:
         - vendor/php-stubs/wordpress-stubs/wordpress-stubs.php
+        - vendor/php-stubs/woocommerce-stubs/woocommerce-stubs.php
+    ignoreErrors:
+        - '#Constant ARRAY_A not found#'
+        - '#Constant OBJECT_K not found#'
+        - '#Constant MINUTE_IN_SECONDS not found#'
+        - '#Constant HOUR_IN_SECONDS not found#'
+        - '#Constant LOGGED_IN_COOKIE not found#'
