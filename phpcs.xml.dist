@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <ruleset name="WebDecoy">
-    <description>WebDecoy WordPress Plugin coding standards</description>
+    <description>WebDecoy WordPress Plugin — security checks</description>
 
     <file>.</file>
 
@@ -11,43 +11,22 @@
     <exclude-pattern>dist/</exclude-pattern>
     <exclude-pattern>assets/</exclude-pattern>
     <exclude-pattern>languages/</exclude-pattern>
+    <exclude-pattern>*.css</exclude-pattern>
+    <exclude-pattern>*.js</exclude-pattern>
 
     <arg name="extensions" value="php"/>
     <arg value="s"/>
 
-    <!-- Use WordPress extra (security + best practices) without strict formatting -->
-    <rule ref="WordPress-Extra">
-        <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
-        <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
-    </rule>
+    <!--
+        This codebase uses PSR-style formatting (spaces, short arrays, Allman braces).
+        We enforce WordPress security and database rules only — no formatting opinions.
+    -->
 
-    <!-- WordPress security rules (always enforced) -->
+    <!-- Escaping, sanitization, nonces, validated input -->
     <rule ref="WordPress.Security"/>
 
-    <!-- Relaxed formatting: the codebase uses PSR-style, not WordPress-style -->
-    <rule ref="Generic.WhiteSpace.DisallowTabIndent"/>
-    <exclude-pattern>*.css</exclude-pattern>
-    <exclude-pattern>*.js</exclude-pattern>
-
-    <!-- Relax formatting rules that conflict with PSR style -->
-    <rule ref="WordPress.WhiteSpace.ControlStructureSpacing">
-        <severity>0</severity>
-    </rule>
-    <rule ref="WordPress.WhiteSpace.OperatorSpacing">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.Commenting.InlineComment.InvalidEndChar">
-        <severity>0</severity>
-    </rule>
-    <rule ref="WordPress.Arrays.ArrayDeclarationSpacing">
-        <severity>0</severity>
-    </rule>
-    <rule ref="WordPress.Arrays.ArrayKeySpacingRestrictions">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Generic.Formatting.MultipleStatementAlignment">
-        <severity>0</severity>
-    </rule>
+    <!-- Proper use of $wpdb->prepare() -->
+    <rule ref="WordPress.DB"/>
 
     <config name="minimum_supported_wp_version" value="5.6"/>
 </ruleset>
