@@ -68,6 +68,7 @@ class WebDecoy_Decoy_Response
             'auth_key' => self::derive('auth_key', 40),
             'admin_user' => 'admin_' . self::derive('admin_user', 6),
             'admin_password' => 'Wd' . self::derive('admin_password', 18),
+            'author_user' => 'editor_' . self::derive('author_user', 6),
             'aws_key' => 'AKIA' . strtoupper(self::derive('aws_key', 16)),
             'aws_secret' => self::derive('aws_secret', 40),
         ];
