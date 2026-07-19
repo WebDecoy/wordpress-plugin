@@ -187,9 +187,10 @@ final class WebDecoy_Plugin
 
             // Tripwires (F4 deception layer). Deterministic, zero-false-positive:
             // a request for a scanner-bait honeypot path is automated by
-            // construction. Off by default so an upgrade never changes behavior
-            // until the site owner opts in.
-            'tripwire_enabled' => false,
+            // construction. On by default — the built-in bait paths carry no
+            // false-positive risk for real visitors, so protection is active
+            // out of the box.
+            'tripwire_enabled' => true,
             'tripwire_include_defaults' => true,
             'tripwire_paths' => [],      // extra exact paths
             'tripwire_prefixes' => [],   // startsWith matches
