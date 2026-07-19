@@ -200,6 +200,30 @@ $options = get_option('webdecoy_options', []);
                         </td>
                     </tr>
                     <tr>
+                        <th scope="row">
+                            <label for="webdecoy_tripwire_response"><?php esc_html_e('Response', 'webdecoy'); ?></label>
+                        </th>
+                        <td>
+                            <select id="webdecoy_tripwire_response" name="webdecoy_options[tripwire_response]">
+                                <option value="block" <?php selected($options['tripwire_response'] ?? 'block', 'block'); ?>>
+                                    <?php esc_html_e('Block — 403 Forbidden (default)', 'webdecoy'); ?>
+                                </option>
+                                <option value="notfound" <?php selected($options['tripwire_response'] ?? 'block', 'notfound'); ?>>
+                                    <?php esc_html_e('Not Found — 404 (hide that anything is protected)', 'webdecoy'); ?>
+                                </option>
+                                <option value="decoy" <?php selected($options['tripwire_response'] ?? 'block', 'decoy'); ?>>
+                                    <?php esc_html_e('Decoy — serve believable fake content with canary credentials', 'webdecoy'); ?>
+                                </option>
+                                <option value="tarpit" <?php selected($options['tripwire_response'] ?? 'block', 'tarpit'); ?>>
+                                    <?php esc_html_e('Tarpit — slow-drip response to waste scanner time', 'webdecoy'); ?>
+                                </option>
+                            </select>
+                            <p class="description">
+                                <?php esc_html_e('Decoy mode serves fake .env / wp-config / SQL-dump / phpinfo content seeded with unique, per-site canary credentials — a later login attempt using one is logged as a critical exfiltration detection. Decoy/Not-Found/Tarpit deliberately keep feeding the scanner (no local IP block) to gather more evidence. Tarpit ties up a PHP worker for up to 10s — use sparingly.', 'webdecoy'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
                         <th scope="row"><?php esc_html_e('Dry Run', 'webdecoy'); ?></th>
                         <td>
                             <label>
