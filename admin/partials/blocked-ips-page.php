@@ -32,9 +32,14 @@ if (isset($_POST['webdecoy_block_ip']) && isset($_POST['_wpnonce']) && wp_verify
 }
 
 if (isset($_GET['unblock']) && isset($_GET['_wpnonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'webdecoy_unblock') && current_user_can('manage_options')) {
-    $ip = sanitize_text_field($_GET['unblock']);
-    $blocker->unblock($ip);
-    echo '<div class="notice notice-success"><p>' . esc_html__('IP unblocked successfully.', 'webdecoy') . '</p></div>';
+    $ip = sanitize_text_field(wp_unslash($_GET['unblock']));
+    // Validate as a real IP before issuing the DELETE, mirroring the block path.
+    if (filter_var($ip, FILTER_VALIDATE_IP)) {
+        $blocker->unblock($ip);
+        echo '<div class="notice notice-success"><p>' . esc_html__('IP unblocked successfully.', 'webdecoy') . '</p></div>';
+    } else {
+        echo '<div class="notice notice-error"><p>' . esc_html__('Invalid IP address.', 'webdecoy') . '</p></div>';
+    }
 }
 
 // Get blocked IPs

@@ -50,6 +50,27 @@ $options = get_option('webdecoy_options', []);
                         </td>
                     </tr>
                     <tr>
+                        <th scope="row"><?php esc_html_e('Client IP / Reverse Proxy', 'webdecoy'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="webdecoy_options[behind_cloudflare]" value="1"
+                                       <?php checked(!empty($options['behind_cloudflare'])); ?> />
+                                <?php esc_html_e('This site is behind Cloudflare', 'webdecoy'); ?>
+                            </label>
+                            <p class="description">
+                                <?php esc_html_e('By default WebDecoy uses the direct connection IP and ignores forwarding headers (X-Forwarded-For, CF-Connecting-IP) because they can be spoofed. Enable this only if your site is actually served through Cloudflare, so the real visitor IP is read from CF-Connecting-IP — but only when the request genuinely comes from Cloudflare.', 'webdecoy'); ?>
+                            </p>
+                            <br>
+                            <label for="webdecoy_trusted_proxies"><strong><?php esc_html_e('Additional trusted proxy IPs / CIDRs', 'webdecoy'); ?></strong></label><br>
+                            <textarea id="webdecoy_trusted_proxies" name="webdecoy_options[trusted_proxies]"
+                                      rows="3" class="large-text code"
+                                      placeholder="10.0.0.0/8&#10;192.168.1.10"><?php echo esc_textarea(is_array($options['trusted_proxies'] ?? '') ? implode("\n", $options['trusted_proxies']) : ($options['trusted_proxies'] ?? '')); ?></textarea>
+                            <p class="description">
+                                <?php esc_html_e('One IP address or CIDR range per line (e.g. your load balancer). Forwarding headers are only trusted when the request arrives from one of these (or Cloudflare, if enabled above). Leave blank for a direct setup.', 'webdecoy'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
                         <th scope="row">
                             <label for="webdecoy_sensitivity"><?php esc_html_e('Sensitivity', 'webdecoy'); ?></label>
                         </th>

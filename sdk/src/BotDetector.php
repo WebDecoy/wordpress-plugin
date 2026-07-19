@@ -157,10 +157,13 @@ class BotDetector
             'block_ai_crawlers' => false,
             'custom_allowlist' => [],
             'verify_bot_ips' => true,
+            'trusted_proxies' => [],
         ], $options);
 
         $this->goodBotList = new GoodBotList();
-        $this->signalCollector = new SignalCollector();
+        $this->signalCollector = new SignalCollector(
+            is_array($this->options['trusted_proxies']) ? $this->options['trusted_proxies'] : []
+        );
     }
 
     /**

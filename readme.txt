@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: security, bot detection, spam protection, woocommerce, firewall
 Requires at least: 5.6
 Tested up to: 6.8
-Stable tag: 2.0.0
+Stable tag: 2.1.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -184,6 +184,10 @@ Privacy Policy: [https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net](htt
 8. Challenge page — invisible proof-of-work for suspicious visitors
 
 == Changelog ==
+
+= 2.1.0 =
+* Added: JS execution verification — detects non-JS HTTP scrapers
+* Added: Challenge token meta tag for premium page serve tracking
 
 = 2.0.0 =
 * **Major: All detection and protection now works locally — no API key required**

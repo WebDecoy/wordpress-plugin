@@ -15,7 +15,8 @@ if (!defined('ABSPATH')) {
 
 // Get options
 $options = get_option('webdecoy_options', []);
-$custom_message = $options['block_message'] ?? '';
+// Saved setting key is 'block_page_message' (fall back to legacy 'block_message').
+$custom_message = $options['block_page_message'] ?? ($options['block_message'] ?? '');
 $show_contact = $options['show_contact_on_block'] ?? false;
 $contact_email = $options['contact_email'] ?? get_option('admin_email');
 

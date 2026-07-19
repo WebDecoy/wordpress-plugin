@@ -1,5 +1,10 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.1.0 - 2026-03-03 =
+* Added: JS execution verification — detects non-JS HTTP scrapers (e.g., Scrapling Fetcher, curl_cffi)
+* Added: Challenge token meta tag injected on page serve for premium users
+* Added: Automatic page serve reporting to ingest service
+
 = 2.0.0 - 2026-03-01 =
 * Major: All detection and protection now works locally — no API key required
 * Added: Invisible proof-of-work (PoW) challenge system (SHA-256, no external service)

@@ -72,10 +72,8 @@
       if (!window.chrome) {
         signals.push('no_chrome_object');
       } else {
-        // chrome.runtime is required in real Chrome (except in some iframes)
-        if (!window.chrome.runtime && window === window.top) {
-          signals.push('missing_chrome_runtime');
-        }
+        // NOTE: chrome.runtime absence intentionally NOT flagged — genuine Chrome on
+        // ordinary pages frequently lacks chrome.runtime, so it is a false positive.
 
         // chrome.app check - should exist in Chrome
         if (window.chrome.app && typeof window.chrome.app.isInstalled !== 'undefined') {

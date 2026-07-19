@@ -72,6 +72,18 @@ if (isset($_GET['action']) && $_GET['action'] === 'export_csv' && wp_verify_nonc
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="webdecoy-detections-' . date('Y-m-d') . '.csv"');
 
+    // Neutralize CSV/spreadsheet formula injection: fields like user_agent and
+    // flags come from untrusted request data, so a value beginning with =, +, -,
+    // @, tab or CR could execute as a formula when the export is opened in Excel/
+    // Sheets. Prefix such values with a single quote to force literal text.
+    $csv_safe = static function ($value): string {
+        $value = (string) $value;
+        if ($value !== '' && in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true)) {
+            return "'" . $value;
+        }
+        return $value;
+    };
+
     $output = fopen('php://output', 'w');
     fputcsv($output, ['Date', 'IP Address', 'Score', 'Threat Level', 'Source', 'User Agent', 'Flags']);
 
@@ -81,13 +93,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'export_csv' && wp_verify_nonc
 
     foreach ($export_results as $row) {
         fputcsv($output, [
-            $row['created_at'],
-            $row['ip_address'],
-            $row['score'],
-            $row['threat_level'],
-            $row['source'],
-            $row['user_agent'],
-            $row['flags'],
+            $csv_safe($row['created_at']),
+            $csv_safe($row['ip_address']),
+            $csv_safe($row['score']),
+            $csv_safe($row['threat_level']),
+            $csv_safe($row['source']),
+            $csv_safe($row['user_agent']),
+            $csv_safe($row['flags']),
         ]);
     }
 

@@ -3,7 +3,7 @@
  * Plugin Name: WebDecoy Bot Detection
  * Plugin URI: https://webdecoy.com/wordpress
  * Description: Protect your WordPress site from bots, spam, and carding attacks with WebDecoy's advanced threat detection.
- * Version: 2.0.0
+ * Version: 2.1.0
  * Requires at least: 5.6
  * Requires PHP: 7.4
  * Author: WebDecoy
@@ -41,7 +41,7 @@ if (!function_exists('str_starts_with')) {
 }
 
 // Plugin constants
-define('WEBDECOY_VERSION', '2.0.0');
+define('WEBDECOY_VERSION', '2.1.0');
 define('WEBDECOY_PLUGIN_FILE', __FILE__);
 define('WEBDECOY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WEBDECOY_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -147,6 +147,13 @@ final class WebDecoy_Plugin
             // API Configuration - only API key required now
             'api_key' => '',
 
+            // Proxy / client IP resolution. By default the plugin uses the direct
+            // connection IP (REMOTE_ADDR) and IGNORES forwarding headers, which are
+            // spoofable. Sites behind a reverse proxy/CDN must opt in so that
+            // X-Forwarded-For / CF-Connecting-IP are honored ONLY from trusted hops.
+            'behind_cloudflare' => false,
+            'trusted_proxies' => '', // newline/comma separated IPs or CIDRs
+
             // Detection Settings
             'enabled' => true,
             'sensitivity' => 'medium',
@@ -200,6 +207,80 @@ final class WebDecoy_Plugin
         if (!empty($this->options['api_key']) && $this->is_encrypted($this->options['api_key'])) {
             $this->options['api_key'] = $this->decrypt_value($this->options['api_key']);
         }
+    }
+
+    /**
+     * Cloudflare published IP ranges (https://www.cloudflare.com/ips/).
+     * Used to verify that a request claiming a CF-Connecting-IP actually arrived
+     * via Cloudflare, rather than trusting the header from any direct connection.
+     */
+    private const CLOUDFLARE_RANGES = [
+        '173.245.48.0/20', '103.21.244.0/22', '103.22.200.0/22', '103.31.4.0/22',
+        '141.101.64.0/18', '108.162.192.0/18', '190.93.240.0/20', '188.114.96.0/20',
+        '197.234.240.0/22', '198.41.128.0/17', '162.158.0.0/15', '104.16.0.0/13',
+        '104.24.0.0/14', '172.64.0.0/13', '131.0.72.0/22',
+        '2400:cb00::/32', '2606:4700::/32', '2803:f800::/32', '2405:b500::/32',
+        '2405:8100::/32', '2a06:98c0::/29', '2c0f:f248::/32',
+    ];
+
+    /**
+     * Build the list of trusted proxy IPs/CIDRs from plugin settings. Returns an
+     * empty array (= direct mode, ignore forwarding headers) unless the site is
+     * explicitly configured to be behind Cloudflare and/or trusted proxies.
+     *
+     * @return string[]
+     */
+    public function get_trusted_proxies(): array
+    {
+        $proxies = [];
+
+        if (!empty($this->options['behind_cloudflare'])) {
+            $proxies = array_merge($proxies, self::CLOUDFLARE_RANGES);
+        }
+
+        $configured = $this->options['trusted_proxies'] ?? '';
+        if (is_array($configured)) {
+            $proxies = array_merge($proxies, $configured);
+        } elseif (is_string($configured) && $configured !== '') {
+            // Allow newline- or comma-separated entries.
+            $parts = preg_split('/[\s,]+/', $configured) ?: [];
+            $proxies = array_merge($proxies, $parts);
+        }
+
+        return array_values(array_filter(array_map('trim', $proxies)));
+    }
+
+    /**
+     * Sanitize the trusted-proxies setting: accept newline/comma separated IPs or
+     * CIDR ranges, discard anything that isn't a valid IP or CIDR, and store back
+     * as a newline-separated string. This prevents garbage entries from widening
+     * the trusted set.
+     */
+    private function sanitize_trusted_proxies($input): string
+    {
+        if (is_array($input)) {
+            $entries = $input;
+        } else {
+            $entries = preg_split('/[\s,]+/', (string) $input) ?: [];
+        }
+
+        $valid = [];
+        foreach ($entries as $entry) {
+            $entry = trim((string) $entry);
+            if ($entry === '') {
+                continue;
+            }
+            if (strpos($entry, '/') !== false) {
+                [$addr, $bits] = array_pad(explode('/', $entry, 2), 2, '');
+                if (filter_var($addr, FILTER_VALIDATE_IP) && ctype_digit($bits) && (int) $bits >= 0 && (int) $bits <= 128) {
+                    $valid[] = $entry;
+                }
+            } elseif (filter_var($entry, FILTER_VALIDATE_IP)) {
+                $valid[] = $entry;
+            }
+        }
+
+        return implode("\n", array_unique($valid));
     }
 
     /**
@@ -323,6 +404,8 @@ final class WebDecoy_Plugin
         if (defined('WEBDECOY_SELF_HOSTED') && WEBDECOY_SELF_HOSTED) {
             add_filter('pre_set_site_transient_update_plugins', [$this, 'check_for_updates']);
             add_filter('plugins_api', [$this, 'plugin_info'], 10, 3);
+            // Verify the downloaded package's checksum before WordPress installs it.
+            add_filter('upgrader_pre_download', [$this, 'verify_update_package'], 10, 3);
         }
 
         // Early request check (as early as possible)
@@ -387,6 +470,12 @@ final class WebDecoy_Plugin
         // Frontend scanner script (only if API is active)
         if ($this->options['scanner_enabled'] && !is_admin()) {
             add_action('wp_enqueue_scripts', [$this, 'frontend_scripts']);
+        }
+
+        // JS execution verification: inject challenge token meta tag and report page serve
+        // Only active when scanner is enabled and API key is configured (premium)
+        if ($this->options['scanner_enabled'] && !is_admin() && $this->is_premium()) {
+            add_action('wp_head', [$this, 'inject_js_verification_token'], 1);
         }
 
         // Clear API cache when settings are saved
@@ -999,6 +1088,10 @@ final class WebDecoy_Plugin
             $sanitized['api_key'] = $api_key;
         }
 
+        // Proxy / client IP resolution
+        $sanitized['behind_cloudflare'] = !empty($input['behind_cloudflare']);
+        $sanitized['trusted_proxies'] = $this->sanitize_trusted_proxies($input['trusted_proxies'] ?? '');
+
         // Detection Settings
         $sanitized['enabled'] = !empty($input['enabled']);
         $sanitized['sensitivity'] = in_array($input['sensitivity'] ?? 'medium', ['low', 'medium', 'high']) ? $input['sensitivity'] : 'medium';
@@ -1195,6 +1288,62 @@ final class WebDecoy_Plugin
     }
 
     /**
+     * Inject JS execution verification challenge token into the page head.
+     * Generates a unique token per page view, embeds it as a meta tag, and
+     * reports it to the ingest service. bot-detection-pro.js reads the meta tag
+     * and beacons it back. If the beacon never arrives, the visitor is a non-JS scraper.
+     */
+    public function inject_js_verification_token(): void
+    {
+        // Skip for logged-in users if scanner excludes them
+        if ($this->options['scanner_exclude_logged_in'] && is_user_logged_in()) {
+            return;
+        }
+
+        // Generate a unique challenge token (32 bytes hex = 64 chars)
+        $token = bin2hex(random_bytes(32));
+
+        // Output the meta tag in <head>
+        echo '<meta name="wd-ct" content="' . esc_attr($token) . '">' . "\n";
+
+        // Report page serve to ingest service (fire-and-forget)
+        $api_key = $this->options['api_key'];
+        if (empty($api_key)) {
+            return;
+        }
+
+        $collector = new \WebDecoy\SignalCollector($this->get_trusted_proxies());
+        $ip = $collector->getIP();
+
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
+
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $domain = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
+
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $path = isset($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : '';
+
+        $payload = [
+            'token'      => $token,
+            'domain'     => $domain,
+            'path'       => $path,
+            'ip'         => $ip,
+            'user_agent' => $user_agent,
+        ];
+
+        wp_remote_post('https://ingest.webdecoy.com/api/v1/page-serve', [
+            'timeout'  => 1,
+            'blocking' => false,
+            'headers'  => [
+                'Content-Type'  => 'application/json',
+                'Authorization' => 'Bearer ' . $api_key,
+            ],
+            'body' => wp_json_encode($payload),
+        ]);
+    }
+
+    /**
      * AJAX: Handle client-side detection
      * Receives detection from JavaScript scanner and forwards to WebDecoy ingest
      */
@@ -1208,7 +1357,7 @@ final class WebDecoy_Plugin
         }
 
         // Get visitor IP first for rate limiting
-        $collector = new \WebDecoy\SignalCollector();
+        $collector = new \WebDecoy\SignalCollector($this->get_trusted_proxies());
         $ip = $collector->getIP();
 
         // Rate limit detection submissions (max 10 per minute per IP)
@@ -1285,7 +1434,21 @@ final class WebDecoy_Plugin
         global $wpdb;
 
         $table = $wpdb->prefix . 'webdecoy_detections';
-        $score = intval($detection['s'] ?? 0);
+
+        // This data comes from an unauthenticated (nopriv) AJAX endpoint, so clamp
+        // and bound everything before storing: keep score in 0-100 and cap the
+        // free-text fields so an attacker can't bloat the table with huge rows.
+        $score = max(0, min(100, intval($detection['s'] ?? 0)));
+
+        $user_agent = (string) ($detection['fp']['userAgent'] ?? '');
+        if (strlen($user_agent) > 512) {
+            $user_agent = substr($user_agent, 0, 512);
+        }
+
+        $flags_json = wp_json_encode($detection['f'] ?? []);
+        if (!is_string($flags_json) || strlen($flags_json) > 2048) {
+            $flags_json = is_string($flags_json) ? substr($flags_json, 0, 2048) : '[]';
+        }
 
         // Determine threat level from score
         $threat_level = 'MINIMAL';
@@ -1301,11 +1464,11 @@ final class WebDecoy_Plugin
 
         $wpdb->insert($table, [
             'ip_address' => $ip,
-            'user_agent' => $detection['fp']['userAgent'] ?? '',
+            'user_agent' => $user_agent,
             'score' => $score,
             'threat_level' => $threat_level,
             'source' => 'wordpress_plugin',
-            'flags' => json_encode($detection['f'] ?? []),
+            'flags' => $flags_json,
             'created_at' => current_time('mysql'),
         ]);
     }
@@ -1652,6 +1815,7 @@ final class WebDecoy_Plugin
                 'allow_social_bots' => $this->options['allow_social_bots'],
                 'block_ai_crawlers' => $this->options['block_ai_crawlers'],
                 'custom_allowlist' => $this->options['custom_allowlist'],
+                'trusted_proxies' => $this->get_trusted_proxies(),
             ]);
         }
         return $this->detector;
@@ -1868,11 +2032,20 @@ final class WebDecoy_Plugin
 
         // Compare versions
         if (version_compare(WEBDECOY_VERSION, $update_info['version'], '<')) {
+            // Host-pin the package URL: WordPress will download and install whatever
+            // is at `package` with full privileges, so refuse any URL that is not an
+            // HTTPS link on our own CDN. Without this, a tampered update-info.json
+            // could point the installer at an attacker-controlled ZIP (RCE).
+            $download_url = $update_info['download_url'] ?? '';
+            if (!$this->is_trusted_package_url($download_url)) {
+                return $transient;
+            }
+
             $transient->response[WEBDECOY_PLUGIN_BASENAME] = (object) [
                 'slug' => 'webdecoy',
                 'plugin' => WEBDECOY_PLUGIN_BASENAME,
                 'new_version' => $update_info['version'],
-                'package' => $update_info['download_url'],
+                'package' => $download_url,
                 'url' => $update_info['details_url'] ?? 'https://webdecoy.com/wordpress',
                 'icons' => $update_info['icons'] ?? [],
                 'banners' => $update_info['banners'] ?? [],
@@ -1882,6 +2055,80 @@ final class WebDecoy_Plugin
         }
 
         return $transient;
+    }
+
+    /**
+     * Whether a package download URL is an HTTPS link on our own CDN host.
+     * Used to prevent the self-hosted updater from installing a ZIP from any
+     * other origin.
+     */
+    private function is_trusted_package_url(string $url): bool
+    {
+        if ($url === '') {
+            return false;
+        }
+        $parts = wp_parse_url($url);
+        if (empty($parts['scheme']) || empty($parts['host'])) {
+            return false;
+        }
+        return strtolower($parts['scheme']) === 'https'
+            && strtolower($parts['host']) === 'cdn.webdecoy.com';
+    }
+
+    /**
+     * Verify the integrity of the self-hosted update package before installation.
+     *
+     * Hooked on `upgrader_pre_download`. When the package is our CDN-hosted ZIP and
+     * the update metadata advertises a sha256, we download it ourselves, verify the
+     * checksum, and hand WordPress the verified local file. A mismatch (or a missing
+     * checksum) aborts the upgrade with a WP_Error rather than installing unverified
+     * code. Returning false defers to WordPress's normal download for anything that
+     * isn't our package.
+     *
+     * @param bool|WP_Error $reply   Short-circuit value (false to continue).
+     * @param string        $package The package URL being downloaded.
+     * @param object        $upgrader The upgrader instance.
+     * @return bool|string|\WP_Error
+     */
+    public function verify_update_package($reply, $package, $upgrader)
+    {
+        // Only act on our own CDN packages; let WP handle everything else.
+        if (!is_string($package) || !$this->is_trusted_package_url($package)) {
+            return $reply;
+        }
+
+        $update_info = get_transient('webdecoy_update_info');
+        $expected = is_array($update_info) ? ($update_info['sha256'] ?? '') : '';
+        $expected = is_string($expected) ? strtolower(trim($expected)) : '';
+
+        // Require a checksum to install self-hosted updates.
+        if (!preg_match('/^[a-f0-9]{64}$/', $expected)) {
+            return new \WP_Error(
+                'webdecoy_no_checksum',
+                __('WebDecoy update aborted: no valid checksum was provided for the package.', 'webdecoy')
+            );
+        }
+
+        if (!function_exists('download_url')) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+        }
+
+        $tmp_file = download_url($package);
+        if (is_wp_error($tmp_file)) {
+            return $tmp_file;
+        }
+
+        $actual = hash_file('sha256', $tmp_file);
+        if (!hash_equals($expected, (string) $actual)) {
+            wp_delete_file($tmp_file);
+            return new \WP_Error(
+                'webdecoy_checksum_mismatch',
+                __('WebDecoy update aborted: package checksum did not match the expected value.', 'webdecoy')
+            );
+        }
+
+        // Verified: hand WordPress the local file to install.
+        return $tmp_file;
     }
 
     /**
