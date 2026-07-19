@@ -77,6 +77,12 @@ foreach ($sdk_paths as $sdk_path) {
         require_once $sdk_path . 'src/Rules/ViolationEvent.php';
         require_once $sdk_path . 'src/Rules/RuleEngine.php';
         require_once $sdk_path . 'src/Rules/TripwireRule.php';
+        // Filter expression language (tokenizer → parser → evaluator).
+        require_once $sdk_path . 'src/Rules/Filter/FilterSyntaxException.php';
+        require_once $sdk_path . 'src/Rules/Filter/Tokenizer.php';
+        require_once $sdk_path . 'src/Rules/Filter/Parser.php';
+        require_once $sdk_path . 'src/Rules/Filter/Evaluator.php';
+        require_once $sdk_path . 'src/Rules/FilterRule.php';
         $sdk_loaded = true;
         break;
     }
@@ -109,6 +115,14 @@ final class WebDecoy_Plugin
      * @var array
      */
     private array $options = [];
+
+    /**
+     * Set by build_rule_engine() when a configured filter rule references an
+     * ip.* field, signalling build_rule_context() to fetch IP enrichment.
+     *
+     * @var bool
+     */
+    private bool $rules_need_enrichment = false;
 
     /**
      * WebDecoy API Client
@@ -211,6 +225,11 @@ final class WebDecoy_Plugin
             // ever hit it — deterministic, zero false positives. On by default.
             'honeytoken_enabled' => true,
             'honeytoken_rotate' => false, // rotate the token daily (with grace)
+
+            // Filter rules: expression-based rules evaluated by the rule engine.
+            // Each entry: ['expression'=>string, 'action'=>'block'|'throttle',
+            // 'dry_run'=>bool, 'name'=>string]. Empty by default.
+            'filter_rules' => [],
 
             // Form Protection
             'protect_comments' => true,
@@ -383,6 +402,62 @@ final class WebDecoy_Plugin
         }
 
         return array_values(array_unique($valid));
+    }
+
+    /**
+     * Sanitize the filter-rules repeater. Each rule's expression is validated by
+     * attempting to parse it; a malformed expression is kept (so the admin can
+     * fix it) but flagged with an `error` and surfaced as a settings notice, and
+     * skipped at engine-build time so it can never fatal a request.
+     *
+     * @param mixed $input
+     * @return array<int,array<string,mixed>>
+     */
+    private function sanitize_filter_rules($input): array
+    {
+        if (!is_array($input)) {
+            return [];
+        }
+
+        $rules = [];
+        foreach ($input as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $expression = trim((string) ($row['expression'] ?? ''));
+            if ($expression === '') {
+                continue;
+            }
+
+            $rule = [
+                'name' => sanitize_text_field($row['name'] ?? ''),
+                'expression' => $expression,
+                'action' => in_array($row['action'] ?? 'block', ['block', 'throttle'], true) ? $row['action'] : 'block',
+                'dry_run' => !empty($row['dry_run']),
+            ];
+
+            // Validate by parsing. Keep the text either way; flag on failure.
+            try {
+                new \WebDecoy\Rules\FilterRule(['expression' => $expression]);
+            } catch (\Throwable $e) {
+                $rule['error'] = $e->getMessage();
+                add_settings_error(
+                    'webdecoy_options',
+                    'filter_rule_invalid',
+                    sprintf(
+                        /* translators: 1: filter expression, 2: parser error */
+                        __('Filter rule "%1$s" is invalid and was disabled: %2$s', 'webdecoy'),
+                        $expression,
+                        $e->getMessage()
+                    ),
+                    'error'
+                );
+            }
+
+            $rules[] = $rule;
+        }
+
+        return $rules;
     }
 
     /**
@@ -660,6 +735,7 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-behavioral-scorer.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-violation-reporter.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-honeytoken.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ip-enrichment.php';
 
         if (class_exists('WooCommerce')) {
             require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-woocommerce.php';
@@ -830,6 +906,34 @@ final class WebDecoy_Plugin
             ]);
         }
 
+        // Filter (expression) rules. A malformed stored expression is skipped
+        // defensively so it can never fatal a request (it was already flagged in
+        // the admin on save). Track whether any rule needs IP enrichment.
+        $filterRules = $this->options['filter_rules'] ?? [];
+        if (is_array($filterRules)) {
+            foreach ($filterRules as $fr) {
+                if (!is_array($fr) || empty($fr['expression']) || !empty($fr['error'])) {
+                    continue;
+                }
+                try {
+                    $rule = new \WebDecoy\Rules\FilterRule([
+                        'expression' => (string) $fr['expression'],
+                        'name' => (string) ($fr['name'] ?? ''),
+                        'action' => ($fr['action'] ?? 'block') === 'throttle'
+                            ? \WebDecoy\Rules\RuleResult::THROTTLE
+                            : \WebDecoy\Rules\RuleResult::DENY,
+                        'dryRun' => !empty($fr['dry_run']),
+                    ]);
+                } catch (\Throwable $e) {
+                    continue; // malformed despite the save-time check — skip
+                }
+                if ($rule->needsEnrichment()) {
+                    $this->rules_need_enrichment = true;
+                }
+                $rules[] = $rule;
+            }
+        }
+
         if ($rules === []) {
             return null;
         }
@@ -873,12 +977,20 @@ final class WebDecoy_Plugin
             ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT']))
             : '';
 
-        // Only the headers rules actually read. The Cookie header is passed raw
-        // (not sanitize_text_field'd) so the wd_clearance token value survives
-        // intact for forwarding.
-        $headers = [];
+        // Headers rules may read: Cookie (wd_clearance — passed raw so the token
+        // value survives intact for forwarding) and any header referenced via
+        // req.header("name"). We forward the full request header set for the
+        // latter, plus the raw cookie.
+        $headers = $this->collect_request_headers();
         if (isset($_SERVER['HTTP_COOKIE'])) {
             $headers['cookie'] = (string) wp_unslash($_SERVER['HTTP_COOKIE']);
+        }
+
+        // Fetch IP enrichment only when a filter rule needs it (premium only).
+        $enrichment = null;
+        if ($this->rules_need_enrichment && $this->is_premium()) {
+            $enricher = new WebDecoy_IP_Enrichment((string) $this->options['api_key']);
+            $enrichment = $enricher->enrich($ip);
         }
 
         return new \WebDecoy\Rules\RuleContext(
@@ -886,8 +998,30 @@ final class WebDecoy_Plugin
             $this->get_request_path(),
             $method,
             $userAgent,
-            $headers
+            $headers,
+            null,
+            $enrichment
         );
+    }
+
+    /**
+     * Collect request headers as a lowercased-key map for filter rules'
+     * req.header("name") lookups. Derived from $_SERVER HTTP_* entries.
+     *
+     * @return array<string,string>
+     */
+    private function collect_request_headers(): array
+    {
+        $headers = [];
+        foreach ($_SERVER as $key => $value) {
+            if (strpos((string) $key, 'HTTP_') !== 0) {
+                continue;
+            }
+            // HTTP_X_REQUESTED_WITH -> x-requested-with
+            $name = strtolower(str_replace('_', '-', substr((string) $key, 5)));
+            $headers[$name] = sanitize_text_field((string) wp_unslash($value));
+        }
+        return $headers;
     }
 
     /**
@@ -1462,6 +1596,7 @@ final class WebDecoy_Plugin
         $sanitized['tripwire_dry_run'] = !empty($input['tripwire_dry_run']);
         $sanitized['honeytoken_enabled'] = !empty($input['honeytoken_enabled']);
         $sanitized['honeytoken_rotate'] = !empty($input['honeytoken_rotate']);
+        $sanitized['filter_rules'] = $this->sanitize_filter_rules($input['filter_rules'] ?? []);
 
         // Form Protection
         $sanitized['protect_comments'] = !empty($input['protect_comments']);
