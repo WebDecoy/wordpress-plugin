@@ -332,7 +332,7 @@ class WebDecoy_Forms
      */
     public function handle_invalid(string $context, array $validation): void
     {
-        $ip = (new \WebDecoy\SignalCollector())->getIP();
+        $ip = (new \WebDecoy\SignalCollector(WebDecoy_Plugin::instance()->get_trusted_proxies()))->getIP();
 
         // Block the IP
         $blocker = new WebDecoy_Blocker();
@@ -400,7 +400,7 @@ class WebDecoy_Forms
         $ingest_url = str_replace('api.webdecoy.com', 'ingest.webdecoy.com', $ingest_url);
         $ingest_url .= '/api/v1/detect';
 
-        $collector = new \WebDecoy\SignalCollector();
+        $collector = new \WebDecoy\SignalCollector(WebDecoy_Plugin::instance()->get_trusted_proxies());
 
         $payload = [
             'aid' => $this->options['organization_id'],

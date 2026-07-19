@@ -19,13 +19,33 @@ class SignalCollector
         'HTTP_ACCEPT_ENCODING',
     ];
 
-    // Priority order for extracting client IP
+    // Priority order for extracting client IP via proxy headers. These are ONLY
+    // consulted when the direct peer (REMOTE_ADDR) is a configured trusted proxy.
     private const IP_HEADERS = [
         'HTTP_CF_CONNECTING_IP',      // Cloudflare
         'HTTP_X_REAL_IP',             // Nginx proxy
         'HTTP_X_FORWARDED_FOR',       // Standard proxy
         'REMOTE_ADDR',                // Direct connection
     ];
+
+    /**
+     * Trusted proxy IPs/CIDRs. Forwarding headers (X-Forwarded-For,
+     * CF-Connecting-IP, X-Real-IP) are only honored when the request's direct
+     * peer (REMOTE_ADDR) matches one of these. Empty = direct mode (secure
+     * default): forwarding headers are ignored entirely so a client cannot
+     * spoof its IP by sending an X-Forwarded-For / CF-Connecting-IP header.
+     *
+     * @var string[]
+     */
+    private array $trustedProxies;
+
+    /**
+     * @param string[] $trustedProxies List of trusted proxy IPs or CIDR ranges
+     */
+    public function __construct(array $trustedProxies = [])
+    {
+        $this->trustedProxies = array_values(array_filter(array_map('trim', $trustedProxies)));
+    }
 
     /**
      * Sanitize a string value (uses WordPress functions if available)
@@ -105,25 +125,111 @@ class SignalCollector
      */
     public function getIP(): string
     {
-        foreach (self::IP_HEADERS as $header) {
-            $rawIp = $this->getServerVar($header);
-            if (!empty($rawIp)) {
-                $ip = $rawIp;
+        $remoteAddr = trim((string) $this->getServerVar('REMOTE_ADDR', ''));
+        $remoteValid = filter_var($remoteAddr, FILTER_VALIDATE_IP) ? $remoteAddr : '0.0.0.0';
 
-                // Handle comma-separated IPs (X-Forwarded-For)
-                if (strpos($ip, ',') !== false) {
-                    $ips = explode(',', $ip);
-                    $ip = trim($ips[0]);
-                }
+        // Secure default: if no trusted proxies are configured, or the request did
+        // not arrive via one of them, never trust client-supplied forwarding
+        // headers — they are trivially spoofable (an attacker can send any
+        // X-Forwarded-For / CF-Connecting-IP). Use the real connecting address.
+        if (empty($this->trustedProxies) || !$this->ipInRanges($remoteAddr, $this->trustedProxies)) {
+            return $remoteValid;
+        }
 
-                // Validate IP
-                if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                    return $ip;
+        // Request arrived via a trusted proxy. Single-value headers are written by
+        // the proxy itself and can be trusted.
+        $cfIp = $this->getServerVar('HTTP_CF_CONNECTING_IP');
+        if (!empty($cfIp) && filter_var($cfIp, FILTER_VALIDATE_IP)) {
+            return $cfIp;
+        }
+        $realIp = $this->getServerVar('HTTP_X_REAL_IP');
+        if (!empty($realIp) && filter_var($realIp, FILTER_VALIDATE_IP)) {
+            return $realIp;
+        }
+
+        // For X-Forwarded-For, the left-most entries are attacker-controlled. Walk
+        // right-to-left and return the first address that is NOT itself a trusted
+        // proxy (i.e. the real client as seen by our outermost trusted proxy).
+        $xff = $this->getServerVar('HTTP_X_FORWARDED_FOR');
+        if (!empty($xff)) {
+            $parts = array_map('trim', explode(',', $xff));
+            for ($i = count($parts) - 1; $i >= 0; $i--) {
+                $candidate = $parts[$i];
+                if (!filter_var($candidate, FILTER_VALIDATE_IP)) {
+                    continue;
                 }
+                if ($this->ipInRanges($candidate, $this->trustedProxies)) {
+                    continue; // another trusted hop, keep walking left
+                }
+                return $candidate;
             }
         }
 
-        return $this->getServerVar('REMOTE_ADDR', '0.0.0.0') ?? '0.0.0.0';
+        return $remoteValid;
+    }
+
+    /**
+     * Check whether an IP falls within any of the given IPs/CIDR ranges.
+     *
+     * @param string   $ip     IP address to test
+     * @param string[] $ranges List of plain IPs or CIDR ranges (v4 or v6)
+     */
+    private function ipInRanges(string $ip, array $ranges): bool
+    {
+        if ($ip === '' || !filter_var($ip, FILTER_VALIDATE_IP)) {
+            return false;
+        }
+        foreach ($ranges as $range) {
+            $range = trim($range);
+            if ($range === '') {
+                continue;
+            }
+            if (strpos($range, '/') === false) {
+                if ($ip === $range) {
+                    return true;
+                }
+                continue;
+            }
+            if ($this->cidrMatch($ip, $range)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Match an IP against a CIDR range. Handles both IPv4 and IPv6.
+     */
+    private function cidrMatch(string $ip, string $cidr): bool
+    {
+        $parts = explode('/', $cidr, 2);
+        if (count($parts) !== 2) {
+            return false;
+        }
+        [$subnet, $bitsRaw] = $parts;
+        $bits = (int) $bitsRaw;
+
+        $ipBin = @inet_pton($ip);
+        $subnetBin = @inet_pton(trim($subnet));
+        if ($ipBin === false || $subnetBin === false || strlen($ipBin) !== strlen($subnetBin)) {
+            return false; // invalid, or IPv4/IPv6 family mismatch
+        }
+
+        $maxBits = strlen($ipBin) * 8;
+        if ($bits < 0 || $bits > $maxBits) {
+            return false;
+        }
+
+        $fullBytes = intdiv($bits, 8);
+        $remainder = $bits % 8;
+        if ($fullBytes > 0 && strncmp($ipBin, $subnetBin, $fullBytes) !== 0) {
+            return false;
+        }
+        if ($remainder === 0) {
+            return true;
+        }
+        $mask = chr((0xff << (8 - $remainder)) & 0xff);
+        return ($ipBin[$fullBytes] & $mask) === ($subnetBin[$fullBytes] & $mask);
     }
 
     /**

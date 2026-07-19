@@ -29,7 +29,7 @@ Zero-configuration bot protection for WordPress. Works immediately on activation
 
 ### Manual Installation
 
-1. Download the latest release ZIP from the [Releases](https://github.com/WebDecoy/wordpress-plugin/releases) page
+1. Download the latest release ZIP from the [Releases](https://github.com/user/webdecoy-wordpress/releases) page
 2. Go to **Plugins > Add New > Upload Plugin**
 3. Upload the ZIP file and click **Install Now**
 4. Activate the plugin
