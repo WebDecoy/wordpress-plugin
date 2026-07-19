@@ -255,6 +255,9 @@ final class WebDecoy_Plugin
             'protect_checkout' => true,
             'checkout_velocity_limit' => 5,
             'checkout_velocity_window' => 3600,
+            // Plant a hidden honeytoken coupon; applying it is a deterministic
+            // bot signal (no human ever sees the code).
+            'woo_honeytoken_coupons' => true,
 
             // Client-side Scanner
             'scanner_enabled' => true,
@@ -1834,6 +1837,7 @@ final class WebDecoy_Plugin
         $sanitized['protect_checkout'] = !empty($input['protect_checkout']);
         $sanitized['checkout_velocity_limit'] = max(1, intval($input['checkout_velocity_limit'] ?? 5));
         $sanitized['checkout_velocity_window'] = max(60, intval($input['checkout_velocity_window'] ?? 3600));
+        $sanitized['woo_honeytoken_coupons'] = !empty($input['woo_honeytoken_coupons']);
 
         // Proof-of-Work
         $sanitized['pow_enabled'] = !empty($input['pow_enabled']);

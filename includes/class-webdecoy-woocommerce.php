@@ -518,7 +518,108 @@ class WebDecoy_WooCommerce
             $threshold
         ), ARRAY_A) ?: [];
     }
+
+    /**
+     * The honeytoken coupon code for this site — a fake promo code planted where
+     * coupon-scraping bots look but no human ever sees. Deterministic from a
+     * per-site secret; optionally rotates daily. Applying it is, by
+     * construction, an automated action.
+     */
+    public function honeytoken_coupon(bool $rotate = false): string
+    {
+        $secret = get_option('webdecoy_coupon_secret', '');
+        if (!is_string($secret) || $secret === '') {
+            $secret = bin2hex(random_bytes(16));
+            add_option('webdecoy_coupon_secret', $secret, '', 'yes');
+        }
+        $label = $rotate ? ('day:' . gmdate('Y-m-d')) : 'stable';
+        return 'WD' . strtoupper(substr(hash_hmac('sha256', $label, $secret), 0, 8));
+    }
+
+    /**
+     * Hidden markup exposing the honeytoken coupon to page scrapers only. Placed
+     * in an HTML comment plus an offscreen, aria-hidden node so it never appears
+     * to a human or in the accessibility tree.
+     */
+    public function render_coupon_bait(): void
+    {
+        if (empty($this->options['woo_honeytoken_coupons'])) {
+            return;
+        }
+        $code = $this->honeytoken_coupon(!empty($this->options['honeytoken_rotate']));
+        echo "\n<!-- promo code: " . esc_html($code) . " -->\n";
+        echo '<div aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">'
+            . '<span class="wd-promo" data-coupon="' . esc_attr($code) . '">' . esc_html($code) . '</span></div>' . "\n";
+    }
+
+    /**
+     * Coupon-load filter: if the code being applied is our honeytoken, record a
+     * detection (and optionally block), then report it invalid. Runs for both
+     * classic checkout and the Store API / Blocks, since both load coupons via
+     * WC_Coupon → this filter. Real coupons are untouched.
+     *
+     * @param mixed  $data   Coupon data (false when no matching coupon post).
+     * @param string $code   The coupon code being looked up.
+     * @return mixed
+     */
+    public function catch_coupon($data, string $code)
+    {
+        if (empty($this->options['woo_honeytoken_coupons'])) {
+            return $data;
+        }
+
+        $canary = $this->honeytoken_coupon(!empty($this->options['honeytoken_rotate']));
+        // Also honor the previous day's code during rotation grace.
+        $prev = null;
+        if (!empty($this->options['honeytoken_rotate'])) {
+            $secret = get_option('webdecoy_coupon_secret', '');
+            if (is_string($secret) && $secret !== '') {
+                $prev = 'WD' . strtoupper(substr(hash_hmac('sha256', 'day:' . gmdate('Y-m-d', time() - DAY_IN_SECONDS), $secret), 0, 8));
+            }
+        }
+
+        $normalized = strtoupper(trim($code));
+        if ($normalized === $canary || ($prev !== null && $normalized === $prev)) {
+            $ip = $this->get_client_ip();
+            $this->log_detection($ip, 'honeytoken_coupon', 100);
+
+            if (($this->options['block_action'] ?? 'block') === 'block') {
+                $this->blocker->block(
+                    $ip,
+                    'Honeytoken coupon applied',
+                    ($this->options['block_duration'] ?? 24) > 0 ? $this->options['block_duration'] : null
+                );
+            }
+
+            return false; // reject as a non-existent coupon
+        }
+
+        return $data;
+    }
 }
+
+// Honeytoken coupons: plant a hidden fake code and catch anyone who applies it.
+add_action('woocommerce_before_cart', function () {
+    $options = get_option('webdecoy_options', []);
+    if (empty($options['protect_checkout']) || empty($options['woo_honeytoken_coupons'])) {
+        return;
+    }
+    (new WebDecoy_WooCommerce($options))->render_coupon_bait();
+});
+add_action('woocommerce_before_checkout_form', function () {
+    $options = get_option('webdecoy_options', []);
+    if (empty($options['protect_checkout']) || empty($options['woo_honeytoken_coupons'])) {
+        return;
+    }
+    (new WebDecoy_WooCommerce($options))->render_coupon_bait();
+});
+add_filter('woocommerce_get_shop_coupon_data', function ($data, $code) {
+    $options = get_option('webdecoy_options', []);
+    if (empty($options['protect_checkout']) || empty($options['woo_honeytoken_coupons'])) {
+        return $data;
+    }
+    return (new WebDecoy_WooCommerce($options))->catch_coupon($data, (string) $code);
+}, 10, 2);
 
 // Hook into WooCommerce payment completion - track success
 add_action('woocommerce_payment_complete', function ($order_id) {

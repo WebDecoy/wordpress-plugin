@@ -637,6 +637,17 @@ $options = get_option('webdecoy_options', []);
                         </td>
                     </tr>
                     <tr>
+                        <th scope="row"><?php esc_html_e('Honeytoken Coupon', 'webdecoy'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="webdecoy_options[woo_honeytoken_coupons]" value="1"
+                                       <?php checked($options['woo_honeytoken_coupons'] ?? true); ?> />
+                                <?php esc_html_e('Plant a hidden decoy coupon code', 'webdecoy'); ?>
+                            </label>
+                            <p class="description"><?php esc_html_e('A fake promo code is placed on cart/checkout pages where coupon-scraping bots look, but hidden from human shoppers. Applying it is a deterministic bot signal — recorded and (per your blocking setting) blocked. Zero false positives: no human ever sees the code.', 'webdecoy'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
                         <th scope="row"><?php esc_html_e('Velocity Limit', 'webdecoy'); ?></th>
                         <td>
                             <label>
