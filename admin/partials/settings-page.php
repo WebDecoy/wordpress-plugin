@@ -209,6 +209,34 @@ $options = get_option('webdecoy_options', []);
                         </td>
                     </tr>
                 </table>
+
+                <h3><?php esc_html_e('Honeytoken', 'webdecoy'); ?></h3>
+                <p class="description">
+                    <?php esc_html_e('Automatically plants an invisible decoy link on your pages, pointing at a secret path only a link-following scraper would ever request. A real visitor never sees it (offscreen, hidden from screen readers, marked nofollow). A hit is armed as a tripwire — deterministic, zero false positives.', 'webdecoy'); ?>
+                </p>
+
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Enable Honeytoken', 'webdecoy'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="webdecoy_options[honeytoken_enabled]" value="1"
+                                       <?php checked($options['honeytoken_enabled'] ?? true); ?> />
+                                <?php esc_html_e('Inject the hidden decoy link and enforce its path', 'webdecoy'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Daily Rotation', 'webdecoy'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="webdecoy_options[honeytoken_rotate]" value="1"
+                                       <?php checked($options['honeytoken_rotate'] ?? false); ?> />
+                                <?php esc_html_e('Rotate the decoy path daily (yesterday\'s stays armed briefly so an in-progress crawl still trips)', 'webdecoy'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                </table>
             </div>
 
             <!-- Good Bots Tab -->
