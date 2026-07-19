@@ -207,17 +207,16 @@ class WebDecoy_Activator
             wp_schedule_event(time(), 'hourly', 'webdecoy_cleanup_expired');
         }
 
-        // Schedule blocked IP sync (every 15 minutes)
-        if (!wp_next_scheduled('webdecoy_sync_blocked_ips')) {
-            wp_schedule_event(time(), 'fifteen_minutes', 'webdecoy_sync_blocked_ips');
-        }
-
         // Safety-net drain of the violation-report spool (every 15 minutes).
         // The primary delivery path is the per-request shutdown flush; this
         // catches anything left behind after an ingest outage.
         if (!wp_next_scheduled('webdecoy_flush_violations')) {
             wp_schedule_event(time(), 'fifteen_minutes', 'webdecoy_flush_violations');
         }
+
+        // Note: webdecoy_sync_blocked_ips is intentionally NOT scheduled — it
+        // never had a handler. Any leftover schedule from an older install is
+        // cleared in activate()/deactivate().
     }
 
     /**
@@ -230,6 +229,8 @@ class WebDecoy_Activator
         if (version_compare($current_version, self::DB_VERSION, '<')) {
             self::create_tables();
             update_option('webdecoy_db_version', self::DB_VERSION);
+            // Clear the dead sync-blocked-ips schedule left by older installs.
+            wp_clear_scheduled_hook('webdecoy_sync_blocked_ips');
         }
     }
 
