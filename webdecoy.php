@@ -219,6 +219,9 @@ final class WebDecoy_Plugin
             'tripwire_patterns' => [],   // regex bodies (no delimiters)
             'tripwire_action' => 'block', // block | throttle
             'tripwire_dry_run' => false,  // record violations without blocking
+            // How a tripwire hit responds: block (403), notfound (404), decoy
+            // (200 fake content w/ canary credentials), or tarpit (slow drip).
+            'tripwire_response' => 'block',
 
             // Honeytoken: auto-inject a hidden decoy link on front-end pages and
             // arm its secret path as a tripwire. Only link-following scrapers
@@ -609,6 +612,14 @@ final class WebDecoy_Plugin
             add_filter('authenticate', [$this, 'check_login'], 30, 3);
         }
 
+        // Canary-credential login detection: a login attempt using a fake
+        // credential we only ever handed out via a decoy response is
+        // unambiguous exfiltration evidence. Active whenever tripwires are on
+        // (the canaries' source), independent of login protection.
+        if (!empty($this->options['tripwire_enabled']) || !empty($this->options['honeytoken_enabled'])) {
+            add_filter('authenticate', [$this, 'check_canary_login'], 5, 3);
+        }
+
         if ($this->options['protect_registration']) {
             add_action('register_post', [$this, 'check_registration'], 10, 3);
         }
@@ -739,6 +750,7 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-violation-reporter.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-honeytoken.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ip-enrichment.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-decoy-response.php';
 
         if (class_exists('WooCommerce')) {
             require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-woocommerce.php';
@@ -1065,12 +1077,67 @@ final class WebDecoy_Plugin
             return;
         }
 
+        // Tripwire DENY with a deceptive response configured: serve fake content
+        // / 404 / tarpit instead of a plain 403. We deliberately do NOT locally
+        // block the IP in these modes — letting the scanner keep digging decoys
+        // gathers more evidence (each hit another reported violation), while
+        // edge enforcement still happens via the reported clearance token.
+        if ($result->rule === 'tripwire') {
+            $mode = $this->options['tripwire_response'] ?? 'block';
+            if ($mode !== 'block') {
+                $path = (is_array($result->metadata) && isset($result->metadata['path'])) ? (string) $result->metadata['path'] : '';
+                $decoy = new WebDecoy_Decoy_Response();
+                if ($mode === 'decoy') {
+                    $served = $decoy->served_canaries($path);
+                    if ($served !== []) {
+                        $this->log_decoy_served($path, $ip, $served);
+                    }
+                }
+                if ($decoy->serve($path, $mode)) {
+                    return; // deceptive response served + exited
+                }
+                // No believable template for this path — fall through to 403.
+            }
+        }
+
         // DENY: record the block, then serve the block page / wp_die.
         $blocker = new WebDecoy_Blocker();
         $duration = $this->options['block_duration'] > 0 ? $this->options['block_duration'] : null;
         $reason = $result->reason ?? ('Rule enforced: ' . ($result->rule ?? 'rule'));
         $blocker->block($ip, $reason, $duration);
         $this->block_request($this->options['block_page_message']);
+    }
+
+    /**
+     * Record that a decoy (with canary credentials) was served, so the audit
+     * trail shows what was handed out. The full canary values are recomputable,
+     * so we store only the identifying markers here.
+     *
+     * @param array<string,string> $canaries
+     */
+    private function log_decoy_served(string $path, string $ip, array $canaries): void
+    {
+        global $wpdb;
+
+        $flags_data = [
+            'flags' => ['decoy_served'],
+            'metadata' => [
+                'rule' => 'tripwire',
+                'decoy_path' => $path,
+                'canary_db_user' => $canaries['db_user'] ?? '',
+                'canary_admin_user' => $canaries['admin_user'] ?? '',
+            ],
+        ];
+
+        $wpdb->insert($wpdb->prefix . 'webdecoy_detections', [
+            'ip_address' => $ip,
+            'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '',
+            'score' => 100,
+            'threat_level' => \WebDecoy\DetectionResult::THREAT_HIGH,
+            'source' => 'wordpress_plugin',
+            'flags' => wp_json_encode($flags_data),
+            'created_at' => current_time('mysql'),
+        ]);
     }
 
     /**
@@ -1339,6 +1406,56 @@ final class WebDecoy_Plugin
         }
 
         return $commentdata;
+    }
+
+    /**
+     * Detect a login attempt using a canary credential — a fake value that could
+     * only have come from a decoy response we served. That's unambiguous
+     * exfiltration evidence: log a high-severity detection, block the IP, and
+     * reject the login.
+     *
+     * @param \WP_User|\WP_Error|null $user
+     * @param string $username
+     * @param string $password
+     * @return \WP_User|\WP_Error|null
+     */
+    public function check_canary_login($user, string $username, string $password)
+    {
+        if ($username === '' && $password === '') {
+            return $user;
+        }
+
+        if (
+            WebDecoy_Decoy_Response::is_canary_credential($username)
+            || WebDecoy_Decoy_Response::is_canary_credential($password)
+        ) {
+            $ip = $this->get_client_ip();
+
+            global $wpdb;
+            $wpdb->insert($wpdb->prefix . 'webdecoy_detections', [
+                'ip_address' => $ip,
+                'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '',
+                'score' => 100,
+                'threat_level' => \WebDecoy\DetectionResult::THREAT_CRITICAL,
+                'source' => 'wordpress_plugin',
+                'flags' => wp_json_encode([
+                    'flags' => ['canary_credential_use'],
+                    'metadata' => ['reason' => 'Login attempt with a decoy (canary) credential'],
+                ]),
+                'created_at' => current_time('mysql'),
+            ]);
+
+            $blocker = new WebDecoy_Blocker();
+            $duration = $this->options['block_duration'] > 0 ? $this->options['block_duration'] : null;
+            $blocker->block($ip, 'Canary credential use (decoy exfiltration)', $duration);
+
+            return new \WP_Error(
+                'webdecoy_canary',
+                __('Access denied.', 'webdecoy')
+            );
+        }
+
+        return $user;
     }
 
     /**
@@ -1611,6 +1728,7 @@ final class WebDecoy_Plugin
         $sanitized['tripwire_patterns'] = $this->sanitize_pattern_list($input['tripwire_patterns'] ?? '');
         $sanitized['tripwire_action'] = in_array($input['tripwire_action'] ?? 'block', ['block', 'throttle'], true) ? $input['tripwire_action'] : 'block';
         $sanitized['tripwire_dry_run'] = !empty($input['tripwire_dry_run']);
+        $sanitized['tripwire_response'] = in_array($input['tripwire_response'] ?? 'block', ['block', 'notfound', 'decoy', 'tarpit'], true) ? $input['tripwire_response'] : 'block';
         $sanitized['honeytoken_enabled'] = !empty($input['honeytoken_enabled']);
         $sanitized['honeytoken_rotate'] = !empty($input['honeytoken_rotate']);
         $sanitized['filter_rules'] = $this->sanitize_filter_rules($input['filter_rules'] ?? []);
