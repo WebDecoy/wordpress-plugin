@@ -121,6 +121,32 @@ $options = get_option('webdecoy_options', []);
                                        min="1" max="3600" class="small-text" />
                                 <?php esc_html_e('seconds', 'webdecoy'); ?>
                             </label>
+                            <br><br>
+                            <label>
+                                <?php esc_html_e('Algorithm', 'webdecoy'); ?>
+                                <select name="webdecoy_options[rate_limit_algorithm]">
+                                    <option value="fixed" <?php selected($options['rate_limit_algorithm'] ?? 'fixed', 'fixed'); ?>><?php esc_html_e('Fixed window', 'webdecoy'); ?></option>
+                                    <option value="sliding" <?php selected($options['rate_limit_algorithm'] ?? 'fixed', 'sliding'); ?>><?php esc_html_e('Sliding window', 'webdecoy'); ?></option>
+                                </select>
+                            </label>
+                            &nbsp;
+                            <label>
+                                <?php esc_html_e('Count by', 'webdecoy'); ?>
+                                <select name="webdecoy_options[rate_limit_key]">
+                                    <option value="ip" <?php selected($options['rate_limit_key'] ?? 'ip', 'ip'); ?>><?php esc_html_e('IP address', 'webdecoy'); ?></option>
+                                    <option value="ip_route" <?php selected($options['rate_limit_key'] ?? 'ip', 'ip_route'); ?>><?php esc_html_e('IP + route', 'webdecoy'); ?></option>
+                                    <option value="user" <?php selected($options['rate_limit_key'] ?? 'ip', 'user'); ?>><?php esc_html_e('Logged-in user', 'webdecoy'); ?></option>
+                                </select>
+                            </label>
+                            <br><br>
+                            <label>
+                                <input type="checkbox" name="webdecoy_options[rate_limit_dry_run]" value="1"
+                                       <?php checked(!empty($options['rate_limit_dry_run'])); ?> />
+                                <?php esc_html_e('Dry run (record without throttling)', 'webdecoy'); ?>
+                            </label>
+                            <p class="description">
+                                <?php esc_html_e('Over-limit requests get a 429 with Retry-After and X-RateLimit-* headers. Sliding window uses a persistent object cache (Redis/Memcached) when available, otherwise falls back to the fixed-window database counter.', 'webdecoy'); ?>
+                            </p>
                         </td>
                     </tr>
                 </table>

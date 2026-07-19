@@ -206,6 +206,12 @@ final class WebDecoy_Plugin
             'rate_limit_enabled' => true,
             'rate_limit_requests' => 60,
             'rate_limit_window' => 60,
+            // Algorithm: fixed window (DB) or sliding window (object cache when a
+            // persistent one is present, else fixed). Key: per IP, IP+route, or
+            // logged-in user. Dry-run records without throttling.
+            'rate_limit_algorithm' => 'fixed',
+            'rate_limit_key' => 'ip',
+            'rate_limit_dry_run' => false,
 
             // Tripwires (F4 deception layer). Deterministic, zero-false-positive:
             // a request for a scanner-bait honeypot path is automated by
@@ -751,6 +757,7 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-honeytoken.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ip-enrichment.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-decoy-response.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-rate-limit-rule.php';
 
         if (class_exists('WooCommerce')) {
             require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-woocommerce.php';
@@ -837,15 +844,9 @@ final class WebDecoy_Plugin
             }
         }
 
-        // Check rate limit
-        if ($this->options['rate_limit_enabled']) {
-            $rateLimiter = new WebDecoy_Rate_Limiter();
-            if ($rateLimiter->is_exceeded($ip)) {
-                $this->handle_rate_limit_exceeded($ip);
-                return;
-            }
-            $rateLimiter->increment($ip);
-        }
+        // Rate limiting now runs as a rule inside the engine above (THROTTLE →
+        // 429 + Retry-After + X-RateLimit-* headers), so it evaluates in order
+        // with tripwires and filters rather than as a separate pre-check.
 
         // Run bot detection with request path for MITRE ATT&CK path analysis
         $detector = $this->get_detector();
@@ -947,6 +948,18 @@ final class WebDecoy_Plugin
                 }
                 $rules[] = $rule;
             }
+        }
+
+        // Rate limiting runs last: a deterministic tripwire/filter DENY should
+        // win over a THROTTLE for the same request.
+        if (!empty($this->options['rate_limit_enabled'])) {
+            $rules[] = new WebDecoy_Rate_Limit_Rule([
+                'limit' => (int) ($this->options['rate_limit_requests'] ?? 60),
+                'window' => (int) ($this->options['rate_limit_window'] ?? 60),
+                'algorithm' => $this->options['rate_limit_algorithm'] ?? 'fixed',
+                'keyBy' => $this->options['rate_limit_key'] ?? 'ip',
+                'dryRun' => !empty($this->options['rate_limit_dry_run']),
+            ]);
         }
 
         if ($rules === []) {
@@ -1062,13 +1075,18 @@ final class WebDecoy_Plugin
     private function handle_rule_decision(\WebDecoy\Rules\RuleEngineResult $result, string $ip): void
     {
         if ($result->action === \WebDecoy\Rules\RuleResult::THROTTLE) {
-            $retryAfter = 60;
-            if (is_array($result->metadata) && isset($result->metadata['retryAfter'])) {
-                $retryAfter = max(1, intval($result->metadata['retryAfter']));
-            }
+            $meta = is_array($result->metadata) ? $result->metadata : [];
+            $retryAfter = isset($meta['retryAfter']) ? max(1, intval($meta['retryAfter'])) : 60;
             nocache_headers();
             status_header(429);
             header('Retry-After: ' . $retryAfter);
+            if (isset($meta['max'])) {
+                header('X-RateLimit-Limit: ' . (int) $meta['max']);
+                header('X-RateLimit-Remaining: ' . (int) ($meta['remaining'] ?? 0));
+                if (isset($meta['resetAt'])) {
+                    header('X-RateLimit-Reset: ' . (int) $meta['resetAt']);
+                }
+            }
             wp_die(
                 esc_html__('Too many requests. Please try again later.', 'webdecoy'),
                 esc_html__('Too Many Requests', 'webdecoy'),
@@ -1265,28 +1283,6 @@ final class WebDecoy_Plugin
 
         include WEBDECOY_PLUGIN_DIR . 'templates/challenge-page.php';
         exit;
-    }
-
-    /**
-     * Handle rate limit exceeded
-     *
-     * @param string $ip
-     */
-    private function handle_rate_limit_exceeded(string $ip): void
-    {
-        // Add rate exceeded flag to detection
-        $detector = $this->get_detector();
-        $result = $detector->analyze(['rate_exceeded' => true]);
-
-        // Log rate limit exceeded
-        $this->log_detection($result, $ip);
-
-        if ($result->getScore() >= $this->options['min_score_to_block']) {
-            $this->handle_blocking($result, $ip);
-        } else {
-            // Just block temporarily for rate limiting
-            $this->block_request(__('Too many requests. Please try again later.', 'webdecoy'));
-        }
     }
 
     /**
@@ -1719,6 +1715,9 @@ final class WebDecoy_Plugin
         $sanitized['rate_limit_enabled'] = !empty($input['rate_limit_enabled']);
         $sanitized['rate_limit_requests'] = max(1, intval($input['rate_limit_requests'] ?? 60));
         $sanitized['rate_limit_window'] = max(1, intval($input['rate_limit_window'] ?? 60));
+        $sanitized['rate_limit_algorithm'] = in_array($input['rate_limit_algorithm'] ?? 'fixed', ['fixed', 'sliding'], true) ? $input['rate_limit_algorithm'] : 'fixed';
+        $sanitized['rate_limit_key'] = in_array($input['rate_limit_key'] ?? 'ip', ['ip', 'ip_route', 'user'], true) ? $input['rate_limit_key'] : 'ip';
+        $sanitized['rate_limit_dry_run'] = !empty($input['rate_limit_dry_run']);
 
         // Tripwires
         $sanitized['tripwire_enabled'] = !empty($input['tripwire_enabled']);
