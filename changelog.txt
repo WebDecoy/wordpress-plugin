@@ -1,6 +1,7 @@
 *** WebDecoy Bot Detection Changelog ***
 
 = 2.2.0 - Unreleased =
+* Added: Clearance client — bundled @webdecoy/client browser script that silently mints a wd_clearance cookie for real visitors (idle-deferred, once per session, no proof-of-work). Enables tripwire/decoy hits to durably lock out the offending device. Configured via a new publishable Site Key in the WebDecoy Cloud tab.
 * Added: Rule engine — deterministic rules evaluated before heuristic scoring; first DENY/THROTTLE wins, with dry-run (log without blocking). Parity with @webdecoy/node.
 * Added: Tripwires (deception layer) — deterministic, zero-false-positive blocking of hidden honeypot paths (scanner-bait like /.env, /.git/config, /wp-config.php). Custom exact paths, prefixes, and regex patterns; block or throttle; dry-run. New Settings → Tripwires tab.
 * Added: wd_clearance forwarding — a tripwire hit carrying the visitor's wd_clearance cookie is reported so the WebDecoy Cloud can durably deny the actor's device fingerprint (rotation-proof lockout). Heuristic rules never carry the token.

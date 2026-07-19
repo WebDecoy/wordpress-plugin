@@ -155,6 +155,14 @@ final class WebDecoy_Plugin
             // API Configuration - only API key required now
             'api_key' => '',
 
+            // Publishable site key (org id) for the browser clearance client.
+            // Distinct from the secret api_key: minting needs no secret, so this
+            // is safe to expose in page markup. Enables silent wd_clearance
+            // cookie minting so tripwire/decoy hits bind to a device fingerprint.
+            'site_key' => '',
+            // Optional scope passed to the clearance client (advanced).
+            'clearance_scope' => '',
+
             // Proxy / client IP resolution. By default the plugin uses the direct
             // connection IP (REMOTE_ADDR) and IGNORES forwarding headers, which are
             // spoofable. Sites behind a reverse proxy/CDN must opt in so that
@@ -559,6 +567,13 @@ final class WebDecoy_Plugin
             add_action('wp_enqueue_scripts', [$this, 'frontend_scripts']);
         }
 
+        // Browser clearance client: mints the wd_clearance cookie for real
+        // visitors so tripwire/decoy hits bind to a device fingerprint. Needs
+        // only the publishable site key (no secret / premium gate).
+        if (!empty($this->options['site_key']) && !is_admin()) {
+            add_action('wp_enqueue_scripts', [$this, 'enqueue_clearance_client']);
+        }
+
         // JS execution verification: inject challenge token meta tag and report page serve
         // Only active when scanner is enabled and API key is configured (premium)
         if ($this->options['scanner_enabled'] && !is_admin() && $this->is_premium()) {
@@ -601,6 +616,19 @@ final class WebDecoy_Plugin
         if ($handle === 'webdecoy-scanner') {
             return str_replace(' src', ' defer src', $tag);
         }
+
+        // The clearance client auto-starts from data-* attributes on its own
+        // script tag; inject them here (WP core has no API to set arbitrary
+        // script-tag attributes on older versions). Also load it async.
+        if ($handle === 'webdecoy-clearance') {
+            $attrs = ' async data-site-key="' . esc_attr((string) $this->options['site_key']) . '"';
+            $scope = (string) ($this->options['clearance_scope'] ?? '');
+            if ($scope !== '') {
+                $attrs .= ' data-scope="' . esc_attr($scope) . '"';
+            }
+            return str_replace(' src', $attrs . ' src', $tag);
+        }
+
         return $tag;
     }
 
@@ -1343,6 +1371,10 @@ final class WebDecoy_Plugin
             $sanitized['api_key'] = $api_key;
         }
 
+        // Publishable site key + clearance scope (not secret; stored as-is).
+        $sanitized['site_key'] = sanitize_text_field($input['site_key'] ?? '');
+        $sanitized['clearance_scope'] = sanitize_text_field($input['clearance_scope'] ?? '');
+
         // Proxy / client IP resolution
         $sanitized['behind_cloudflare'] = !empty($input['behind_cloudflare']);
         $sanitized['trusted_proxies'] = $this->sanitize_trusted_proxies($input['trusted_proxies'] ?? '');
@@ -1549,6 +1581,36 @@ final class WebDecoy_Plugin
             'powEnabled' => !empty($this->options['pow_enabled']),
             'challengeUrl' => admin_url('admin-ajax.php'),
         ]);
+    }
+
+    /**
+     * Enqueue the bundled @webdecoy/client browser script, which silently mints
+     * the wd_clearance cookie for real visitors. The script auto-starts from the
+     * data-site-key attribute injected in {@see add_defer_to_scanner()}.
+     *
+     * Served from the plugin's own origin (not a CDN) per WordPress.org
+     * guidelines. Minting is idle-deferred, once per session, and does no
+     * proof-of-work, so there's no page-load cost.
+     */
+    public function enqueue_clearance_client(): void
+    {
+        if (empty($this->options['site_key'])) {
+            return;
+        }
+
+        // Skip for logged-in users if the scanner is configured to exclude them,
+        // keeping behavior consistent across both front-end scripts.
+        if (!empty($this->options['scanner_exclude_logged_in']) && is_user_logged_in()) {
+            return;
+        }
+
+        wp_enqueue_script(
+            'webdecoy-clearance',
+            WEBDECOY_PLUGIN_URL . 'public/js/webdecoy-clearance.js',
+            [],
+            WEBDECOY_VERSION,
+            true
+        );
     }
 
     /**
