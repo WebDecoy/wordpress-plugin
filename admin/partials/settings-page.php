@@ -500,6 +500,19 @@ $options = get_option('webdecoy_options', []);
                         </td>
                     </tr>
                     <tr>
+                        <th scope="row">
+                            <label for="webdecoy_site_key"><?php esc_html_e('Site Key', 'webdecoy'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="webdecoy_site_key" name="webdecoy_options[site_key]"
+                                   value="<?php echo esc_attr($options['site_key'] ?? ''); ?>"
+                                   class="regular-text" autocomplete="off" />
+                            <p class="description">
+                                <?php esc_html_e('Your publishable site key (organization ID). Unlike the API key this is not secret — it enables the browser to silently obtain a clearance token so that tripwire and decoy hits durably lock out the offending device. Required for enforcement; safe to leave blank for detection-only.', 'webdecoy'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
                         <th scope="row"><?php esc_html_e('API Status', 'webdecoy'); ?></th>
                         <td>
                             <?php
