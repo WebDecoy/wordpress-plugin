@@ -54,11 +54,48 @@ class WebDecoy_Behavioral_Scorer
             $total += $cat_score * self::WEIGHTS[$category];
         }
 
+        // Stealth (F1) is applied as an override, not a weighted term: a patched
+        // native function is the single strongest bot signal (node weights it
+        // 0.30, the highest category), so a confirmed stealth tell should be
+        // decisive on its own. Taking the max preserves the existing weighted
+        // model when no lie data is present. Fed via $signals['lies'].
+        $stealth_score = $this->score_stealth($signals['lies'] ?? [], $detections);
+        $category_scores['stealth'] = $stealth_score;
+        $final = max($total, $stealth_score);
+
         return [
-            'score' => round(min(1.0, max(0.0, $total)), 4),
+            'score' => round(min(1.0, max(0.0, $final)), 4),
             'category_scores' => $category_scores,
             'detections' => $detections,
         ];
+    }
+
+    /**
+     * Score stealth-browser (F1) lie detection. Mirrors the scanner's strong/weak
+     * split and @webdecoy/node's stealth curve (0.7 base, +0.12 per additional
+     * strong tell, capped 0.97). Weak tells alone are never decisive (real
+     * privacy extensions can trigger them).
+     *
+     * @param array $lies ['strong' => string[], 'weak' => string[]]
+     */
+    private function score_stealth(array $lies, array &$detections): float
+    {
+        $strong = isset($lies['strong']) && is_array($lies['strong']) ? count($lies['strong']) : 0;
+        $weak = isset($lies['weak']) && is_array($lies['weak']) ? count($lies['weak']) : 0;
+
+        if ($strong > 0) {
+            $score = min(0.7 + ($strong - 1) * 0.12 + $weak * 0.03, 0.97);
+            $detections[] = ['category' => 'stealth', 'signal' => 'patched_native_functions', 'confidence' => $score];
+            return $score;
+        }
+
+        if ($weak >= 2) {
+            $score = min(0.3 + $weak * 0.05, 0.5);
+            $detections[] = ['category' => 'stealth', 'signal' => 'multiple_weak_patches', 'confidence' => $score];
+            return $score;
+        }
+
+        return 0.0;
     }
 
     /**
