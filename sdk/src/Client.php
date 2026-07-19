@@ -17,7 +17,17 @@ class Client
     private const DEFAULT_BASE_URL = 'https://api.webdecoy.com';
     private const DEFAULT_INGEST_URL = 'https://ingest.webdecoy.com';
     private const DEFAULT_TIMEOUT = 10;
-    private const USER_AGENT = 'WebDecoy-PHP-SDK/1.0';
+
+    /**
+     * Build the User-Agent string. Derives the version from the bundling
+     * plugin's WEBDECOY_VERSION constant when present so it never goes stale;
+     * falls back to a generic marker for standalone SDK use.
+     */
+    private static function userAgent(): string
+    {
+        $version = defined('WEBDECOY_VERSION') ? WEBDECOY_VERSION : '2.x';
+        return 'WebDecoy-PHP-SDK/' . $version;
+    }
 
     private string $apiKey;
     private string $baseUrl;
@@ -363,7 +373,7 @@ class Client
         $headers = [
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-            'User-Agent' => self::USER_AGENT,
+            'User-Agent' => self::userAgent(),
         ];
 
         if ($authenticated) {
@@ -414,7 +424,7 @@ class Client
         $headers = [
             'Content-Type: application/json',
             'Accept: application/json',
-            'User-Agent: ' . self::USER_AGENT,
+            'User-Agent: ' . self::userAgent(),
         ];
 
         if ($authenticated) {
