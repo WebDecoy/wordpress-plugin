@@ -32,6 +32,80 @@
   }
 
   /**
+   * Stealth-browser (F1) detection: native functions patched to hide automation.
+   *
+   * A real, unmodified browser never rewrites its own native functions. Stealth
+   * tooling (puppeteer-extra-stealth, botasaurus, etc.) patches them to spoof
+   * away fingerprint tells — but the patch itself is detectable: a patched
+   * function's toString() no longer reports "[native code]". This catches the
+   * exact class of scraper that defeats conventional fingerprinting.
+   *
+   * Signals are split by false-positive risk:
+   *   - strong: near-zero FP. A patched Function.prototype.toString or a
+   *     modified navigator.webdriver getter is an automation signature.
+   *   - weak:   privacy extensions (canvas/WebGL blockers) legitimately patch
+   *     some of these, so they're reported but scored gently, never decisive
+   *     on their own.
+   */
+  function detectLies() {
+    var strong = [];
+    var weak = [];
+
+    function isPatched(fn) {
+      try {
+        return typeof fn === 'function' && fn.toString().indexOf('[native code]') === -1;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    try {
+      // Function.prototype.toString itself patched → stealth plugins do this to
+      // hide their other patches. Extremely strong tell.
+      if (isPatched(Function.prototype.toString)) {
+        strong.push('Function.prototype.toString');
+      }
+
+      // navigator.webdriver getter replaced with a non-native function → the
+      // browser is actively lying about being automated.
+      try {
+        var desc = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(navigator), 'webdriver') ||
+          Object.getOwnPropertyDescriptor(navigator, 'webdriver');
+        if (desc && typeof desc.get === 'function' &&
+          desc.get.toString().indexOf('[native code]') === -1) {
+          strong.push('navigator.webdriver getter');
+        }
+      } catch (e) { /* ignore */ }
+
+      // Weak: real privacy tooling patches some of these.
+      if (navigator.permissions && isPatched(navigator.permissions.query)) {
+        weak.push('navigator.permissions.query');
+      }
+      if (window.Notification && isPatched(window.Notification.requestPermission)) {
+        weak.push('Notification.requestPermission');
+      }
+      if (window.HTMLCanvasElement && isPatched(window.HTMLCanvasElement.prototype.toDataURL)) {
+        weak.push('HTMLCanvasElement.toDataURL');
+      }
+      if (window.WebGLRenderingContext && isPatched(window.WebGLRenderingContext.prototype.getParameter)) {
+        weak.push('WebGLRenderingContext.getParameter');
+      }
+      if (navigator.mediaDevices && isPatched(navigator.mediaDevices.enumerateDevices)) {
+        weak.push('mediaDevices.enumerateDevices');
+      }
+    } catch (e) {
+      return { detected: false, strong: [], weak: [], signals: [] };
+    }
+
+    return {
+      detected: strong.length > 0 || weak.length > 0,
+      strong: strong,
+      weak: weak,
+      signals: strong.concat(weak)
+    };
+  }
+
+  /**
    * Detects headless browser indicators
    */
   function detectHeadless() {
@@ -607,6 +681,21 @@
       score += Math.min(signals.apiTiming.signals.length * 15, 30);
     }
 
+    // Stealth-browser (F1): patched native functions. The single strongest bot
+    // signal. Strong tells are near-certain automation; weak tells (which real
+    // privacy extensions can trigger) are scored gently so they never block a
+    // legitimate user on their own.
+    if (signals.lieDetection && signals.lieDetection.detected) {
+      var strongCount = signals.lieDetection.strong.length;
+      var weakCount = signals.lieDetection.weak.length;
+      if (strongCount > 0) {
+        score += Math.min(70 + (strongCount - 1) * 12 + weakCount * 3, 97);
+      } else if (weakCount >= 2) {
+        score += Math.min(20 + weakCount * 5, 40);
+      }
+      // A single weak tell alone contributes nothing (likely a privacy tool).
+    }
+
     // Behavioral analysis scoring
     if (signals.behavioral && signals.behavioral.detected) {
       var behavioralSignals = signals.behavioral.signals;
@@ -969,7 +1058,8 @@
           apiTiming: detectAPITiming(),
           permissionInconsistency: null,
           webrtcIP: null,
-          behavioral: analyzeBehavior()
+          behavioral: analyzeBehavior(),
+          lieDetection: detectLies()
         };
 
         var honeypotValue = checkHoneypot();
@@ -1067,6 +1157,12 @@
         }
       }
       if (signals.honeypotTriggered) flags.push('honeypot');
+
+      if (signals.lieDetection && signals.lieDetection.detected) {
+        for (var s = 0; s < signals.lieDetection.signals.length; s++) {
+          flags.push('lie:' + signals.lieDetection.signals[s]);
+        }
+      }
 
       if (signals.chromeInconsistency && signals.chromeInconsistency.detected) {
         for (var j = 0; j < signals.chromeInconsistency.signals.length; j++) {
