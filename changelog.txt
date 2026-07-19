@@ -1,6 +1,10 @@
 *** WebDecoy Bot Detection Changelog ***
 
-= 2.1.0 - 2026-03-03 =
+= 2.2.0 - Unreleased =
+* Added: Rule engine — deterministic rules evaluated before heuristic scoring; first DENY/THROTTLE wins, with dry-run (log without blocking). Parity with @webdecoy/node.
+* Added: Tripwires (deception layer) — deterministic, zero-false-positive blocking of hidden honeypot paths (scanner-bait like /.env, /.git/config, /wp-config.php). Custom exact paths, prefixes, and regex patterns; block or throttle; dry-run. New Settings → Tripwires tab.
+* Added: wd_clearance forwarding — a tripwire hit carrying the visitor's wd_clearance cookie is reported so the WebDecoy Cloud can durably deny the actor's device fingerprint (rotation-proof lockout). Heuristic rules never carry the token.
+* Added: Violation reporting — rule hits are batched and reported to the WebDecoy Cloud (premium) on request shutdown, fire-and-forget with no added page latency. Hits are always recorded locally in the Detections page.
 * Added: JS execution verification — detects non-JS HTTP scrapers (e.g., Scrapling Fetcher, curl_cffi)
 * Added: Challenge token meta tag injected on page serve for premium users
 * Added: Automatic page serve reporting to ingest service

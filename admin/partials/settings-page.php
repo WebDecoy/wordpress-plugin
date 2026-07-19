@@ -24,6 +24,7 @@ $options = get_option('webdecoy_options', []);
         <div class="webdecoy-tabs">
             <nav class="nav-tab-wrapper">
                 <a href="#tab-detection" class="nav-tab nav-tab-active"><?php esc_html_e('Protection', 'webdecoy'); ?></a>
+                <a href="#tab-tripwires" class="nav-tab"><?php esc_html_e('Tripwires', 'webdecoy'); ?></a>
                 <a href="#tab-bots" class="nav-tab"><?php esc_html_e('Good Bots', 'webdecoy'); ?></a>
                 <a href="#tab-blocking" class="nav-tab"><?php esc_html_e('Blocking', 'webdecoy'); ?></a>
                 <a href="#tab-forms" class="nav-tab"><?php esc_html_e('Forms', 'webdecoy'); ?></a>
@@ -118,6 +119,92 @@ $options = get_option('webdecoy_options', []);
                                        value="<?php echo esc_attr($options['rate_limit_window'] ?? 60); ?>"
                                        min="1" max="3600" class="small-text" />
                                 <?php esc_html_e('seconds', 'webdecoy'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Tripwires Tab -->
+            <div id="tab-tripwires-tab" class="webdecoy-tab-content">
+                <h2><?php esc_html_e('Tripwires', 'webdecoy'); ?></h2>
+                <p class="description">
+                    <?php esc_html_e('Tripwires are hidden honeypot paths that no real visitor ever requests — scanner-bait like /.env or /.git/config. A request for one is automated by construction, so it is blocked deterministically with zero false positives. Tripwire hits are the strongest deception signal and, with a WebDecoy Cloud key, drive durable device-fingerprint lockouts.', 'webdecoy'); ?>
+                </p>
+
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Enable Tripwires', 'webdecoy'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="webdecoy_options[tripwire_enabled]" value="1"
+                                       <?php checked($options['tripwire_enabled'] ?? false); ?> />
+                                <?php esc_html_e('Deterministically block requests to honeypot paths', 'webdecoy'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Built-in Bait Paths', 'webdecoy'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="webdecoy_options[tripwire_include_defaults]" value="1"
+                                       <?php checked($options['tripwire_include_defaults'] ?? true); ?> />
+                                <?php esc_html_e('Include the built-in scanner-bait list (/.env, /.git/config, /wp-config.php, and more)', 'webdecoy'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="webdecoy_tripwire_paths"><?php esc_html_e('Custom Paths', 'webdecoy'); ?></label>
+                        </th>
+                        <td>
+                            <textarea id="webdecoy_tripwire_paths" name="webdecoy_options[tripwire_paths]"
+                                      rows="4" class="large-text code" placeholder="/secret-admin&#10;/old-backup.tar.gz"><?php echo esc_textarea(implode("\n", (array) ($options['tripwire_paths'] ?? []))); ?></textarea>
+                            <p class="description"><?php esc_html_e('Exact paths, one per line. Each is matched exactly (query string and fragment are ignored).', 'webdecoy'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="webdecoy_tripwire_prefixes"><?php esc_html_e('Path Prefixes', 'webdecoy'); ?></label>
+                        </th>
+                        <td>
+                            <textarea id="webdecoy_tripwire_prefixes" name="webdecoy_options[tripwire_prefixes]"
+                                      rows="3" class="large-text code" placeholder="/.git/&#10;/vendor/"><?php echo esc_textarea(implode("\n", (array) ($options['tripwire_prefixes'] ?? []))); ?></textarea>
+                            <p class="description"><?php esc_html_e('Any request path starting with one of these is a hit. One prefix per line.', 'webdecoy'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="webdecoy_tripwire_patterns"><?php esc_html_e('Regex Patterns', 'webdecoy'); ?></label>
+                        </th>
+                        <td>
+                            <textarea id="webdecoy_tripwire_patterns" name="webdecoy_options[tripwire_patterns]"
+                                      rows="3" class="large-text code" placeholder="\.(sql|bak|old)$"><?php echo esc_textarea(implode("\n", (array) ($options['tripwire_patterns'] ?? []))); ?></textarea>
+                            <p class="description"><?php esc_html_e('Advanced: PCRE patterns without delimiters, one per line. Invalid patterns are discarded on save.', 'webdecoy'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="webdecoy_tripwire_action"><?php esc_html_e('Action', 'webdecoy'); ?></label>
+                        </th>
+                        <td>
+                            <select id="webdecoy_tripwire_action" name="webdecoy_options[tripwire_action]">
+                                <option value="block" <?php selected($options['tripwire_action'] ?? 'block', 'block'); ?>>
+                                    <?php esc_html_e('Block (recommended)', 'webdecoy'); ?>
+                                </option>
+                                <option value="throttle" <?php selected($options['tripwire_action'] ?? 'block', 'throttle'); ?>>
+                                    <?php esc_html_e('Throttle (429 Too Many Requests)', 'webdecoy'); ?>
+                                </option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Dry Run', 'webdecoy'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="webdecoy_options[tripwire_dry_run]" value="1"
+                                       <?php checked($options['tripwire_dry_run'] ?? false); ?> />
+                                <?php esc_html_e('Record tripwire hits without blocking (test against live traffic first)', 'webdecoy'); ?>
                             </label>
                         </td>
                     </tr>
