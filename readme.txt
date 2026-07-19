@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: security, bot detection, spam protection, woocommerce, firewall
 Requires at least: 5.6
 Tested up to: 6.8
-Stable tag: 2.1.0
+Stable tag: 2.2.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -184,6 +184,21 @@ Privacy Policy: [https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net](htt
 8. Challenge page — invisible proof-of-work for suspicious visitors
 
 == Changelog ==
+
+= 2.2.0 =
+* Added: Tripwires — deterministic, zero-false-positive blocking of hidden honeypot paths (on by default)
+* Added: Honeytoken — auto-injected invisible decoy link armed as a tripwire (on by default)
+* Added: Filter rules — expression-based rules with an admin rule builder (ip.* / req.* fields)
+* Added: IP enrichment (VPN/proxy/Tor, geo, ASN, abuse score) powering ip.* filter fields
+* Added: wd_clearance enforcement loop — silent cookie minting + tripwire forwarding for rotation-proof device lockouts
+* Added: Stealth-browser (F1) detection — catches automation that patches native browser functions
+* Added: Deceptive tripwire responses — fake .env/wp-config/SQL/phpinfo with per-site canary credentials; canary logins flagged as critical
+* Added: WordPress-native traps — fake vulnerable-plugin paths, optional XML-RPC trap, author-enumeration canary
+* Added: WooCommerce honeytoken coupons — a hidden decoy coupon; applying it is a deterministic bot signal
+* Added: IP allowlist (Settings → Blocking)
+* Improved: Rate limiting runs as a rule — proper 429 + Retry-After + X-RateLimit-* headers, sliding-window algorithm, per-IP/route/user keying
+* Improved: Resilient violation reporting (DB spool + cron retry, no page latency)
+* Changed: Consolidated onto a single detector path; removed legacy dead code
 
 = 2.1.0 =
 * Added: JS execution verification — detects non-JS HTTP scrapers
