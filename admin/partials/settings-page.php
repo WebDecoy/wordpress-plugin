@@ -288,6 +288,45 @@ $options = get_option('webdecoy_options', []);
                         </td>
                     </tr>
                 </table>
+
+                <h3><?php esc_html_e('WordPress Traps', 'webdecoy'); ?></h3>
+                <p class="description">
+                    <?php esc_html_e('Traps targeting the recon patterns WordPress scanners run. Each turns a probe into a deterministic detection.', 'webdecoy'); ?>
+                </p>
+
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Fake Vulnerable Plugins', 'webdecoy'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="webdecoy_options[traps_fake_plugins]" value="1"
+                                       <?php checked($options['traps_fake_plugins'] ?? true); ?> />
+                                <?php esc_html_e('Trap requests to known scanner-targeted plugin paths (only for plugins not actually installed here)', 'webdecoy'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Author Enumeration', 'webdecoy'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="webdecoy_options[traps_author_enum]" value="1"
+                                       <?php checked($options['traps_author_enum'] ?? true); ?> />
+                                <?php esc_html_e('Trap ?author=N and REST user enumeration — returns a canary username instead of leaking real ones (a later login with it is flagged as exfiltration)', 'webdecoy'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('XML-RPC', 'webdecoy'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="webdecoy_options[traps_xmlrpc]" value="1"
+                                       <?php checked($options['traps_xmlrpc'] ?? false); ?> />
+                                <?php esc_html_e('Trap xmlrpc.php probing', 'webdecoy'); ?>
+                            </label>
+                            <p class="description"><?php esc_html_e('Off by default: legitimate clients (Jetpack, the WordPress mobile app, some pingbacks) use XML-RPC. Only enable if your site does not.', 'webdecoy'); ?></p>
+                        </td>
+                    </tr>
+                </table>
             </div>
 
             <!-- Rules Tab -->

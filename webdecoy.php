@@ -235,6 +235,11 @@ final class WebDecoy_Plugin
             'honeytoken_enabled' => true,
             'honeytoken_rotate' => false, // rotate the token daily (with grace)
 
+            // WordPress-native traps.
+            'traps_fake_plugins' => true,  // arm fake vulnerable-plugin paths (absent plugins only)
+            'traps_xmlrpc' => false,       // trap xmlrpc.php (off: legit clients use it)
+            'traps_author_enum' => true,   // trap ?author=N + REST user enumeration
+
             // Filter rules: expression-based rules evaluated by the rule engine.
             // Each entry: ['expression'=>string, 'action'=>'block'|'throttle',
             // 'dry_run'=>bool, 'name'=>string]. Empty by default.
@@ -679,6 +684,12 @@ final class WebDecoy_Plugin
             add_action('wp_footer', [$this, 'inject_honeytoken_link'], 99);
         }
 
+        // WordPress-native query/REST traps (author enumeration). Registered
+        // after includes are loaded so the traps class is available.
+        if (!empty($this->options['traps_author_enum'])) {
+            add_action('plugins_loaded', [$this, 'register_wp_traps'], 20);
+        }
+
         // JS execution verification: inject challenge token meta tag and report page serve
         // Only active when scanner is enabled and API key is configured (premium)
         if ($this->options['scanner_enabled'] && !is_admin() && $this->is_premium()) {
@@ -758,6 +769,7 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ip-enrichment.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-decoy-response.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-rate-limit-rule.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-wp-traps.php';
 
         if (class_exists('WooCommerce')) {
             require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-woocommerce.php';
@@ -922,6 +934,27 @@ final class WebDecoy_Plugin
             ]);
         }
 
+        // WordPress-native path traps: fake vulnerable-plugin routes (only for
+        // absent plugins) and, optionally, xmlrpc.php. Armed as a tripwire so
+        // they get the full DENY + violation + clearance + optional-decoy path.
+        $trap_prefixes = [];
+        $trap_paths = [];
+        if (!empty($this->options['traps_fake_plugins'])) {
+            $trap_prefixes = array_merge($trap_prefixes, WebDecoy_WP_Traps::plugin_path_prefixes());
+        }
+        if (!empty($this->options['traps_xmlrpc'])) {
+            $trap_paths[] = '/xmlrpc.php';
+        }
+        if ($trap_prefixes !== [] || $trap_paths !== []) {
+            $rules[] = new \WebDecoy\Rules\TripwireRule([
+                'paths' => $trap_paths,
+                'prefixes' => $trap_prefixes,
+                'includeDefaults' => false,
+                'action' => $action,
+                'dryRun' => $dryRun,
+            ]);
+        }
+
         // Filter (expression) rules. A malformed stored expression is skipped
         // defensively so it can never fatal a request (it was already flagged in
         // the admin on save). Track whether any rule needs IP enrichment.
@@ -967,6 +1000,56 @@ final class WebDecoy_Plugin
         }
 
         return new \WebDecoy\Rules\RuleEngine($rules);
+    }
+
+    /**
+     * Register the WordPress-native query/REST traps (author enumeration),
+     * wired to record synthetic tripwire violations.
+     */
+    public function register_wp_traps(): void
+    {
+        $traps = new WebDecoy_WP_Traps([$this, 'record_synthetic_tripwire']);
+        $traps->register(!empty($this->options['traps_author_enum']));
+    }
+
+    /**
+     * Record + report a synthetic tripwire hit for traps that don't flow through
+     * the rule engine (author enumeration, REST user probing). Logged locally
+     * and, when premium, reported with the wd_clearance token so the actor's
+     * device fingerprint can be durably denied — same as an engine tripwire.
+     *
+     * @param string $rule
+     * @param string $path
+     */
+    public function record_synthetic_tripwire(string $rule, string $path): void
+    {
+        $ip = $this->get_client_ip();
+        $ua = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
+        $clearance = null;
+        if ($rule === 'tripwire' && isset($_COOKIE['wd_clearance'])) {
+            $clearance = sanitize_text_field(wp_unslash($_COOKIE['wd_clearance']));
+        }
+
+        $event = new \WebDecoy\Rules\ViolationEvent(
+            $rule,
+            \WebDecoy\Rules\RuleResult::DENY,
+            $ip,
+            $path,
+            isset($_SERVER['REQUEST_METHOD']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD'])) : 'GET',
+            $ua !== '' ? $ua : null,
+            'WordPress trap hit: ' . $path,
+            $clearance,
+            ['path' => $path, 'confidence' => 100, 'trap' => true],
+            false,
+            gmdate('Y-m-d\TH:i:s') . '.000Z'
+        );
+
+        $this->log_rule_violations([$event]);
+
+        $reporter = WebDecoy_Violation_Reporter::instance($this->is_premium() ? (string) $this->options['api_key'] : '');
+        if ($reporter !== null) {
+            $reporter->report([$event]);
+        }
     }
 
     /**
@@ -1730,6 +1813,9 @@ final class WebDecoy_Plugin
         $sanitized['tripwire_response'] = in_array($input['tripwire_response'] ?? 'block', ['block', 'notfound', 'decoy', 'tarpit'], true) ? $input['tripwire_response'] : 'block';
         $sanitized['honeytoken_enabled'] = !empty($input['honeytoken_enabled']);
         $sanitized['honeytoken_rotate'] = !empty($input['honeytoken_rotate']);
+        $sanitized['traps_fake_plugins'] = !empty($input['traps_fake_plugins']);
+        $sanitized['traps_xmlrpc'] = !empty($input['traps_xmlrpc']);
+        $sanitized['traps_author_enum'] = !empty($input['traps_author_enum']);
         $sanitized['filter_rules'] = $this->sanitize_filter_rules($input['filter_rules'] ?? []);
 
         // Form Protection
