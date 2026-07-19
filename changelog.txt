@@ -8,7 +8,7 @@
 * Added: Tripwires (deception layer) — deterministic, zero-false-positive blocking of hidden honeypot paths (scanner-bait like /.env, /.git/config, /wp-config.php). On by default. Custom exact paths, prefixes, and regex patterns; block or throttle; dry-run. New Settings → Tripwires tab.
 * Added: Honeytoken — automatically injects an invisible decoy link on front-end pages pointing at a secret per-site path; only link-following scrapers ever request it, and a hit is armed as a tripwire. On by default, with optional daily rotation. Never shown to real visitors or logged-in users.
 * Added: wd_clearance forwarding — a tripwire hit carrying the visitor's wd_clearance cookie is reported so the WebDecoy Cloud can durably deny the actor's device fingerprint (rotation-proof lockout). Heuristic rules never carry the token.
-* Added: Violation reporting — rule hits are batched and reported to the WebDecoy Cloud (premium) on request shutdown, fire-and-forget with no added page latency. Hits are always recorded locally in the Detections page.
+* Added: Violation reporting — rule hits are reported to the WebDecoy Cloud (premium), spooled to a local queue and delivered on request shutdown (after the response is handed back, so no added page latency). Survives brief ingest outages: retried once by a cron safety net, then dropped, with a hard queue cap. Hits are always recorded locally in the Detections page.
 * Added: JS execution verification — detects non-JS HTTP scrapers (e.g., Scrapling Fetcher, curl_cffi)
 * Added: Challenge token meta tag injected on page serve for premium users
 * Added: Automatic page serve reporting to ingest service

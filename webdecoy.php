@@ -671,6 +671,9 @@ final class WebDecoy_Plugin
         // Clear API cache when settings are saved
         add_action('update_option_webdecoy_options', [$this, 'clear_api_status_cache']);
 
+        // Safety-net cron drain of the violation-report spool.
+        add_action('webdecoy_flush_violations', [$this, 'cron_flush_violations']);
+
         // Load text domain
         add_action('init', [$this, 'load_textdomain']);
 
@@ -939,6 +942,20 @@ final class WebDecoy_Plugin
         }
 
         return new \WebDecoy\Rules\RuleEngine($rules);
+    }
+
+    /**
+     * Cron: drain any spooled violation reports that the per-request shutdown
+     * flush couldn't deliver (e.g. a brief ingest outage). A non-empty API key
+     * is all that's required to attempt delivery.
+     */
+    public function cron_flush_violations(): void
+    {
+        $apiKey = (string) ($this->options['api_key'] ?? '');
+        if ($apiKey === '') {
+            return;
+        }
+        WebDecoy_Violation_Reporter::drain_queue($apiKey);
     }
 
     /**
