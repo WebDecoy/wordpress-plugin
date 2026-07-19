@@ -1,6 +1,8 @@
 *** WebDecoy Bot Detection Changelog ***
 
 = 2.2.0 - Unreleased =
+* Added: IP allowlist — IPs or CIDR ranges that bypass all detection and blocking (Settings → Blocking). Previously the check existed internally but had no way to configure it.
+* Changed: Consolidated onto a single detector path (SDK detector + WordPress-signal wrapper) across front-end, forms, and WooCommerce; removed the unused legacy forms class and a dead scheduled task. No behavior change to detection.
 * Added: Filter rules — write expression-based rules (e.g. `ip.tor or ip.abuse_score > 50`, `ip.country in ["CN","RU"] and req.path matches "^/wp-login"`) evaluated before scoring; block or throttle, with dry-run. New Settings → Rules tab with a rule builder and parse-on-save validation. Expression language is byte-for-byte compatible with @webdecoy/node.
 * Added: IP enrichment — VPN/proxy/Tor, geo, ASN, and abuse-score data (WebDecoy Cloud) powering the ip.* filter-rule fields, cached 1 hour, fetched only when a rule needs it, fail-open.
 * Improved: Rate limiting now runs as a rule in the engine — over-limit requests get a proper 429 with Retry-After and X-RateLimit-* headers (previously it only nudged the bot score). Adds a sliding-window algorithm (exact via a persistent object cache, falling back to the fixed-window database counter), per-IP / per-IP+route / per-user keying, and dry-run.

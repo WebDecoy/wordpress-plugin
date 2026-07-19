@@ -197,6 +197,7 @@ final class WebDecoy_Plugin
             'custom_allowlist' => [],
 
             // Blocking Settings
+            'ip_allowlist' => [], // IPs/CIDRs that bypass all detection
             'block_action' => 'block',
             'block_duration' => 24,
             'show_block_page' => true,
@@ -762,7 +763,6 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-activator.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-blocker.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-detector.php';
-        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-forms.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-rate-limiter.php';
 
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-pow.php';
@@ -824,6 +824,11 @@ final class WebDecoy_Plugin
         $blocker = new WebDecoy_Blocker();
         $ip = $this->get_client_ip();
 
+        // Allowlisted IPs bypass all detection entirely.
+        if ($blocker->is_allowlisted($ip)) {
+            return;
+        }
+
         if ($blocker->is_blocked($ip)) {
             $this->block_request(__('Your IP has been blocked.', 'webdecoy'));
             return;
@@ -863,14 +868,11 @@ final class WebDecoy_Plugin
         // 429 + Retry-After + X-RateLimit-* headers), so it evaluates in order
         // with tripwires and filters rather than as a separate pre-check.
 
-        // Run bot detection with request path for MITRE ATT&CK path analysis
-        $detector = $this->get_detector();
-        $signals = $detector->getSignalCollector()->collect();
-
-        // Add request path for path-based scoring
-        $signals['request_path'] = $this->get_request_path();
-
-        $result = $detector->analyze($signals);
+        // Run bot detection through the WebDecoy_Detector wrapper — the single
+        // detector path (SDK BotDetector + WP-specific signals), the same one
+        // WooCommerce uses. It collects request signals, adds the request path
+        // for MITRE ATT&CK path analysis, and merges WP context.
+        $result = (new WebDecoy_Detector($this->options))->analyze();
 
         // Skip if good bot
         if ($result->isGoodBot()) {
@@ -1792,6 +1794,10 @@ final class WebDecoy_Plugin
         $sanitized['custom_allowlist'] = array_filter(array_map('sanitize_text_field', explode("\n", $input['custom_allowlist'] ?? '')));
 
         // Blocking Settings
+        // Allowlist: validate as IPs/CIDRs (reuses the trusted-proxy validator),
+        // stored as an array of valid entries.
+        $allowlist = $this->sanitize_trusted_proxies($input['ip_allowlist'] ?? '');
+        $sanitized['ip_allowlist'] = $allowlist === '' ? [] : explode("\n", $allowlist);
         $sanitized['block_action'] = in_array($input['block_action'] ?? 'block', ['block', 'challenge', 'log']) ? $input['block_action'] : 'block';
         $sanitized['block_duration'] = max(0, intval($input['block_duration'] ?? 24));
         $sanitized['show_block_page'] = !empty($input['show_block_page']);

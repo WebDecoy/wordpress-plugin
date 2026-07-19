@@ -465,6 +465,17 @@ $options = get_option('webdecoy_options', []);
                 <table class="form-table">
                     <tr>
                         <th scope="row">
+                            <label for="webdecoy_ip_allowlist"><?php esc_html_e('IP Allowlist', 'webdecoy'); ?></label>
+                        </th>
+                        <td>
+                            <textarea id="webdecoy_ip_allowlist" name="webdecoy_options[ip_allowlist]"
+                                      rows="3" class="large-text code"
+                                      placeholder="203.0.113.10&#10;198.51.100.0/24"><?php echo esc_textarea(is_array($options['ip_allowlist'] ?? '') ? implode("\n", $options['ip_allowlist']) : ($options['ip_allowlist'] ?? '')); ?></textarea>
+                            <p class="description"><?php esc_html_e('IPs or CIDR ranges that bypass all detection and blocking (e.g. your office, an uptime monitor). One per line. Invalid entries are discarded on save.', 'webdecoy'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
                             <label for="webdecoy_block_action"><?php esc_html_e('Block Action', 'webdecoy'); ?></label>
                         </th>
                         <td>
