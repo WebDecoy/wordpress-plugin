@@ -21,7 +21,7 @@ class WebDecoy_Activator
     /**
      * Database version for migrations
      */
-    private const DB_VERSION = '2.0.0';
+    private const DB_VERSION = '2.2.0';
 
     /**
      * Plugin activation
@@ -115,12 +115,25 @@ class WebDecoy_Activator
             KEY status (status)
         ) $charset_collate;";
 
+        // Violation queue table — spool for rule-engine violations awaiting
+        // delivery to the ingest service (resilient reporting: survives ingest
+        // downtime, retried by cron). Only used when a Cloud API key is set.
+        $sql_violation_queue = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}webdecoy_violation_queue (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            payload LONGTEXT NOT NULL,
+            attempts TINYINT UNSIGNED DEFAULT 0,
+            created_at DATETIME NOT NULL,
+            PRIMARY KEY (id),
+            KEY created_at (created_at)
+        ) $charset_collate;";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
         dbDelta($sql_blocked);
         dbDelta($sql_detections);
         dbDelta($sql_rate_limits);
         dbDelta($sql_checkout);
+        dbDelta($sql_violation_queue);
     }
 
     /**
@@ -198,6 +211,13 @@ class WebDecoy_Activator
         if (!wp_next_scheduled('webdecoy_sync_blocked_ips')) {
             wp_schedule_event(time(), 'fifteen_minutes', 'webdecoy_sync_blocked_ips');
         }
+
+        // Safety-net drain of the violation-report spool (every 15 minutes).
+        // The primary delivery path is the per-request shutdown flush; this
+        // catches anything left behind after an ingest outage.
+        if (!wp_next_scheduled('webdecoy_flush_violations')) {
+            wp_schedule_event(time(), 'fifteen_minutes', 'webdecoy_flush_violations');
+        }
     }
 
     /**
@@ -226,6 +246,7 @@ class WebDecoy_Activator
             $wpdb->prefix . 'webdecoy_detections',
             $wpdb->prefix . 'webdecoy_rate_limits',
             $wpdb->prefix . 'webdecoy_checkout_attempts',
+            $wpdb->prefix . 'webdecoy_violation_queue',
         ];
 
         foreach ($tables as $table) {
@@ -240,6 +261,7 @@ class WebDecoy_Activator
         // Clear scheduled events
         wp_clear_scheduled_hook('webdecoy_cleanup_expired');
         wp_clear_scheduled_hook('webdecoy_sync_blocked_ips');
+        wp_clear_scheduled_hook('webdecoy_flush_violations');
     }
 }
 
