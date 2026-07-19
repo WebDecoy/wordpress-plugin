@@ -20,6 +20,11 @@ require_once $src . 'RuleEngineResult.php';
 require_once $src . 'ViolationEvent.php';
 require_once $src . 'RuleEngine.php';
 require_once $src . 'TripwireRule.php';
+require_once $src . 'Filter/FilterSyntaxException.php';
+require_once $src . 'Filter/Tokenizer.php';
+require_once $src . 'Filter/Parser.php';
+require_once $src . 'Filter/Evaluator.php';
+require_once $src . 'FilterRule.php';
 
 final class TestRunner
 {

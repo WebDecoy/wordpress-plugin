@@ -25,6 +25,7 @@ $options = get_option('webdecoy_options', []);
             <nav class="nav-tab-wrapper">
                 <a href="#tab-detection" class="nav-tab nav-tab-active"><?php esc_html_e('Protection', 'webdecoy'); ?></a>
                 <a href="#tab-tripwires" class="nav-tab"><?php esc_html_e('Tripwires', 'webdecoy'); ?></a>
+                <a href="#tab-rules" class="nav-tab"><?php esc_html_e('Rules', 'webdecoy'); ?></a>
                 <a href="#tab-bots" class="nav-tab"><?php esc_html_e('Good Bots', 'webdecoy'); ?></a>
                 <a href="#tab-blocking" class="nav-tab"><?php esc_html_e('Blocking', 'webdecoy'); ?></a>
                 <a href="#tab-forms" class="nav-tab"><?php esc_html_e('Forms', 'webdecoy'); ?></a>
@@ -237,6 +238,85 @@ $options = get_option('webdecoy_options', []);
                         </td>
                     </tr>
                 </table>
+            </div>
+
+            <!-- Rules Tab -->
+            <?php
+            $filter_rules = isset($options['filter_rules']) && is_array($options['filter_rules']) ? $options['filter_rules'] : [];
+            $has_api_key = !empty($options['api_key']);
+            ?>
+            <div id="tab-rules-tab" class="webdecoy-tab-content">
+                <h2><?php esc_html_e('Filter Rules', 'webdecoy'); ?></h2>
+                <p class="description">
+                    <?php esc_html_e('Write expression-based rules evaluated on every request, in order, before scoring. The first matching Block/Throttle rule wins. Example expressions:', 'webdecoy'); ?>
+                </p>
+                <ul class="webdecoy-rule-examples" style="margin-left:1.5em;list-style:disc;">
+                    <li><code>ip.tor or ip.vpn</code></li>
+                    <li><code>ip.country in ["CN","RU"] and req.path matches "^/wp-login"</code></li>
+                    <li><code>ip.abuse_score &gt; 50</code></li>
+                    <li><code>req.header("x-requested-with") == "XMLHttpRequest"</code></li>
+                </ul>
+                <p class="description">
+                    <?php esc_html_e('Fields: ip.vpn / ip.proxy / ip.tor / ip.relay / ip.hosting, ip.country / ip.country_name / ip.city / ip.timezone, ip.asn / ip.asn_org, ip.abuse_score / ip.total_reports / ip.is_high_risk, req.path / req.method / req.ip / req.user_agent, req.header("name"). Operators: and, or, not, ==, !=, >, >=, <, <=, in, not in, matches (regex).', 'webdecoy'); ?>
+                </p>
+                <?php if (!$has_api_key) : ?>
+                    <p class="description webdecoy-error-text">
+                        <?php esc_html_e('Note: ip.* fields require a WebDecoy Cloud API key (for IP enrichment). Without one, ip.* conditions are always false; req.* rules still work.', 'webdecoy'); ?>
+                    </p>
+                <?php endif; ?>
+
+                <table class="widefat webdecoy-rules-table" style="margin-top:1em;max-width:60em;">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e('Name (optional)', 'webdecoy'); ?></th>
+                            <th><?php esc_html_e('Expression', 'webdecoy'); ?></th>
+                            <th><?php esc_html_e('Action', 'webdecoy'); ?></th>
+                            <th><?php esc_html_e('Dry run', 'webdecoy'); ?></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="webdecoy-rules-body">
+                        <?php foreach ($filter_rules as $i => $rule) : ?>
+                            <tr class="webdecoy-rule-row">
+                                <td><input type="text" name="webdecoy_options[filter_rules][<?php echo (int) $i; ?>][name]"
+                                           value="<?php echo esc_attr($rule['name'] ?? ''); ?>" class="regular-text" /></td>
+                                <td><input type="text" name="webdecoy_options[filter_rules][<?php echo (int) $i; ?>][expression]"
+                                           value="<?php echo esc_attr($rule['expression'] ?? ''); ?>" class="large-text code" />
+                                    <?php if (!empty($rule['error'])) : ?>
+                                        <p class="description webdecoy-error-text"><?php echo esc_html($rule['error']); ?></p>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <select name="webdecoy_options[filter_rules][<?php echo (int) $i; ?>][action]">
+                                        <option value="block" <?php selected($rule['action'] ?? 'block', 'block'); ?>><?php esc_html_e('Block', 'webdecoy'); ?></option>
+                                        <option value="throttle" <?php selected($rule['action'] ?? 'block', 'throttle'); ?>><?php esc_html_e('Throttle', 'webdecoy'); ?></option>
+                                    </select>
+                                </td>
+                                <td style="text-align:center;"><input type="checkbox"
+                                    name="webdecoy_options[filter_rules][<?php echo (int) $i; ?>][dry_run]" value="1"
+                                    <?php checked(!empty($rule['dry_run'])); ?> /></td>
+                                <td><button type="button" class="button-link webdecoy-remove-rule" aria-label="<?php esc_attr_e('Remove rule', 'webdecoy'); ?>"><?php esc_html_e('Remove', 'webdecoy'); ?></button></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+
+                <p><button type="button" class="button button-secondary" id="webdecoy-add-rule"><?php esc_html_e('+ Add Rule', 'webdecoy'); ?></button></p>
+
+                <script type="text/html" id="webdecoy-rule-template">
+                    <tr class="webdecoy-rule-row">
+                        <td><input type="text" name="webdecoy_options[filter_rules][__IDX__][name]" value="" class="regular-text" /></td>
+                        <td><input type="text" name="webdecoy_options[filter_rules][__IDX__][expression]" value="" class="large-text code" /></td>
+                        <td>
+                            <select name="webdecoy_options[filter_rules][__IDX__][action]">
+                                <option value="block"><?php esc_html_e('Block', 'webdecoy'); ?></option>
+                                <option value="throttle"><?php esc_html_e('Throttle', 'webdecoy'); ?></option>
+                            </select>
+                        </td>
+                        <td style="text-align:center;"><input type="checkbox" name="webdecoy_options[filter_rules][__IDX__][dry_run]" value="1" /></td>
+                        <td><button type="button" class="button-link webdecoy-remove-rule"><?php esc_html_e('Remove', 'webdecoy'); ?></button></td>
+                    </tr>
+                </script>
             </div>
 
             <!-- Good Bots Tab -->

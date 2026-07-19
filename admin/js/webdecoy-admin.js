@@ -18,6 +18,7 @@
             this.bindEvents();
             this.initTabs();
             this.initPasswordToggle();
+            this.initRulesRepeater();
         },
 
         /**
@@ -41,6 +42,39 @@
 
             // Select all good bots in category
             $(document).on('change', '.webdecoy-category-toggle', this.toggleCategory);
+
+            // Filter rules repeater
+            $(document).on('click', '#webdecoy-add-rule', this.addRule);
+            $(document).on('click', '.webdecoy-remove-rule', this.removeRule);
+        },
+
+        /**
+         * Filter-rules repeater: ever-increasing index so removed rows never
+         * collide with new ones (PHP re-indexes on save).
+         */
+        ruleIndex: 0,
+
+        initRulesRepeater: function() {
+            // Seed the counter above any server-rendered row index.
+            var max = -1;
+            $('#webdecoy-rules-body .webdecoy-rule-row input[name*="[filter_rules]"]').each(function() {
+                var m = /\[filter_rules\]\[(\d+)\]/.exec($(this).attr('name') || '');
+                if (m) { max = Math.max(max, parseInt(m[1], 10)); }
+            });
+            WebDecoyAdmin.ruleIndex = max + 1;
+        },
+
+        addRule: function(e) {
+            e.preventDefault();
+            var tpl = $('#webdecoy-rule-template').html();
+            if (!tpl) { return; }
+            var html = tpl.replace(/__IDX__/g, String(WebDecoyAdmin.ruleIndex++));
+            $('#webdecoy-rules-body').append(html);
+        },
+
+        removeRule: function(e) {
+            e.preventDefault();
+            $(this).closest('.webdecoy-rule-row').remove();
         },
 
         /**
