@@ -69,6 +69,14 @@ foreach ($sdk_paths as $sdk_path) {
         require_once $sdk_path . 'src/SignalCollector.php';
         require_once $sdk_path . 'src/BotDetector.php';
         require_once $sdk_path . 'src/Client.php';
+        // Rules engine (tripwires, filters, rate-limit rules) — pure logic.
+        require_once $sdk_path . 'src/Rules/RuleInterface.php';
+        require_once $sdk_path . 'src/Rules/RuleContext.php';
+        require_once $sdk_path . 'src/Rules/RuleResult.php';
+        require_once $sdk_path . 'src/Rules/RuleEngineResult.php';
+        require_once $sdk_path . 'src/Rules/ViolationEvent.php';
+        require_once $sdk_path . 'src/Rules/RuleEngine.php';
+        require_once $sdk_path . 'src/Rules/TripwireRule.php';
         $sdk_loaded = true;
         break;
     }
@@ -177,6 +185,19 @@ final class WebDecoy_Plugin
             'rate_limit_requests' => 60,
             'rate_limit_window' => 60,
 
+            // Tripwires (F4 deception layer). Deterministic, zero-false-positive:
+            // a request for a scanner-bait honeypot path is automated by
+            // construction. On by default — the built-in bait paths carry no
+            // false-positive risk for real visitors, so protection is active
+            // out of the box.
+            'tripwire_enabled' => true,
+            'tripwire_include_defaults' => true,
+            'tripwire_paths' => [],      // extra exact paths
+            'tripwire_prefixes' => [],   // startsWith matches
+            'tripwire_patterns' => [],   // regex bodies (no delimiters)
+            'tripwire_action' => 'block', // block | throttle
+            'tripwire_dry_run' => false,  // record violations without blocking
+
             // Form Protection
             'protect_comments' => true,
             'protect_login' => true,
@@ -281,6 +302,73 @@ final class WebDecoy_Plugin
         }
 
         return implode("\n", array_unique($valid));
+    }
+
+    /**
+     * Sanitize a newline/comma separated list of URL paths into a clean array.
+     * Each entry is normalized to begin with a leading slash.
+     *
+     * @param mixed $input
+     * @return string[]
+     */
+    private function sanitize_path_list($input): array
+    {
+        if (is_array($input)) {
+            $entries = $input;
+        } else {
+            $entries = preg_split('/[\r\n,]+/', (string) $input) ?: [];
+        }
+
+        $valid = [];
+        foreach ($entries as $entry) {
+            $entry = trim((string) $entry);
+            if ($entry === '') {
+                continue;
+            }
+            // Strip whitespace and control chars; keep it a bare path.
+            $entry = sanitize_text_field($entry);
+            if ($entry === '') {
+                continue;
+            }
+            if ($entry[0] !== '/') {
+                $entry = '/' . $entry;
+            }
+            $valid[] = $entry;
+        }
+
+        return array_values(array_unique($valid));
+    }
+
+    /**
+     * Sanitize a newline separated list of regex bodies (no delimiters).
+     * Discards any pattern that isn't a valid PCRE so a bad rule can never
+     * throw at evaluation time.
+     *
+     * @param mixed $input
+     * @return string[]
+     */
+    private function sanitize_pattern_list($input): array
+    {
+        if (is_array($input)) {
+            $entries = $input;
+        } else {
+            $entries = preg_split('/[\r\n]+/', (string) $input) ?: [];
+        }
+
+        $valid = [];
+        foreach ($entries as $entry) {
+            $entry = trim((string) $entry);
+            if ($entry === '') {
+                continue;
+            }
+            $delimited = '#' . str_replace('#', '\\#', $entry) . '#';
+            // phpcs:ignore
+            if (@preg_match($delimited, '') !== false) {
+                $valid[] = $entry;
+            }
+        }
+
+        return array_values(array_unique($valid));
     }
 
     /**
@@ -530,6 +618,7 @@ final class WebDecoy_Plugin
 
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-pow.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-behavioral-scorer.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-violation-reporter.php';
 
         if (class_exists('WooCommerce')) {
             require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-woocommerce.php';
@@ -586,6 +675,36 @@ final class WebDecoy_Plugin
             return;
         }
 
+        // Deterministic rule engine (tripwires / filters). Runs before heuristic
+        // scoring: a rule DENY/THROTTLE short-circuits and scoring never runs,
+        // matching @webdecoy/node's protect() flow. Rules also record violations
+        // (reported to the cloud) even when they don't decide the outcome.
+        $engine = $this->build_rule_engine();
+        if ($engine !== null) {
+            $context = $this->build_rule_context($ip);
+            $engineResult = $engine->evaluate($context);
+
+            if ($engineResult->violations) {
+                // Log locally so hits show in the Detections admin page even for
+                // local-only installs and dry-run rules (which record but don't
+                // block).
+                $this->log_rule_violations($engineResult->violations);
+
+                // Report to the cloud (premium only). Tripwire hits carry
+                // wd_clearance so the backend can durably deny the actor's
+                // device fingerprint.
+                $reporter = WebDecoy_Violation_Reporter::instance($this->is_premium() ? (string) $this->options['api_key'] : '');
+                if ($reporter !== null) {
+                    $reporter->report($engineResult->violations);
+                }
+            }
+
+            if (!$engineResult->isAllowed()) {
+                $this->handle_rule_decision($engineResult, $ip);
+                return;
+            }
+        }
+
         // Check rate limit
         if ($this->options['rate_limit_enabled']) {
             $rateLimiter = new WebDecoy_Rate_Limiter();
@@ -628,6 +747,143 @@ final class WebDecoy_Plugin
         // Check if should block (higher threshold)
         if ($result->shouldBlock($this->options['min_score_to_block'])) {
             $this->handle_blocking($result, $ip);
+        }
+    }
+
+    /**
+     * Build the rule engine from current settings, or null when no rules are
+     * configured (so the common case adds zero overhead).
+     *
+     * @return \WebDecoy\Rules\RuleEngine|null
+     */
+    private function build_rule_engine(): ?\WebDecoy\Rules\RuleEngine
+    {
+        $rules = [];
+
+        if (!empty($this->options['tripwire_enabled'])) {
+            $rules[] = new \WebDecoy\Rules\TripwireRule([
+                'paths' => is_array($this->options['tripwire_paths'] ?? null) ? $this->options['tripwire_paths'] : [],
+                'prefixes' => is_array($this->options['tripwire_prefixes'] ?? null) ? $this->options['tripwire_prefixes'] : [],
+                'patterns' => is_array($this->options['tripwire_patterns'] ?? null) ? $this->options['tripwire_patterns'] : [],
+                'includeDefaults' => !empty($this->options['tripwire_include_defaults']),
+                'action' => ($this->options['tripwire_action'] ?? 'block') === 'throttle'
+                    ? \WebDecoy\Rules\RuleResult::THROTTLE
+                    : \WebDecoy\Rules\RuleResult::DENY,
+                'dryRun' => !empty($this->options['tripwire_dry_run']),
+            ]);
+        }
+
+        if ($rules === []) {
+            return null;
+        }
+
+        return new \WebDecoy\Rules\RuleEngine($rules);
+    }
+
+    /**
+     * Build the rule context for the current request (trusted-proxy-resolved IP,
+     * path, method, UA, and headers — the Cookie header carries wd_clearance).
+     *
+     * @param string $ip
+     * @return \WebDecoy\Rules\RuleContext
+     */
+    private function build_rule_context(string $ip): \WebDecoy\Rules\RuleContext
+    {
+        $method = isset($_SERVER['REQUEST_METHOD'])
+            ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD']))
+            : 'GET';
+        $userAgent = isset($_SERVER['HTTP_USER_AGENT'])
+            ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT']))
+            : '';
+
+        // Only the headers rules actually read. The Cookie header is passed raw
+        // (not sanitize_text_field'd) so the wd_clearance token value survives
+        // intact for forwarding.
+        $headers = [];
+        if (isset($_SERVER['HTTP_COOKIE'])) {
+            $headers['cookie'] = (string) wp_unslash($_SERVER['HTTP_COOKIE']);
+        }
+
+        return new \WebDecoy\Rules\RuleContext(
+            $ip,
+            $this->get_request_path(),
+            $method,
+            $userAgent,
+            $headers
+        );
+    }
+
+    /**
+     * Act on a non-ALLOW rule-engine decision: DENY blocks, THROTTLE serves 429.
+     *
+     * @param \WebDecoy\Rules\RuleEngineResult $result
+     * @param string $ip
+     */
+    private function handle_rule_decision(\WebDecoy\Rules\RuleEngineResult $result, string $ip): void
+    {
+        if ($result->action === \WebDecoy\Rules\RuleResult::THROTTLE) {
+            $retryAfter = 60;
+            if (is_array($result->metadata) && isset($result->metadata['retryAfter'])) {
+                $retryAfter = max(1, intval($result->metadata['retryAfter']));
+            }
+            nocache_headers();
+            status_header(429);
+            header('Retry-After: ' . $retryAfter);
+            wp_die(
+                esc_html__('Too many requests. Please try again later.', 'webdecoy'),
+                esc_html__('Too Many Requests', 'webdecoy'),
+                ['response' => 429]
+            );
+            return;
+        }
+
+        // DENY: record the block, then serve the block page / wp_die.
+        $blocker = new WebDecoy_Blocker();
+        $duration = $this->options['block_duration'] > 0 ? $this->options['block_duration'] : null;
+        $reason = $result->reason ?? ('Rule enforced: ' . ($result->rule ?? 'rule'));
+        $blocker->block($ip, $reason, $duration);
+        $this->block_request($this->options['block_page_message']);
+    }
+
+    /**
+     * Record rule-engine violations in the local detections table so they show
+     * in the Detections admin page — including dry-run hits and installs with no
+     * API key. One row per recorded violation.
+     *
+     * @param \WebDecoy\Rules\ViolationEvent[] $violations
+     */
+    private function log_rule_violations(array $violations): void
+    {
+        global $wpdb;
+
+        foreach ($violations as $violation) {
+            $confidence = 100;
+            if (is_array($violation->metadata) && isset($violation->metadata['confidence'])) {
+                $confidence = intval($violation->metadata['confidence']);
+            }
+
+            $flags_data = [
+                'flags' => [$violation->rule . '_rule'],
+                'metadata' => array_merge(
+                    is_array($violation->metadata) ? $violation->metadata : [],
+                    [
+                        'rule' => $violation->rule,
+                        'rule_enforced' => !$violation->dryRun,
+                        'dry_run' => $violation->dryRun,
+                        'reason' => $violation->reason,
+                    ]
+                ),
+            ];
+
+            $wpdb->insert($wpdb->prefix . 'webdecoy_detections', [
+                'ip_address' => $violation->ip,
+                'user_agent' => $violation->userAgent ?? '',
+                'score' => $confidence,
+                'threat_level' => \WebDecoy\DetectionResult::THREAT_HIGH,
+                'source' => 'wordpress_plugin',
+                'flags' => wp_json_encode($flags_data),
+                'created_at' => current_time('mysql'),
+            ]);
         }
     }
 
@@ -1114,6 +1370,15 @@ final class WebDecoy_Plugin
         $sanitized['rate_limit_enabled'] = !empty($input['rate_limit_enabled']);
         $sanitized['rate_limit_requests'] = max(1, intval($input['rate_limit_requests'] ?? 60));
         $sanitized['rate_limit_window'] = max(1, intval($input['rate_limit_window'] ?? 60));
+
+        // Tripwires
+        $sanitized['tripwire_enabled'] = !empty($input['tripwire_enabled']);
+        $sanitized['tripwire_include_defaults'] = !empty($input['tripwire_include_defaults']);
+        $sanitized['tripwire_paths'] = $this->sanitize_path_list($input['tripwire_paths'] ?? '');
+        $sanitized['tripwire_prefixes'] = $this->sanitize_path_list($input['tripwire_prefixes'] ?? '');
+        $sanitized['tripwire_patterns'] = $this->sanitize_pattern_list($input['tripwire_patterns'] ?? '');
+        $sanitized['tripwire_action'] = in_array($input['tripwire_action'] ?? 'block', ['block', 'throttle'], true) ? $input['tripwire_action'] : 'block';
+        $sanitized['tripwire_dry_run'] = !empty($input['tripwire_dry_run']);
 
         // Form Protection
         $sanitized['protect_comments'] = !empty($input['protect_comments']);
