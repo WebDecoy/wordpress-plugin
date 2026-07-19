@@ -73,6 +73,50 @@ class WebDecoy_Rate_Limiter
     }
 
     /**
+     * Fixed-window check-and-increment for an arbitrary key. Increments first,
+     * then reports whether the new count is within the limit (matches
+     * @webdecoy/node's RateLimitRule semantics). Used by the rate-limit rule.
+     *
+     * @param string $key IP or composite/hashed key
+     * @return array{allowed:bool,current:int,resetAt:int}
+     */
+    public function check_and_increment(string $key): array
+    {
+        global $wpdb;
+
+        $table = $wpdb->prefix . 'webdecoy_rate_limits';
+        $now = current_time('mysql');
+        $window_start_threshold = date('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
+
+        $existing = $wpdb->get_row($wpdb->prepare(
+            "SELECT request_count, window_start FROM {$table} WHERE ip_address = %s AND window_start > %s",
+            $key,
+            $window_start_threshold
+        ), ARRAY_A);
+
+        if ($existing) {
+            $current = (int) $existing['request_count'] + 1;
+            $wpdb->update($table, ['request_count' => $current], ['ip_address' => $key]);
+            $reset_at = strtotime($existing['window_start']) + $this->window;
+        } else {
+            $wpdb->delete($table, ['ip_address' => $key]);
+            $wpdb->insert($table, [
+                'ip_address' => $key,
+                'request_count' => 1,
+                'window_start' => $now,
+            ]);
+            $current = 1;
+            $reset_at = strtotime($now) + $this->window;
+        }
+
+        return [
+            'allowed' => $current <= $this->limit,
+            'current' => $current,
+            'resetAt' => $reset_at,
+        ];
+    }
+
+    /**
      * Increment request count for an IP
      *
      * @param string $ip IP address
