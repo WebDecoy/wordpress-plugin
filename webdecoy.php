@@ -206,6 +206,12 @@ final class WebDecoy_Plugin
             'tripwire_action' => 'block', // block | throttle
             'tripwire_dry_run' => false,  // record violations without blocking
 
+            // Honeytoken: auto-inject a hidden decoy link on front-end pages and
+            // arm its secret path as a tripwire. Only link-following scrapers
+            // ever hit it — deterministic, zero false positives. On by default.
+            'honeytoken_enabled' => true,
+            'honeytoken_rotate' => false, // rotate the token daily (with grace)
+
             // Form Protection
             'protect_comments' => true,
             'protect_login' => true,
@@ -575,6 +581,12 @@ final class WebDecoy_Plugin
             add_action('wp_enqueue_scripts', [$this, 'enqueue_clearance_client']);
         }
 
+        // Honeytoken: inject the hidden decoy link on front-end pages. The path
+        // itself is armed as a tripwire in build_rule_engine().
+        if (!empty($this->options['honeytoken_enabled']) && !is_admin()) {
+            add_action('wp_footer', [$this, 'inject_honeytoken_link'], 99);
+        }
+
         // JS execution verification: inject challenge token meta tag and report page serve
         // Only active when scanner is enabled and API key is configured (premium)
         if ($this->options['scanner_enabled'] && !is_admin() && $this->is_premium()) {
@@ -647,6 +659,7 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-pow.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-behavioral-scorer.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-violation-reporter.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-honeytoken.php';
 
         if (class_exists('WooCommerce')) {
             require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-woocommerce.php';
@@ -788,16 +801,32 @@ final class WebDecoy_Plugin
     {
         $rules = [];
 
+        $action = ($this->options['tripwire_action'] ?? 'block') === 'throttle'
+            ? \WebDecoy\Rules\RuleResult::THROTTLE
+            : \WebDecoy\Rules\RuleResult::DENY;
+        $dryRun = !empty($this->options['tripwire_dry_run']);
+
         if (!empty($this->options['tripwire_enabled'])) {
             $rules[] = new \WebDecoy\Rules\TripwireRule([
                 'paths' => is_array($this->options['tripwire_paths'] ?? null) ? $this->options['tripwire_paths'] : [],
                 'prefixes' => is_array($this->options['tripwire_prefixes'] ?? null) ? $this->options['tripwire_prefixes'] : [],
                 'patterns' => is_array($this->options['tripwire_patterns'] ?? null) ? $this->options['tripwire_patterns'] : [],
                 'includeDefaults' => !empty($this->options['tripwire_include_defaults']),
-                'action' => ($this->options['tripwire_action'] ?? 'block') === 'throttle'
-                    ? \WebDecoy\Rules\RuleResult::THROTTLE
-                    : \WebDecoy\Rules\RuleResult::DENY,
-                'dryRun' => !empty($this->options['tripwire_dry_run']),
+                'action' => $action,
+                'dryRun' => $dryRun,
+            ]);
+        }
+
+        // Arm the honeytoken path(s) as a tripwire. Independent of the general
+        // tripwire toggle: if honeytokens are on, their secret path is always
+        // enforced (the hidden link is only useful if a hit actually trips).
+        if (!empty($this->options['honeytoken_enabled'])) {
+            $honeytoken = new WebDecoy_Honeytoken(!empty($this->options['honeytoken_rotate']));
+            $rules[] = new \WebDecoy\Rules\TripwireRule([
+                'paths' => $honeytoken->active_paths(),
+                'includeDefaults' => false,
+                'action' => $action,
+                'dryRun' => $dryRun,
             ]);
         }
 
@@ -806,6 +835,26 @@ final class WebDecoy_Plugin
         }
 
         return new \WebDecoy\Rules\RuleEngine($rules);
+    }
+
+    /**
+     * Inject the hidden honeytoken decoy link into the page footer. Only
+     * link-following scrapers ever request the path it points at.
+     */
+    public function inject_honeytoken_link(): void
+    {
+        if (empty($this->options['honeytoken_enabled'])) {
+            return;
+        }
+
+        $honeytoken = new WebDecoy_Honeytoken(!empty($this->options['honeytoken_rotate']));
+        if (!$honeytoken->should_inject()) {
+            return;
+        }
+
+        // The link markup is a fixed, safe template (the path is esc_attr'd
+        // inside render_link()); emit it verbatim.
+        echo $honeytoken->render_link(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     }
 
     /**
@@ -1411,6 +1460,8 @@ final class WebDecoy_Plugin
         $sanitized['tripwire_patterns'] = $this->sanitize_pattern_list($input['tripwire_patterns'] ?? '');
         $sanitized['tripwire_action'] = in_array($input['tripwire_action'] ?? 'block', ['block', 'throttle'], true) ? $input['tripwire_action'] : 'block';
         $sanitized['tripwire_dry_run'] = !empty($input['tripwire_dry_run']);
+        $sanitized['honeytoken_enabled'] = !empty($input['honeytoken_enabled']);
+        $sanitized['honeytoken_rotate'] = !empty($input['honeytoken_rotate']);
 
         // Form Protection
         $sanitized['protect_comments'] = !empty($input['protect_comments']);
