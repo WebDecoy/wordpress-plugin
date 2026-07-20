@@ -4,7 +4,7 @@
  * Plugin URI: https://webdecoy.com/wordpress
  * Description: Protect your WordPress site from bots, spam, and carding attacks with WebDecoy's advanced threat detection.
  * Version: 2.2.1
- * Requires at least: 5.6
+ * Requires at least: 6.1
  * Requires PHP: 7.4
  * Author: WebDecoy
  * Author URI: https://webdecoy.com
