@@ -140,7 +140,7 @@ class WebDecoy_Violation_Reporter
 
         // Enforce the hard cap first: discard the oldest overflow so a prolonged
         // ingest outage can't grow the table without bound.
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
         $total = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table}");
         if ($total > self::MAX_QUEUE) {
             $overflow = $total - self::MAX_QUEUE;

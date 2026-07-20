@@ -340,7 +340,7 @@ class WebDecoy_WooCommerce
         // Log locally
         $wpdb->insert($table, [
             'ip_address' => $ip,
-            'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field($_SERVER['HTTP_USER_AGENT']) : '',
+            'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '',
             'score' => $final_score,
             'threat_level' => 'HIGH',
             'source' => $source,

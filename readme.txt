@@ -4,12 +4,12 @@ Donate link: https://webdecoy.com
 Tags: security, bot detection, spam protection, woocommerce, firewall
 Requires at least: 6.1
 Tested up to: 7.0
-Stable tag: 2.2.1
+Stable tag: 2.2.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Zero-configuration bot protection for WordPress. Works immediately on activation — no account, no API key, no external dependencies. Multi-layer detection with invisible proof-of-work challenges.
+Zero-config bot, spam, and carding protection. Works instantly on activation, with no account, API key, or external connections.
 
 == Description ==
 
@@ -173,6 +173,9 @@ Privacy Policy: https://webdecoy.com/privacy
 
 **Without an API key, the plugin operates 100% locally — no external connections on the front end or back end.** Chart.js (used for the admin Statistics charts) is bundled with the plugin, not loaded from a CDN.
 
+= Bundled third-party libraries =
+Chart.js v4.4.9 (MIT license) is included at admin/js/vendor/chart.umd.min.js for the admin Statistics charts. It is the official distribution build; the human-readable source is available at https://github.com/chartjs/Chart.js/releases/tag/v4.4.9 . No other third-party libraries are bundled.
+
 == Screenshots ==
 
 1. Protection settings — configure detection and blocking
@@ -185,6 +188,13 @@ Privacy Policy: https://webdecoy.com/privacy
 8. Challenge page — invisible proof-of-work for suspicious visitors
 
 == Changelog ==
+
+= 2.2.2 =
+* Fixed: A PHP 7.4 fatal error in good-bot verification (use of a PHP 8 function)
+* Fixed: Timezone-safe date handling throughout
+* Changed: The bundled SDK now uses the WordPress HTTP API exclusively (removed the raw cURL fallback)
+* Changed: Requires WordPress 6.1+; tested up to WordPress 7.0
+* Internal: Full WordPress Plugin Check compliance (resolved 69 flagged items)
 
 = 2.2.1 =
 * Changed: Chart.js (admin Statistics charts) is now bundled with the plugin instead of loaded from a CDN — the plugin makes no external requests until you connect a WebDecoy Cloud account

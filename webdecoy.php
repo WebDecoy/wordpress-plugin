@@ -3,7 +3,7 @@
  * Plugin Name: WebDecoy Bot Detection
  * Plugin URI: https://webdecoy.com/wordpress
  * Description: Protect your WordPress site from bots, spam, and carding attacks with WebDecoy's advanced threat detection.
- * Version: 2.2.1
+ * Version: 2.2.2
  * Requires at least: 6.1
  * Requires PHP: 7.4
  * Author: WebDecoy
@@ -41,7 +41,7 @@ if (!function_exists('str_starts_with')) {
 }
 
 // Plugin constants
-define('WEBDECOY_VERSION', '2.2.1');
+define('WEBDECOY_VERSION', '2.2.2');
 define('WEBDECOY_PLUGIN_FILE', __FILE__);
 define('WEBDECOY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WEBDECOY_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -1109,13 +1109,13 @@ final class WebDecoy_Plugin
             ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT']))
             : '';
 
-        // Headers rules may read: Cookie (wd_clearance — passed raw so the token
-        // value survives intact for forwarding) and any header referenced via
-        // req.header("name"). We forward the full request header set for the
-        // latter, plus the raw cookie.
+        // Headers rules may read: Cookie (wd_clearance — the token's base64url/JWT
+        // characters pass through sanitize_text_field intact for forwarding) and
+        // any header referenced via req.header("name"). We forward the full request
+        // header set for the latter, plus the sanitized cookie header.
         $headers = $this->collect_request_headers();
         if (isset($_SERVER['HTTP_COOKIE'])) {
-            $headers['cookie'] = (string) wp_unslash($_SERVER['HTTP_COOKIE']);
+            $headers['cookie'] = sanitize_text_field(wp_unslash($_SERVER['HTTP_COOKIE']));
         }
 
         // Fetch IP enrichment only when a filter rule needs it (premium only).
@@ -1342,7 +1342,7 @@ final class WebDecoy_Plugin
      */
     private function is_challenge_verified(string $ip): bool
     {
-        $cookie = isset($_COOKIE['webdecoy_verified']) ? sanitize_text_field($_COOKIE['webdecoy_verified']) : '';
+        $cookie = isset($_COOKIE['webdecoy_verified']) ? sanitize_text_field(wp_unslash($_COOKIE['webdecoy_verified'])) : '';
         if (empty($cookie)) {
             return false;
         }
@@ -1418,7 +1418,7 @@ final class WebDecoy_Plugin
 
         $wpdb->insert($table, [
             'ip_address' => $ip,
-            'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field($_SERVER['HTTP_USER_AGENT']) : '',
+            'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '',
             'score' => $result->getScore(),
             'threat_level' => $result->getThreatLevel(),
             'source' => 'wordpress_plugin',
@@ -1648,6 +1648,7 @@ final class WebDecoy_Plugin
     {
         $honeypot_name = 'webdecoy_hp_' . $context;
 
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- honeypot detection: any submitted value is treated as a bot signal, so nonce verification is not applicable
         if (isset($_POST[$honeypot_name]) && !empty($_POST[$honeypot_name])) {
             // Honeypot triggered - definitely a bot
             $ip = $this->get_client_ip();
@@ -2122,7 +2123,7 @@ final class WebDecoy_Plugin
         }
 
         // Get detection data
-        $detection_json = isset($_POST['detection']) ? wp_unslash($_POST['detection']) : '';
+        $detection_json = isset($_POST['detection']) ? sanitize_text_field(wp_unslash($_POST['detection'])) : '';
         $detection = json_decode($detection_json, true);
 
         if (!$detection || !is_array($detection)) {
@@ -2294,7 +2295,7 @@ final class WebDecoy_Plugin
             return;
         }
 
-        $api_key = sanitize_text_field($_POST['api_key'] ?? '');
+        $api_key = sanitize_text_field(wp_unslash($_POST['api_key'] ?? ''));
 
         // Decrypt if encrypted
         if (!empty($api_key) && $this->is_encrypted($api_key)) {
@@ -2369,8 +2370,8 @@ final class WebDecoy_Plugin
             return;
         }
 
-        $ip = sanitize_text_field($_POST['ip'] ?? '');
-        $reason = sanitize_text_field($_POST['reason'] ?? '');
+        $ip = sanitize_text_field(wp_unslash($_POST['ip'] ?? ''));
+        $reason = sanitize_text_field(wp_unslash($_POST['reason'] ?? ''));
         $duration = intval($_POST['duration'] ?? 24);
 
         if (empty($ip) || !filter_var($ip, FILTER_VALIDATE_IP)) {
@@ -2396,7 +2397,7 @@ final class WebDecoy_Plugin
             return;
         }
 
-        $ip = sanitize_text_field($_POST['ip'] ?? '');
+        $ip = sanitize_text_field(wp_unslash($_POST['ip'] ?? ''));
 
         if (empty($ip)) {
             wp_send_json_error(['message' => __('Invalid IP address.', 'webdecoy')]);
@@ -2421,7 +2422,7 @@ final class WebDecoy_Plugin
             return;
         }
 
-        $ips = isset($_POST['ips']) ? array_map('sanitize_text_field', (array) $_POST['ips']) : [];
+        $ips = isset($_POST['ips']) ? array_map('sanitize_text_field', wp_unslash((array) $_POST['ips'])) : [];
 
         if (empty($ips)) {
             wp_send_json_error(['message' => __('No IPs selected.', 'webdecoy')]);
@@ -2484,7 +2485,7 @@ final class WebDecoy_Plugin
         $ip = $this->get_client_ip();
 
         // Get challenge data
-        $challenge_json = isset($_POST['challenge']) ? wp_unslash($_POST['challenge']) : '';
+        $challenge_json = isset($_POST['challenge']) ? sanitize_text_field(wp_unslash($_POST['challenge'])) : '';
         $challenge = json_decode($challenge_json, true);
 
         if (!$challenge || !is_array($challenge)) {
@@ -2493,7 +2494,7 @@ final class WebDecoy_Plugin
         }
 
         $nonce = isset($_POST['pow_nonce']) ? intval($_POST['pow_nonce']) : 0;
-        $hash = isset($_POST['pow_hash']) ? wp_unslash($_POST['pow_hash']) : '';
+        $hash = isset($_POST['pow_hash']) ? sanitize_text_field(wp_unslash($_POST['pow_hash'])) : '';
         if (!preg_match('/^[0-9a-f]{64}$/i', $hash)) {
             wp_send_json_error(['message' => __('Invalid hash.', 'webdecoy')]);
             return;
@@ -2509,7 +2510,7 @@ final class WebDecoy_Plugin
         }
 
         // Score behavioral signals if provided
-        $behavioral_json = isset($_POST['behavioral']) ? wp_unslash($_POST['behavioral']) : '';
+        $behavioral_json = isset($_POST['behavioral']) ? sanitize_text_field(wp_unslash($_POST['behavioral'])) : '';
         $behavioral = json_decode($behavioral_json, true);
 
         if ($behavioral && is_array($behavioral)) {

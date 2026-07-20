@@ -146,7 +146,7 @@ class WebDecoy_PoW {
         }
 
         // Check for known bot UA patterns
-        $ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? $_SERVER['HTTP_USER_AGENT'] : '';
+        $ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
         if ( $this->is_suspicious_ua( $ua ) ) {
             $difficulty++;
         }

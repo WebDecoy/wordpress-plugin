@@ -19,8 +19,9 @@ $blocker = new WebDecoy_Blocker();
 
 // Handle actions
 if (isset($_POST['webdecoy_block_ip']) && isset($_POST['_wpnonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'webdecoy_block_ip') && current_user_can('manage_options')) {
-    $ip = sanitize_text_field($_POST['ip_address']);
-    $reason = sanitize_text_field($_POST['reason'] ?? '');
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- presence check only; the value is validated below after nonce and capability checks
+    $ip = sanitize_text_field(wp_unslash($_POST['ip_address']));
+    $reason = sanitize_text_field(wp_unslash($_POST['reason'] ?? ''));
     $duration = intval($_POST['duration'] ?? 24);
 
     if (filter_var($ip, FILTER_VALIDATE_IP)) {
