@@ -167,9 +167,9 @@ class WebDecoy_Detector
      */
     private function is_register_page(): bool
     {
-        return ($GLOBALS['pagenow'] ?? '') === 'wp-login.php' &&
-               isset($_REQUEST['action']) &&
-               $_REQUEST['action'] === 'register';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only page detection, no state change
+        $action = isset($_REQUEST['action']) ? sanitize_text_field(wp_unslash($_REQUEST['action'])) : '';
+        return ($GLOBALS['pagenow'] ?? '') === 'wp-login.php' && $action === 'register';
     }
 
     /**

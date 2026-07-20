@@ -265,7 +265,7 @@ class BotDetector
         foreach ($headers as $header) {
             // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- IP validated with FILTER_VALIDATE_IP below
             if (!empty($_SERVER[$header])) {
-                // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+                // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- WP path unslashes + sanitizes; the standalone fallback trims the raw value because wp_unslash() is unavailable outside WordPress
                 $ip = function_exists('sanitize_text_field') ? sanitize_text_field(wp_unslash($_SERVER[$header])) : trim($_SERVER[$header]);
                 // X-Forwarded-For can contain multiple IPs
                 if (strpos($ip, ',') !== false) {

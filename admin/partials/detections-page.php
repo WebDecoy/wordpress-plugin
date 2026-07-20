@@ -18,18 +18,19 @@ if (!current_user_can('manage_options')) {
 global $wpdb;
 
 $table = $wpdb->prefix . 'webdecoy_detections';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only admin list filtering via GET, no state change
 $page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
 $per_page = 50;
 $offset = ($page - 1) * $per_page;
 
 // Filters
-$threat_level = isset($_GET['threat_level']) ? sanitize_text_field($_GET['threat_level']) : '';
-$source = isset($_GET['source']) ? sanitize_text_field($_GET['source']) : '';
+$threat_level = isset($_GET['threat_level']) ? sanitize_text_field(wp_unslash($_GET['threat_level'])) : '';
+$source = isset($_GET['source']) ? sanitize_text_field(wp_unslash($_GET['source'])) : '';
 
 // Date range handling
-$date_from = isset($_GET['date_from']) ? sanitize_text_field($_GET['date_from']) : '';
-$date_to = isset($_GET['date_to']) ? sanitize_text_field($_GET['date_to']) : '';
-$range = isset($_GET['range']) ? sanitize_text_field($_GET['range']) : '';
+$date_from = isset($_GET['date_from']) ? sanitize_text_field(wp_unslash($_GET['date_from'])) : '';
+$date_to = isset($_GET['date_to']) ? sanitize_text_field(wp_unslash($_GET['date_to'])) : '';
+$range = isset($_GET['range']) ? sanitize_text_field(wp_unslash($_GET['range'])) : '';
 
 if ($range === 'today') {
     $date_from = gmdate('Y-m-d');
@@ -68,7 +69,7 @@ if ($date_to) {
 $where = implode(' AND ', $where_clauses);
 
 // Handle CSV export
-if (isset($_GET['action']) && $_GET['action'] === 'export_csv' && wp_verify_nonce($_GET['_wpnonce'] ?? '', 'webdecoy_export')) {
+if (isset($_GET['action']) && sanitize_text_field(wp_unslash($_GET['action'])) === 'export_csv' && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'] ?? '')), 'webdecoy_export')) {
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="webdecoy-detections-' . gmdate('Y-m-d') . '.csv"');
 
@@ -157,7 +158,7 @@ $blocker = new WebDecoy_Blocker();
                     if (!empty($_GET['date_from']) || !empty($_GET['date_to'])) {
                         $active_range = 'custom';
                     } elseif (isset($_GET['range'])) {
-                        $active_range = sanitize_text_field($_GET['range']);
+                        $active_range = sanitize_text_field(wp_unslash($_GET['range']));
                     }
                     ?>
                     <a href="<?php echo esc_url(add_query_arg(['page' => 'webdecoy-detections', 'range' => 'today'], admin_url('admin.php'))); ?>"

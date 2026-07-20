@@ -23,7 +23,7 @@ $checkout_table = $wpdb->prefix . 'webdecoy_checkout_attempts';
 // 30-day detection trend
 $thirty_days_ago = gmdate('Y-m-d H:i:s', strtotime('-30 days'));
 $daily_counts = $wpdb->get_results($wpdb->prepare(
-    "SELECT DATE(created_at) as date, COUNT(*) as count FROM {$detections_table} WHERE created_at > %s GROUP BY DATE(created_at) ORDER BY date ASC",
+    "SELECT DATE(created_at) as date, COUNT(*) as count FROM {$detections_table} WHERE created_at > %s GROUP BY DATE(created_at) ORDER BY date ASC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
     $thirty_days_ago
 ), ARRAY_A);
 
@@ -41,13 +41,13 @@ foreach ($daily_counts as $row) {
 
 // Threat level distribution
 $threat_distribution = $wpdb->get_results($wpdb->prepare(
-    "SELECT threat_level, COUNT(*) as count FROM {$detections_table} WHERE created_at > %s GROUP BY threat_level ORDER BY count DESC",
+    "SELECT threat_level, COUNT(*) as count FROM {$detections_table} WHERE created_at > %s GROUP BY threat_level ORDER BY count DESC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
     $thirty_days_ago
 ), ARRAY_A);
 
 // Top flagged signals (parse from JSON flags)
 $recent_flags = $wpdb->get_results($wpdb->prepare(
-    "SELECT flags FROM {$detections_table} WHERE created_at > %s AND flags IS NOT NULL AND flags != '' LIMIT 500",
+    "SELECT flags FROM {$detections_table} WHERE created_at > %s AND flags IS NOT NULL AND flags != '' LIMIT 500", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
     $thirty_days_ago
 ), ARRAY_A);
 
@@ -78,29 +78,29 @@ $top_signals = array_slice($signal_counts, 0, 10, true);
 
 // Top blocked IPs
 $top_ips = $wpdb->get_results($wpdb->prepare(
-    "SELECT ip_address, COUNT(*) as count, MAX(created_at) as last_seen FROM {$detections_table} WHERE created_at > %s GROUP BY ip_address ORDER BY count DESC LIMIT 10",
+    "SELECT ip_address, COUNT(*) as count, MAX(created_at) as last_seen FROM {$detections_table} WHERE created_at > %s GROUP BY ip_address ORDER BY count DESC LIMIT 10", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
     $thirty_days_ago
 ), ARRAY_A);
 
 // Source distribution
 $source_distribution = $wpdb->get_results($wpdb->prepare(
-    "SELECT source, COUNT(*) as count FROM {$detections_table} WHERE created_at > %s GROUP BY source ORDER BY count DESC",
+    "SELECT source, COUNT(*) as count FROM {$detections_table} WHERE created_at > %s GROUP BY source ORDER BY count DESC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
     $thirty_days_ago
 ), ARRAY_A);
 
 // Overall stats
 $total_30d = array_sum($daily_data);
 $total_7d = $wpdb->get_var($wpdb->prepare(
-    "SELECT COUNT(*) FROM {$detections_table} WHERE created_at > %s",
+    "SELECT COUNT(*) FROM {$detections_table} WHERE created_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
     gmdate('Y-m-d H:i:s', strtotime('-7 days'))
 ));
 $total_today = $wpdb->get_var($wpdb->prepare(
-    "SELECT COUNT(*) FROM {$detections_table} WHERE created_at > %s",
+    "SELECT COUNT(*) FROM {$detections_table} WHERE created_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
     gmdate('Y-m-d 00:00:00')
 ));
 // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- static query, no user input
 $active_blocks = $wpdb->get_var(
-    "SELECT COUNT(*) FROM {$blocked_table} WHERE expires_at IS NULL OR expires_at > NOW()"
+    "SELECT COUNT(*) FROM {$blocked_table} WHERE expires_at IS NULL OR expires_at > NOW()" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
 );
 
 // WooCommerce stats (if active)
@@ -108,11 +108,11 @@ $woo_stats = null;
 if (class_exists('WooCommerce')) {
     $woo_stats = [
         'attempts' => (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$checkout_table} WHERE created_at > %s",
+            "SELECT COUNT(*) FROM {$checkout_table} WHERE created_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
             $thirty_days_ago
         )),
         'blocked' => (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$checkout_table} WHERE created_at > %s AND status = 'blocked'",
+            "SELECT COUNT(*) FROM {$checkout_table} WHERE created_at > %s AND status = 'blocked'", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
             $thirty_days_ago
         )),
     ];

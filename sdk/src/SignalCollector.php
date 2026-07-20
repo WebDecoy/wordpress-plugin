@@ -82,7 +82,7 @@ class SignalCollector
             return $default;
         }
 
-        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized below
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- WP path unslashes + sanitizes below; the standalone fallback trims the raw value because wp_unslash() is unavailable outside WordPress
         $value = $_SERVER[$key];
 
         // Use WordPress sanitization if available
