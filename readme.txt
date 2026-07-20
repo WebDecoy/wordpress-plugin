@@ -173,6 +173,9 @@ Privacy Policy: https://webdecoy.com/privacy
 
 **Without an API key, the plugin operates 100% locally — no external connections on the front end or back end.** Chart.js (used for the admin Statistics charts) is bundled with the plugin, not loaded from a CDN.
 
+= Bundled third-party libraries =
+Chart.js v4.4.9 (MIT license) is included at admin/js/vendor/chart.umd.min.js for the admin Statistics charts. It is the official distribution build; the human-readable source is available at https://github.com/chartjs/Chart.js/releases/tag/v4.4.9 . No other third-party libraries are bundled.
+
 == Screenshots ==
 
 1. Protection settings — configure detection and blocking
