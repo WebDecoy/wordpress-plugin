@@ -3,7 +3,7 @@
  * Plugin Name: WebDecoy Bot Detection
  * Plugin URI: https://webdecoy.com/wordpress
  * Description: Protect your WordPress site from bots, spam, and carding attacks with WebDecoy's advanced threat detection.
- * Version: 2.2.0
+ * Version: 2.2.1
  * Requires at least: 5.6
  * Requires PHP: 7.4
  * Author: WebDecoy
@@ -41,7 +41,7 @@ if (!function_exists('str_starts_with')) {
 }
 
 // Plugin constants
-define('WEBDECOY_VERSION', '2.2.0');
+define('WEBDECOY_VERSION', '2.2.1');
 define('WEBDECOY_PLUGIN_FILE', __FILE__);
 define('WEBDECOY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WEBDECOY_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -593,14 +593,16 @@ final class WebDecoy_Plugin
         register_activation_hook(WEBDECOY_PLUGIN_FILE, [$this, 'activate']);
         register_deactivation_hook(WEBDECOY_PLUGIN_FILE, [$this, 'deactivate']);
 
-        // Self-hosted update mechanism: Only active when WEBDECOY_SELF_HOSTED constant is defined.
-        // WordPress.org installs use the standard WordPress.org update system exclusively.
-        // This code is inert by default and does not run on WordPress.org-distributed copies.
+        // Self-hosted update mechanism: CDN distribution only, gated behind the
+        // WEBDECOY_SELF_HOSTED constant AND the presence of the updater file.
+        // The WordPress.org build (build.sh --org) omits class-webdecoy-updater.php,
+        // so this stays inert there — .org installs update exclusively via .org.
         if (defined('WEBDECOY_SELF_HOSTED') && WEBDECOY_SELF_HOSTED) {
-            add_filter('pre_set_site_transient_update_plugins', [$this, 'check_for_updates']);
-            add_filter('plugins_api', [$this, 'plugin_info'], 10, 3);
-            // Verify the downloaded package's checksum before WordPress installs it.
-            add_filter('upgrader_pre_download', [$this, 'verify_update_package'], 10, 3);
+            $updater_file = WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-updater.php';
+            if (file_exists($updater_file)) {
+                require_once $updater_file;
+                new WebDecoy_Updater();
+            }
         }
 
         // Early request check (as early as possible)
@@ -1950,11 +1952,13 @@ final class WebDecoy_Plugin
 
         // Load Chart.js and charts script on statistics page
         if ($hook === 'webdecoy_page_webdecoy-statistics') {
+            // Chart.js is bundled locally (admin/js/vendor/) rather than loaded
+            // from a CDN, so the plugin makes no external requests.
             wp_enqueue_script(
                 'chartjs',
-                'https://cdn.jsdelivr.net/npm/chart.js@4.4/dist/chart.umd.min.js',
+                WEBDECOY_PLUGIN_URL . 'admin/js/vendor/chart.umd.min.js',
                 [],
-                '4.4.0',
+                '4.4.9',
                 true
             );
 
@@ -2012,6 +2016,12 @@ final class WebDecoy_Plugin
     public function enqueue_clearance_client(): void
     {
         if (empty($this->options['site_key'])) {
+            return;
+        }
+
+        // The WordPress.org build (build.sh --org) omits the bundled client, so
+        // no-op cleanly when the asset isn't present rather than enqueue a 404.
+        if (!file_exists(WEBDECOY_PLUGIN_DIR . 'public/js/webdecoy-clearance.js')) {
             return;
         }
 
@@ -2735,195 +2745,6 @@ final class WebDecoy_Plugin
         return $this->options;
     }
 
-    /**
-     * Check for plugin updates from WebDecoy CDN
-     *
-     * @param object $transient Update transient
-     * @return object Modified transient
-     */
-    public function check_for_updates($transient)
-    {
-        if (empty($transient->checked)) {
-            return $transient;
-        }
-
-        // Check for cached update info
-        $update_info = get_transient('webdecoy_update_info');
-
-        if ($update_info === false) {
-            // Fetch update info from WebDecoy
-            $response = wp_remote_get('https://cdn.webdecoy.com/wordpress/update-info.json', [
-                'timeout' => 10,
-                'headers' => [
-                    'Accept' => 'application/json',
-                ],
-            ]);
-
-            if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
-                return $transient;
-            }
-
-            $update_info = json_decode(wp_remote_retrieve_body($response), true);
-
-            if (!$update_info || !isset($update_info['version'])) {
-                return $transient;
-            }
-
-            // Cache for 12 hours
-            set_transient('webdecoy_update_info', $update_info, 12 * HOUR_IN_SECONDS);
-        }
-
-        // Compare versions
-        if (version_compare(WEBDECOY_VERSION, $update_info['version'], '<')) {
-            // Host-pin the package URL: WordPress will download and install whatever
-            // is at `package` with full privileges, so refuse any URL that is not an
-            // HTTPS link on our own CDN. Without this, a tampered update-info.json
-            // could point the installer at an attacker-controlled ZIP (RCE).
-            $download_url = $update_info['download_url'] ?? '';
-            if (!$this->is_trusted_package_url($download_url)) {
-                return $transient;
-            }
-
-            $transient->response[WEBDECOY_PLUGIN_BASENAME] = (object) [
-                'slug' => 'webdecoy',
-                'plugin' => WEBDECOY_PLUGIN_BASENAME,
-                'new_version' => $update_info['version'],
-                'package' => $download_url,
-                'url' => $update_info['details_url'] ?? 'https://webdecoy.com/wordpress',
-                'icons' => $update_info['icons'] ?? [],
-                'banners' => $update_info['banners'] ?? [],
-                'tested' => $update_info['tested'] ?? '',
-                'requires_php' => $update_info['requires_php'] ?? '7.4',
-            ];
-        }
-
-        return $transient;
-    }
-
-    /**
-     * Whether a package download URL is an HTTPS link on our own CDN host.
-     * Used to prevent the self-hosted updater from installing a ZIP from any
-     * other origin.
-     */
-    private function is_trusted_package_url(string $url): bool
-    {
-        if ($url === '') {
-            return false;
-        }
-        $parts = wp_parse_url($url);
-        if (empty($parts['scheme']) || empty($parts['host'])) {
-            return false;
-        }
-        return strtolower($parts['scheme']) === 'https'
-            && strtolower($parts['host']) === 'cdn.webdecoy.com';
-    }
-
-    /**
-     * Verify the integrity of the self-hosted update package before installation.
-     *
-     * Hooked on `upgrader_pre_download`. When the package is our CDN-hosted ZIP and
-     * the update metadata advertises a sha256, we download it ourselves, verify the
-     * checksum, and hand WordPress the verified local file. A mismatch (or a missing
-     * checksum) aborts the upgrade with a WP_Error rather than installing unverified
-     * code. Returning false defers to WordPress's normal download for anything that
-     * isn't our package.
-     *
-     * @param bool|WP_Error $reply   Short-circuit value (false to continue).
-     * @param string        $package The package URL being downloaded.
-     * @param object        $upgrader The upgrader instance.
-     * @return bool|string|\WP_Error
-     */
-    public function verify_update_package($reply, $package, $upgrader)
-    {
-        // Only act on our own CDN packages; let WP handle everything else.
-        if (!is_string($package) || !$this->is_trusted_package_url($package)) {
-            return $reply;
-        }
-
-        $update_info = get_transient('webdecoy_update_info');
-        $expected = is_array($update_info) ? ($update_info['sha256'] ?? '') : '';
-        $expected = is_string($expected) ? strtolower(trim($expected)) : '';
-
-        // Require a checksum to install self-hosted updates.
-        if (!preg_match('/^[a-f0-9]{64}$/', $expected)) {
-            return new \WP_Error(
-                'webdecoy_no_checksum',
-                __('WebDecoy update aborted: no valid checksum was provided for the package.', 'webdecoy')
-            );
-        }
-
-        if (!function_exists('download_url')) {
-            require_once ABSPATH . 'wp-admin/includes/file.php';
-        }
-
-        $tmp_file = download_url($package);
-        if (is_wp_error($tmp_file)) {
-            return $tmp_file;
-        }
-
-        $actual = hash_file('sha256', $tmp_file);
-        if (!hash_equals($expected, (string) $actual)) {
-            wp_delete_file($tmp_file);
-            return new \WP_Error(
-                'webdecoy_checksum_mismatch',
-                __('WebDecoy update aborted: package checksum did not match the expected value.', 'webdecoy')
-            );
-        }
-
-        // Verified: hand WordPress the local file to install.
-        return $tmp_file;
-    }
-
-    /**
-     * Plugin information for the update details popup
-     *
-     * @param false|object|array $result
-     * @param string $action
-     * @param object $args
-     * @return false|object
-     */
-    public function plugin_info($result, $action, $args)
-    {
-        if ($action !== 'plugin_information' || !isset($args->slug) || $args->slug !== 'webdecoy') {
-            return $result;
-        }
-
-        // Fetch plugin info from WebDecoy
-        $response = wp_remote_get('https://cdn.webdecoy.com/wordpress/plugin-info.json', [
-            'timeout' => 10,
-            'headers' => [
-                'Accept' => 'application/json',
-            ],
-        ]);
-
-        if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
-            return $result;
-        }
-
-        $info = json_decode(wp_remote_retrieve_body($response), true);
-
-        if (!$info) {
-            return $result;
-        }
-
-        return (object) [
-            'name' => $info['name'] ?? 'WebDecoy Bot Detection',
-            'slug' => 'webdecoy',
-            'version' => $info['version'] ?? WEBDECOY_VERSION,
-            'author' => $info['author'] ?? '<a href="https://webdecoy.com">WebDecoy</a>',
-            'author_profile' => $info['author_profile'] ?? 'https://webdecoy.com',
-            'requires' => $info['requires'] ?? '5.6',
-            'tested' => $info['tested'] ?? '',
-            'requires_php' => $info['requires_php'] ?? '7.4',
-            'sections' => $info['sections'] ?? [
-                'description' => 'Protect your WordPress site from bots, spam, and carding attacks.',
-                'changelog' => $info['changelog'] ?? '',
-            ],
-            'download_link' => $info['download_url'] ?? '',
-            'banners' => $info['banners'] ?? [],
-            'icons' => $info['icons'] ?? [],
-        ];
-    }
 }
 
 /**
