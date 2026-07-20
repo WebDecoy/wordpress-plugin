@@ -21,7 +21,7 @@ $blocked_table = $wpdb->prefix . 'webdecoy_blocked_ips';
 $checkout_table = $wpdb->prefix . 'webdecoy_checkout_attempts';
 
 // 30-day detection trend
-$thirty_days_ago = date('Y-m-d H:i:s', strtotime('-30 days'));
+$thirty_days_ago = gmdate('Y-m-d H:i:s', strtotime('-30 days'));
 $daily_counts = $wpdb->get_results($wpdb->prepare(
     "SELECT DATE(created_at) as date, COUNT(*) as count FROM {$detections_table} WHERE created_at > %s GROUP BY DATE(created_at) ORDER BY date ASC",
     $thirty_days_ago
@@ -30,7 +30,7 @@ $daily_counts = $wpdb->get_results($wpdb->prepare(
 // Fill in missing days with 0
 $daily_data = [];
 for ($i = 29; $i >= 0; $i--) {
-    $date = date('Y-m-d', strtotime("-{$i} days"));
+    $date = gmdate('Y-m-d', strtotime("-{$i} days"));
     $daily_data[$date] = 0;
 }
 foreach ($daily_counts as $row) {
@@ -92,11 +92,11 @@ $source_distribution = $wpdb->get_results($wpdb->prepare(
 $total_30d = array_sum($daily_data);
 $total_7d = $wpdb->get_var($wpdb->prepare(
     "SELECT COUNT(*) FROM {$detections_table} WHERE created_at > %s",
-    date('Y-m-d H:i:s', strtotime('-7 days'))
+    gmdate('Y-m-d H:i:s', strtotime('-7 days'))
 ));
 $total_today = $wpdb->get_var($wpdb->prepare(
     "SELECT COUNT(*) FROM {$detections_table} WHERE created_at > %s",
-    date('Y-m-d 00:00:00')
+    gmdate('Y-m-d 00:00:00')
 ));
 // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- static query, no user input
 $active_blocks = $wpdb->get_var(

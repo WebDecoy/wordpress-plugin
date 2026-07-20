@@ -58,7 +58,7 @@ class WebDecoy_Blocker
 
         $expires_at = null;
         if ($duration_hours !== null && $duration_hours > 0) {
-            $expires_at = date('Y-m-d H:i:s', strtotime("+{$duration_hours} hours"));
+            $expires_at = gmdate('Y-m-d H:i:s', strtotime("+{$duration_hours} hours"));
         }
 
         // Check if already blocked
@@ -273,7 +273,7 @@ class WebDecoy_Blocker
 
         $new_expires = null;
         if ($info['expires_at']) {
-            $new_expires = date('Y-m-d H:i:s', strtotime($info['expires_at'] . " +{$hours} hours"));
+            $new_expires = gmdate('Y-m-d H:i:s', strtotime($info['expires_at'] . " +{$hours} hours"));
         }
 
         $result = $wpdb->update(
@@ -300,8 +300,10 @@ class WebDecoy_Blocker
 
         $count = $wpdb->query("DELETE FROM {$table}");
 
-        // Clear all cache
-        wp_cache_flush_group('webdecoy');
+        // Clear all cache (wp_cache_flush_group() requires WP 6.1+)
+        if (function_exists('wp_cache_flush_group')) {
+            wp_cache_flush_group('webdecoy');
+        }
 
         return $count;
     }
@@ -598,7 +600,7 @@ class WebDecoy_Blocker
         // Blocks in last 24 hours
         $recent = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$table} WHERE blocked_at > %s",
-            date('Y-m-d H:i:s', strtotime('-24 hours'))
+            gmdate('Y-m-d H:i:s', strtotime('-24 hours'))
         ));
 
         return [

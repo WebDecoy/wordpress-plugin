@@ -3,7 +3,7 @@ Contributors: webdecoy
 Donate link: https://webdecoy.com
 Tags: security, bot detection, spam protection, woocommerce, firewall
 Requires at least: 5.6
-Tested up to: 6.8
+Tested up to: 6.7
 Stable tag: 2.2.1
 Requires PHP: 7.4
 License: GPLv2 or later

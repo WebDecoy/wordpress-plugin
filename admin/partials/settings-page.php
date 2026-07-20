@@ -768,6 +768,7 @@ $options = get_option('webdecoy_options', []);
                             <?php if ($last_check) : ?>
                                 <p class="description">
                                     <?php printf(
+                                        /* translators: %s: date and time the API connection was last checked */
                                         esc_html__('Last checked: %s', 'webdecoy'),
                                         esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($last_check)))
                                     ); ?>

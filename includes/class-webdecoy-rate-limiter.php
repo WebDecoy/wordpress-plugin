@@ -85,8 +85,8 @@ class WebDecoy_Rate_Limiter
         global $wpdb;
 
         $table = $wpdb->prefix . 'webdecoy_rate_limits';
-        $now = current_time('mysql');
-        $window_start_threshold = date('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
+        $now = current_time('mysql', true);
+        $window_start_threshold = gmdate('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
 
         $existing = $wpdb->get_row($wpdb->prepare(
             "SELECT request_count, window_start FROM {$table} WHERE ip_address = %s AND window_start > %s",
@@ -127,8 +127,8 @@ class WebDecoy_Rate_Limiter
         global $wpdb;
 
         $table = $wpdb->prefix . 'webdecoy_rate_limits';
-        $now = current_time('mysql');
-        $window_start = date('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
+        $now = current_time('mysql', true);
+        $window_start = gmdate('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
 
         // Check for existing record in current window
         $existing = $wpdb->get_row($wpdb->prepare(
@@ -169,7 +169,7 @@ class WebDecoy_Rate_Limiter
         global $wpdb;
 
         $table = $wpdb->prefix . 'webdecoy_rate_limits';
-        $window_start = date('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
+        $window_start = gmdate('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
 
         $count = $wpdb->get_var($wpdb->prepare(
             "SELECT request_count FROM {$table} WHERE ip_address = %s AND window_start > %s",
@@ -203,7 +203,7 @@ class WebDecoy_Rate_Limiter
         global $wpdb;
 
         $table = $wpdb->prefix . 'webdecoy_rate_limits';
-        $window_start_threshold = date('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
+        $window_start_threshold = gmdate('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
 
         $window_start = $wpdb->get_var($wpdb->prepare(
             "SELECT window_start FROM {$table} WHERE ip_address = %s AND window_start > %s",
@@ -246,7 +246,7 @@ class WebDecoy_Rate_Limiter
         global $wpdb;
 
         $table = $wpdb->prefix . 'webdecoy_rate_limits';
-        $threshold = date('Y-m-d H:i:s', strtotime('-1 hour'));
+        $threshold = gmdate('Y-m-d H:i:s', strtotime('-1 hour'));
 
         return $wpdb->query($wpdb->prepare(
             "DELETE FROM {$table} WHERE window_start < %s",
@@ -339,7 +339,7 @@ class WebDecoy_Rate_Limiter
         global $wpdb;
 
         $table = $wpdb->prefix . 'webdecoy_rate_limits';
-        $window_start = date('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
+        $window_start = gmdate('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
 
         $active_ips = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(DISTINCT ip_address) FROM {$table} WHERE window_start > %s",

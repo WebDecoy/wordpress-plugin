@@ -275,7 +275,7 @@ class WebDecoy_Detector
         global $wpdb;
 
         $table = $wpdb->prefix . 'webdecoy_detections';
-        $since = date('Y-m-d H:i:s', strtotime("-{$days} days"));
+        $since = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
 
         $total = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$table} WHERE created_at > %s",
@@ -317,7 +317,7 @@ class WebDecoy_Detector
         global $wpdb;
 
         $table = $wpdb->prefix . 'webdecoy_detections';
-        $since = date('Y-m-d H:i:s', strtotime("-{$days} days"));
+        $since = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
 
         return (int) $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(DISTINCT ip_address) FROM {$table} WHERE created_at > %s",

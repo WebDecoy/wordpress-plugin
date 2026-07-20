@@ -245,7 +245,7 @@ class WebDecoy_Decoy_Response
         $start = time();
         $i = 0;
         while ((time() - $start) < $budget) {
-            echo '<!-- ' . str_repeat('.', 8) . " {$i} -->\n";
+            echo '<!-- ' . str_repeat('.', 8) . " {$i} -->\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- template-generated decoy content, contains no user input
             if (function_exists('flush')) {
                 @flush(); // phpcs:ignore
             }

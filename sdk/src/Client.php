@@ -308,7 +308,7 @@ class Client
             return true;
         } catch (WebDecoyException $e) {
             if ($e->getCode() === 401 || $e->getCode() === 403) {
-                throw new WebDecoyException('Invalid API key or insufficient permissions', $e->getCode());
+                throw new WebDecoyException('Invalid API key or insufficient permissions', $e->getCode()); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- internal exception, never output to the browser
             }
             throw $e;
         }
@@ -328,7 +328,7 @@ class Client
     /**
      * Make an HTTP request to the API
      *
-     * Uses WordPress HTTP API when available, falls back to cURL otherwise.
+     * Uses the WordPress HTTP API, which is always available inside WordPress.
      *
      * @param string $method HTTP method
      * @param string $endpoint API endpoint
@@ -349,13 +349,12 @@ class Client
             $data = [];
         }
 
-        // Use WordPress HTTP API if available (preferred for WP plugins)
-        if (function_exists('wp_remote_request')) {
-            return $this->requestWithWordPress($method, $url, $data, $authenticated);
+        // Use the WordPress HTTP API (always available inside WordPress).
+        if (!function_exists('wp_remote_request')) {
+            throw new WebDecoyException('WordPress HTTP API is unavailable', 0); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- internal exception, never output to the browser
         }
 
-        // Fall back to cURL for non-WordPress environments
-        return $this->requestWithCurl($method, $url, $data, $authenticated);
+        return $this->requestWithWordPress($method, $url, $data, $authenticated);
     }
 
     /**
@@ -394,7 +393,7 @@ class Client
         $response = wp_remote_request($url, $args);
 
         if (is_wp_error($response)) {
-            throw new WebDecoyException('API request failed: ' . $response->get_error_message(), 0);
+            throw new WebDecoyException('API request failed: ' . $response->get_error_message(), 0); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- internal exception, never output to the browser
         }
 
         $httpCode = wp_remote_retrieve_response_code($response);
@@ -403,74 +402,7 @@ class Client
 
         if ($httpCode >= 400) {
             $message = $decoded['error']['message'] ?? $decoded['message'] ?? 'Unknown error';
-            throw new WebDecoyException("API error: {$message}", $httpCode);
-        }
-
-        return $decoded ?? [];
-    }
-
-    /**
-     * Make HTTP request using cURL (fallback for non-WordPress environments)
-     *
-     * @param string $method HTTP method
-     * @param string $url Full URL
-     * @param array $data Request data
-     * @param bool $authenticated Whether to include API key auth
-     * @return array Decoded response
-     * @throws WebDecoyException On error
-     */
-    private function requestWithCurl(string $method, string $url, array $data, bool $authenticated): array
-    {
-        $headers = [
-            'Content-Type: application/json',
-            'Accept: application/json',
-            'User-Agent: ' . self::userAgent(),
-        ];
-
-        if ($authenticated) {
-            $headers[] = 'Authorization: Bearer ' . $this->apiKey;
-        }
-
-        $ch = curl_init();
-
-        curl_setopt_array($ch, [
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => $this->timeout,
-            CURLOPT_HTTPHEADER => $headers,
-            CURLOPT_SSL_VERIFYPEER => $this->verifySsl,
-            CURLOPT_SSL_VERIFYHOST => $this->verifySsl ? 2 : 0,
-        ]);
-
-        switch ($method) {
-            case 'POST':
-                curl_setopt($ch, CURLOPT_POST, true);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-                break;
-            case 'PUT':
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-                break;
-            case 'DELETE':
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-                break;
-        }
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-
-        curl_close($ch);
-
-        if ($error) {
-            throw new WebDecoyException("API request failed: {$error}", 0);
-        }
-
-        $decoded = json_decode($response, true);
-
-        if ($httpCode >= 400) {
-            $message = $decoded['error']['message'] ?? $decoded['message'] ?? 'Unknown error';
-            throw new WebDecoyException("API error: {$message}", $httpCode);
+            throw new WebDecoyException("API error: {$message}", $httpCode); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- internal exception, never output to the browser
         }
 
         return $decoded ?? [];

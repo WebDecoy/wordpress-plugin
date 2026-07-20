@@ -671,7 +671,7 @@ add_action('woocommerce_blocks_loaded', function () {
             if ($blocker->is_blocked($ip)) {
                 throw new \Automattic\WooCommerce\StoreApi\Exceptions\RouteException(
                     'webdecoy_blocked',
-                    __('Your checkout has been blocked due to suspicious activity.', 'webdecoy'),
+                    esc_html(__('Your checkout has been blocked due to suspicious activity.', 'webdecoy')),
                     403
                 );
             }
@@ -686,7 +686,7 @@ add_action('woocommerce_blocks_loaded', function () {
 
                 throw new \Automattic\WooCommerce\StoreApi\Exceptions\RouteException(
                     'webdecoy_velocity',
-                    __('Too many checkout attempts. Please try again later.', 'webdecoy'),
+                    esc_html(__('Too many checkout attempts. Please try again later.', 'webdecoy')),
                     429
                 );
             }
@@ -701,7 +701,7 @@ add_action('woocommerce_blocks_loaded', function () {
 
                 throw new \Automattic\WooCommerce\StoreApi\Exceptions\RouteException(
                     'webdecoy_carding',
-                    __('Suspicious checkout activity detected.', 'webdecoy'),
+                    esc_html(__('Suspicious checkout activity detected.', 'webdecoy')),
                     403
                 );
             }

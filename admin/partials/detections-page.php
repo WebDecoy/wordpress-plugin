@@ -32,14 +32,14 @@ $date_to = isset($_GET['date_to']) ? sanitize_text_field($_GET['date_to']) : '';
 $range = isset($_GET['range']) ? sanitize_text_field($_GET['range']) : '';
 
 if ($range === 'today') {
-    $date_from = date('Y-m-d');
-    $date_to = date('Y-m-d');
+    $date_from = gmdate('Y-m-d');
+    $date_to = gmdate('Y-m-d');
 } elseif ($range === '7d') {
-    $date_from = date('Y-m-d', strtotime('-7 days'));
-    $date_to = date('Y-m-d');
+    $date_from = gmdate('Y-m-d', strtotime('-7 days'));
+    $date_to = gmdate('Y-m-d');
 } elseif ($range === '30d') {
-    $date_from = date('Y-m-d', strtotime('-30 days'));
-    $date_to = date('Y-m-d');
+    $date_from = gmdate('Y-m-d', strtotime('-30 days'));
+    $date_to = gmdate('Y-m-d');
 }
 
 // Build query with always using prepare() for safety
@@ -70,7 +70,7 @@ $where = implode(' AND ', $where_clauses);
 // Handle CSV export
 if (isset($_GET['action']) && $_GET['action'] === 'export_csv' && wp_verify_nonce($_GET['_wpnonce'] ?? '', 'webdecoy_export')) {
     header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="webdecoy-detections-' . date('Y-m-d') . '.csv"');
+    header('Content-Disposition: attachment; filename="webdecoy-detections-' . gmdate('Y-m-d') . '.csv"');
 
     // Neutralize CSV/spreadsheet formula injection: fields like user_agent and
     // flags come from untrusted request data, so a value beginning with =, +, -,
@@ -103,7 +103,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'export_csv' && wp_verify_nonc
         ]);
     }
 
-    fclose($output);
+    fclose($output); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- streaming CSV to php://output for download, not filesystem access
     exit;
 }
 
