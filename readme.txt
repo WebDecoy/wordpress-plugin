@@ -52,7 +52,7 @@ WebDecoy is a **free, fully-functional** bot detection and protection plugin tha
 * Comment spam protection
 * Login brute force protection
 * Registration spam prevention
-* Invisible honeypot fields with obfuscated names
+* Invisible honeypot fields on comment, login, and registration forms
 
 **WooCommerce Protection**
 * Checkout carding attack prevention

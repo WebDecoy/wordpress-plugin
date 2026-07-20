@@ -29,3 +29,6 @@ composer.lock
 
 # Logs
 *.log
+
+# WordPress.org SVN working copy (created by bin/deploy-wporg.sh)
+/.svn-wporg/
