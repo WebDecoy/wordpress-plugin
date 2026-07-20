@@ -9,7 +9,7 @@ Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Zero-configuration bot protection for WordPress. Works immediately on activation — no account, no API key, no external dependencies. Multi-layer detection with invisible proof-of-work challenges.
+Zero-config bot, spam, and carding protection. Works instantly on activation, with no account, API key, or external connections.
 
 == Description ==
 
