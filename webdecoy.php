@@ -4,7 +4,7 @@
  * Plugin URI: https://webdecoy.com/wordpress
  * Description: Protect your WordPress site from bots, spam, and carding attacks with WebDecoy's advanced threat detection.
  * Version: 2.2.1
- * Requires at least: 5.6
+ * Requires at least: 6.1
  * Requires PHP: 7.4
  * Author: WebDecoy
  * Author URI: https://webdecoy.com
@@ -1365,7 +1365,7 @@ final class WebDecoy_Plugin
         $message = __('Please verify that you are human to continue.', 'webdecoy');
         $challenge_data = $pow->generate_challenge($ip, intval($this->options['pow_difficulty'] ?? 4));
         $redirect_url = $this->get_current_url();
-        if (parse_url($redirect_url, PHP_URL_HOST) !== parse_url(home_url(), PHP_URL_HOST)) {
+        if (wp_parse_url($redirect_url, PHP_URL_HOST) !== wp_parse_url(home_url(), PHP_URL_HOST)) {
             $redirect_url = home_url('/');
         }
         $ajax_url = admin_url('admin-ajax.php');
@@ -1941,8 +1941,10 @@ final class WebDecoy_Plugin
                 'testSuccess' => __('Connection successful!', 'webdecoy'),
                 'testFailed' => __('Connection failed:', 'webdecoy'),
                 'connectionFailed' => __('Connection failed', 'webdecoy'),
+                /* translators: %s: IP address to block */
                 'confirmBlock' => __('Are you sure you want to block %s?', 'webdecoy'),
                 'confirmUnblock' => __('Are you sure you want to unblock this IP?', 'webdecoy'),
+                /* translators: %d: number of IP addresses to block */
                 'confirmBulkBlock' => __('Are you sure you want to block %d IPs?', 'webdecoy'),
                 'selectIPs' => __('Please select at least one IP to block.', 'webdecoy'),
                 'toggleVisibility' => __('Toggle visibility', 'webdecoy'),
@@ -2346,8 +2348,8 @@ final class WebDecoy_Plugin
 
         try {
             $stats = $client->getStats(
-                date('Y-m-d', strtotime('-7 days')),
-                date('Y-m-d')
+                gmdate('Y-m-d', strtotime('-7 days')),
+                gmdate('Y-m-d')
             );
             wp_send_json_success($stats);
         } catch (\Exception $e) {

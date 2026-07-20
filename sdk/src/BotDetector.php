@@ -457,7 +457,7 @@ class BotDetector
 
         // Extract path from URL if full URL provided
         if (strpos($path, '://') !== false) {
-            $parsed = parse_url($path);
+            $parsed = function_exists('wp_parse_url') ? wp_parse_url($path) : parse_url($path); // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url -- guarded fallback for non-WordPress (standalone SDK) use
             $path = ($parsed['path'] ?? '/') . (isset($parsed['query']) ? '?' . $parsed['query'] : '');
         }
 

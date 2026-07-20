@@ -173,7 +173,9 @@ $expires_at = isset($block_info['expires_at']) ? $block_info['expires_at'] : nul
         <?php if ($show_contact && $contact_email) : ?>
         <div class="contact-section">
             <p><?php esc_html_e('If you believe this is a mistake, please contact us:', 'webdecoy'); ?></p>
-            <a href="mailto:<?php echo esc_attr($contact_email); ?>?subject=<?php echo esc_attr(sprintf(__('Block Appeal - %s', 'webdecoy'), $visitor_ip ?? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'] ?? '')))); ?>" class="contact-link">
+            <a href="mailto:<?php echo esc_attr($contact_email); ?>?subject=<?php
+            /* translators: %s: visitor IP address */
+            echo esc_attr(sprintf(__('Block Appeal - %s', 'webdecoy'), $visitor_ip ?? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'] ?? '')))); ?>" class="contact-link">
                 <?php esc_html_e('Contact Support', 'webdecoy'); ?>
             </a>
         </div>
@@ -181,7 +183,7 @@ $expires_at = isset($block_info['expires_at']) ? $block_info['expires_at'] : nul
 
         <p class="reference-id">
             <?php esc_html_e('Reference ID:', 'webdecoy'); ?>
-            <code><?php echo esc_html(substr(md5(($visitor_ip ?? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'] ?? ''))) . date('Ymd')), 0, 12)); ?></code>
+            <code><?php echo esc_html(substr(md5(($visitor_ip ?? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'] ?? ''))) . gmdate('Ymd')), 0, 12)); ?></code>
         </p>
     </div>
 </body>

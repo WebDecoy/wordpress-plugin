@@ -167,7 +167,7 @@ final class Tokenizer
                 continue;
             }
 
-            throw new FilterSyntaxException("Unexpected character '{$ch}' at position {$this->pos}");
+            throw new FilterSyntaxException("Unexpected character '{$ch}' at position {$this->pos}"); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- internal exception, never output to the browser
         }
 
         $this->tokens[] = ['type' => TokenType::EOF, 'value' => '', 'position' => $this->pos];
@@ -210,7 +210,7 @@ final class Tokenizer
             $this->pos++;
         }
         if ($this->pos >= $len) {
-            throw new FilterSyntaxException("Unterminated string at position {$start}");
+            throw new FilterSyntaxException("Unterminated string at position {$start}"); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- internal exception, never output to the browser
         }
         $this->pos++; // skip closing quote
         $this->tokens[] = ['type' => TokenType::STRING, 'value' => $value, 'position' => $start];

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace WebDecoy;
 
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 // PHP 7.4 polyfill for str_ends_with (available in PHP 8.0+)
 // Kept here for non-WordPress contexts where webdecoy.php is not loaded
 if (!function_exists('str_ends_with')) {
@@ -692,7 +696,9 @@ class GoodBotList
         // Step 2: Check if hostname ends with expected suffix
         $matchesSuffix = false;
         foreach ($expectedSuffixes as $suffix) {
-            if (str_ends_with($hostname, strtolower($suffix))) {
+            $suffixLower = strtolower($suffix);
+            $suffixLen = strlen($suffixLower);
+            if ($suffixLen === 0 || substr($hostname, -$suffixLen) === $suffixLower) {
                 $matchesSuffix = true;
                 break;
             }

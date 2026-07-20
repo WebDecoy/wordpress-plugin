@@ -178,7 +178,7 @@ final class Parser
             $path = [$this->advance()['value']];
             while ($this->match(TokenType::DOT)) {
                 if (!$this->check(TokenType::IDENT)) {
-                    throw new FilterSyntaxException('Expected identifier after "." at position ' . $this->current()['position']);
+                    throw new FilterSyntaxException('Expected identifier after "." at position ' . $this->current()['position']); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- internal exception, never output to the browser
                 }
                 $path[] = $this->advance()['value'];
             }
@@ -200,7 +200,7 @@ final class Parser
             return ['kind' => 'property', 'path' => $path];
         }
 
-        throw new FilterSyntaxException('Unexpected token "' . $this->current()['value'] . '" at position ' . $this->current()['position']);
+        throw new FilterSyntaxException('Unexpected token "' . $this->current()['value'] . '" at position ' . $this->current()['position']); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- internal exception, never output to the browser
     }
 
     /**
@@ -246,6 +246,6 @@ final class Parser
         if ($this->check($type)) {
             return $this->advance();
         }
-        throw new FilterSyntaxException($message . ', got "' . $this->current()['value'] . '" at position ' . $this->current()['position']);
+        throw new FilterSyntaxException($message . ', got "' . $this->current()['value'] . '" at position ' . $this->current()['position']); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- internal exception, never output to the browser
     }
 }

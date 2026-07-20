@@ -65,7 +65,8 @@ class SignalCollector
         }
 
         // Fallback sanitization for non-WordPress environments
-        return htmlspecialchars(strip_tags(trim($value)), ENT_QUOTES, 'UTF-8');
+        $stripped = function_exists('wp_strip_all_tags') ? wp_strip_all_tags(trim($value)) : strip_tags(trim($value)); // phpcs:ignore WordPress.WP.AlternativeFunctions.strip_tags_strip_tags -- guarded fallback for non-WordPress (standalone SDK) use
+        return htmlspecialchars($stripped, ENT_QUOTES, 'UTF-8');
     }
 
     /**
