@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: security, bot detection, spam protection, woocommerce, firewall
 Requires at least: 6.1
 Tested up to: 7.0
-Stable tag: 2.2.1
+Stable tag: 2.2.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -185,6 +185,13 @@ Privacy Policy: https://webdecoy.com/privacy
 8. Challenge page — invisible proof-of-work for suspicious visitors
 
 == Changelog ==
+
+= 2.2.2 =
+* Fixed: A PHP 7.4 fatal error in good-bot verification (use of a PHP 8 function)
+* Fixed: Timezone-safe date handling throughout
+* Changed: The bundled SDK now uses the WordPress HTTP API exclusively (removed the raw cURL fallback)
+* Changed: Requires WordPress 6.1+; tested up to WordPress 7.0
+* Internal: Full WordPress Plugin Check compliance (resolved 69 flagged items)
 
 = 2.2.1 =
 * Changed: Chart.js (admin Statistics charts) is now bundled with the plugin instead of loaded from a CDN — the plugin makes no external requests until you connect a WebDecoy Cloud account

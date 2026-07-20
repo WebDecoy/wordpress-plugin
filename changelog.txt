@@ -1,5 +1,12 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.2.2 - 2026-07-20 =
+* Fixed: A PHP 7.4 fatal error in good-bot verification (str_ends_with is PHP 8.0+)
+* Fixed: Timezone-safe date handling throughout (date() -> gmdate())
+* Changed: The bundled SDK now uses the WordPress HTTP API exclusively (removed the raw cURL fallback)
+* Changed: Requires WordPress 6.1+ (wp_cache_flush_group); tested up to WordPress 7.0
+* Internal: Full WordPress Plugin Check compliance — resolved all 69 flagged errors
+
 = 2.2.1 - 2026-07-19 =
 * Changed: Chart.js is now bundled with the plugin instead of loaded from a CDN — no external requests for the admin charts
 * Changed: Clarified the External Services disclosure in readme
