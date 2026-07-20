@@ -15,10 +15,17 @@ Update the version string in **all** of these:
 The SDK `User-Agent` derives from `WEBDECOY_VERSION` automatically — nothing to
 bump there.
 
+## Two distribution channels / two builds
+
+There are two builds from one codebase:
+
+- **CDN / self-hosted** — `./build.sh <version>` → `dist/webdecoy-<version>.zip`. Includes the self-hosted updater (`includes/class-webdecoy-updater.php`) and the bundled clearance client (`public/js/webdecoy-clearance.js`). This is what `release.sh` builds and uploads to the CDN.
+- **WordPress.org** — `./build.sh <version> --org` → `dist/webdecoy-<version>-wporg.zip`. Strips the self-updater (the directory forbids self-updating plugins) and the minified clearance client, and drops CDN release tooling. This is what you submit to / commit to WordPress.org SVN. Chart.js is bundled locally in both builds.
+
 ## 2. Build + prepare CDN metadata
 
 ```bash
-./release.sh <version>     # e.g. ./release.sh 2.2.0
+./release.sh <version>     # e.g. ./release.sh 2.2.1  (CDN build)
 ```
 
 This runs `build.sh`, produces `dist/webdecoy-<version>.zip`, and regenerates

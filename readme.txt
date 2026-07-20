@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: security, bot detection, spam protection, woocommerce, firewall
 Requires at least: 5.6
 Tested up to: 6.8
-Stable tag: 2.2.0
+Stable tag: 2.2.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -15,7 +15,7 @@ Zero-configuration bot protection for WordPress. Works immediately on activation
 
 WebDecoy is a **free, fully-functional** bot detection and protection plugin that works 100% locally. Unlike CAPTCHA solutions that frustrate visitors, WebDecoy uses invisible multi-layer detection — legitimate users never see challenges or interruptions.
 
-**Works immediately on activation.** No account needed. No API key required. No external connections on the front end. (The admin Statistics page loads Chart.js from the jsDelivr CDN.)
+**Works immediately on activation.** No account needed. No API key required. No external connections at all until you optionally connect a WebDecoy Cloud account.
 
 = Why WebDecoy? =
 
@@ -149,7 +149,7 @@ Yes. WebDecoy includes specialized carding protection for WooCommerce including 
 
 = Is my data secure? =
 
-Without an API key, the plugin makes **zero external connections on the front end** — visitors' browsers never contact third-party servers. The admin Statistics page loads Chart.js from the jsDelivr CDN (see External Services below). All detection data stays on your server. Detection logs are automatically cleaned up after 30 days. When using WebDecoy Cloud, all communication is encrypted over HTTPS.
+Without an API key, the plugin makes **zero external connections** — visitors' browsers never contact third-party servers, and neither does your server. Chart.js (admin charts) is bundled with the plugin. All detection data stays on your server, and detection logs are automatically cleaned up after 30 days. When you optionally connect WebDecoy Cloud, all communication is encrypted over HTTPS (see External Services below).
 
 = How does the proof-of-work challenge work? =
 
@@ -159,18 +159,19 @@ When a suspicious visitor is detected and your block action is set to "Challenge
 
 This plugin can optionally connect to the following external services when you provide an API key:
 
-= WebDecoy Cloud (api.webdecoy.com / ingest.webdecoy.com) =
-Used for: Threat intelligence feeds, IP reputation data, cross-site intelligence, cloud analytics, detection forwarding
-When connected: Detection data (IP addresses, user agents, threat scores) is sent to WebDecoy Cloud for analysis
-Privacy Policy: [https://webdecoy.com/privacy](https://webdecoy.com/privacy)
-Terms of Service: [https://webdecoy.com/terms](https://webdecoy.com/terms)
+= WebDecoy Cloud — ingest.webdecoy.com and api.webdecoy.com =
+This plugin only contacts WebDecoy Cloud when you explicitly connect an account by entering an API key on the WebDecoy Cloud settings tab. With no API key configured, no data is ever sent to these services.
 
-**Without an API key, the plugin operates 100% locally with zero external connections on the front end.** The admin Statistics page loads Chart.js from jsDelivr CDN (see below).
+What is sent, and when:
+* When a detection or rule violation occurs: the visitor's IP address, user agent, request path, threat score and detection flags are sent to ingest.webdecoy.com so the event appears in your cloud dashboard.
+* When you use an IP-reputation filter rule (e.g. ip.abuse_score, ip.tor): the visitor's IP address is sent to ingest.webdecoy.com to look up reputation/geo data.
+* When validating your key or forwarding a WooCommerce checkout detection: your API key, organization ID and the detection data above are sent to api.webdecoy.com / ingest.webdecoy.com.
 
-= Chart.js (cdn.jsdelivr.net) =
-Used for: Rendering detection trend charts on the Statistics admin page
-When loaded: Only on the WebDecoy Statistics admin page, loaded from jsDelivr CDN
-Privacy Policy: [https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net](https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net)
+All requests are made server-side over HTTPS. This is an optional cloud service provided by WebDecoy.
+Terms of Service: https://webdecoy.com/terms
+Privacy Policy: https://webdecoy.com/privacy
+
+**Without an API key, the plugin operates 100% locally — no external connections on the front end or back end.** Chart.js (used for the admin Statistics charts) is bundled with the plugin, not loaded from a CDN.
 
 == Screenshots ==
 
@@ -184,6 +185,11 @@ Privacy Policy: [https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net](htt
 8. Challenge page — invisible proof-of-work for suspicious visitors
 
 == Changelog ==
+
+= 2.2.1 =
+* Changed: Chart.js (admin Statistics charts) is now bundled with the plugin instead of loaded from a CDN — the plugin makes no external requests until you connect a WebDecoy Cloud account
+* Changed: Clarified the External Services disclosure
+* Internal: Refactored the self-hosted updater into its own module
 
 = 2.2.0 =
 * Added: Tripwires — deterministic, zero-false-positive blocking of hidden honeypot paths (on by default)
