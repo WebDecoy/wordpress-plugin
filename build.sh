@@ -46,7 +46,17 @@ mkdir -p "${DIST_DIR}"
 
 # Copy plugin files into build directory
 echo "Copying plugin files..."
-rsync -a --exclude='build' --exclude='dist' --exclude='build.sh' . "${BUILD_DIR}/${PLUGIN_SLUG}/"
+# Excludes are anchored with a leading slash to the plugin root so we only drop
+# the top-level dev vendor/ (composer dev tools) — NOT admin/js/vendor/, which
+# holds the bundled Chart.js.
+rsync -a \
+    --exclude='/build' --exclude='/dist' --exclude='/build.sh' \
+    --exclude='/.git' --exclude='/.github' --exclude='/.svn-wporg' \
+    --exclude='/vendor' --exclude='/sdk/vendor' \
+    --exclude='node_modules' --exclude='/tests' \
+    --exclude='/composer.json' --exclude='/composer.lock' \
+    --exclude='/phpcs.xml.dist' --exclude='/phpstan.neon' \
+    . "${BUILD_DIR}/${PLUGIN_SLUG}/"
 
 # Update version in main plugin file
 echo "Setting version to ${VERSION}..."
