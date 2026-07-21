@@ -24,6 +24,16 @@ $contact_email = $options['contact_email'] ?? get_option('admin_email');
 $block_reason = isset($block_info['reason']) ? $block_info['reason'] : '';
 $expires_at = isset($block_info['expires_at']) ? $block_info['expires_at'] : null;
 
+// This is a standalone interstitial served before the theme renders (the
+// request exits after this template), so the wp_enqueue_scripts hook never
+// fires here. The stylesheet is still registered through the WordPress
+// dependency API and printed with wp_print_styles() below.
+wp_register_style(
+    'webdecoy-block',
+    WEBDECOY_PLUGIN_URL . 'public/css/webdecoy-block.css',
+    [],
+    WEBDECOY_VERSION
+);
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -32,112 +42,7 @@ $expires_at = isset($block_info['expires_at']) ? $block_info['expires_at'] : nul
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title><?php esc_html_e('Access Denied', 'webdecoy'); ?> - <?php bloginfo('name'); ?></title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .block-container {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 500px;
-            width: 100%;
-            padding: 40px;
-            text-align: center;
-        }
-        .block-icon {
-            width: 80px;
-            height: 80px;
-            background: #f44336;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 24px;
-        }
-        .block-icon svg {
-            width: 40px;
-            height: 40px;
-            fill: #fff;
-        }
-        h1 {
-            color: #333;
-            font-size: 28px;
-            margin-bottom: 16px;
-            font-weight: 600;
-        }
-        .block-message {
-            color: #666;
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 24px;
-        }
-        .block-details {
-            background: #f5f5f5;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 24px;
-            font-size: 14px;
-            color: #666;
-        }
-        .block-details dt {
-            font-weight: 600;
-            color: #333;
-            display: inline;
-        }
-        .block-details dd {
-            display: inline;
-            margin-left: 8px;
-        }
-        .block-details dl {
-            margin: 8px 0;
-        }
-        .contact-section {
-            border-top: 1px solid #eee;
-            padding-top: 24px;
-            margin-top: 24px;
-        }
-        .contact-section p {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
-        .contact-link {
-            display: inline-block;
-            background: #667eea;
-            color: #fff;
-            padding: 12px 24px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
-        .contact-link:hover {
-            background: #5a6fd6;
-        }
-        .reference-id {
-            font-size: 12px;
-            color: #999;
-            margin-top: 24px;
-        }
-        .reference-id code {
-            background: #f5f5f5;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: monospace;
-        }
-    </style>
+    <?php wp_print_styles(['webdecoy-block']); ?>
 </head>
 <body>
     <div class="block-container">

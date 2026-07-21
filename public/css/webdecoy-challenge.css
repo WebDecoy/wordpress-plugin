@@ -1,0 +1,150 @@
+/**
+ * WebDecoy Challenge Page styles
+ *
+ * Loaded on the standalone proof-of-work challenge interstitial via
+ * wp_register_style() + wp_print_styles() (the page renders before the
+ * theme, so the wp_enqueue_scripts hook never fires for it).
+ *
+ * @package WebDecoy
+ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+.challenge-card {
+    background: #16213e;
+    border: 1px solid #2a3a5c;
+    border-radius: 12px;
+    padding: 40px;
+    max-width: 440px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+.challenge-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 20px;
+    border: 3px solid #4a9eff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.challenge-icon svg {
+    width: 24px;
+    height: 24px;
+    fill: #4a9eff;
+}
+h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 8px;
+}
+.subtitle {
+    font-size: 14px;
+    color: #8892a4;
+    margin-bottom: 24px;
+}
+.challenge-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    border: 2px solid #2a3a5c;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #1a1a2e;
+    user-select: none;
+    margin-bottom: 16px;
+}
+.challenge-checkbox:hover {
+    border-color: #4a9eff;
+    background: #1e2a4a;
+}
+.challenge-checkbox.solving {
+    border-color: #ffa726;
+    cursor: wait;
+}
+.challenge-checkbox.solving:hover {
+    background: #1a1a2e;
+}
+.challenge-checkbox.success {
+    border-color: #66bb6a;
+    background: #1a2e1a;
+    cursor: default;
+}
+.challenge-checkbox.failed {
+    border-color: #ef5350;
+}
+.checkbox-box {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #4a5568;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+.checkbox-box .check {
+    display: none;
+    color: #66bb6a;
+    font-size: 16px;
+    font-weight: bold;
+}
+.checkbox-box .spinner {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffa726;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+.success .checkbox-box { border-color: #66bb6a; }
+.success .checkbox-box .check { display: block; }
+.solving .checkbox-box .spinner { display: block; }
+.checkbox-label {
+    font-size: 15px;
+    color: #c0c8d8;
+}
+.solving .checkbox-label { color: #ffa726; }
+.success .checkbox-label { color: #66bb6a; }
+.failed .checkbox-label { color: #ef5350; }
+.status-text {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 8px;
+    min-height: 18px;
+}
+.powered-by {
+    margin-top: 20px;
+    font-size: 11px;
+    color: #4a5568;
+}
+.powered-by a { color: #4a9eff; text-decoration: none; }
+.retry-btn {
+    display: none;
+    margin-top: 12px;
+    padding: 8px 20px;
+    background: #4a9eff;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.retry-btn:hover { background: #3a8eef; }
+@keyframes spin { to { transform: rotate(360deg); } }

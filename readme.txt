@@ -1,10 +1,10 @@
 === WebDecoy Bot Detection ===
-Contributors: webdecoy
+Contributors: webdecoy1
 Donate link: https://webdecoy.com
 Tags: security, bot detection, spam protection, woocommerce, firewall
 Requires at least: 6.1
 Tested up to: 7.0
-Stable tag: 2.2.2
+Stable tag: 2.2.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -174,7 +174,10 @@ Privacy Policy: https://webdecoy.com/privacy
 **Without an API key, the plugin operates 100% locally — no external connections on the front end or back end.** Chart.js (used for the admin Statistics charts) is bundled with the plugin, not loaded from a CDN.
 
 = Bundled third-party libraries =
-Chart.js v4.4.9 (MIT license) is included at admin/js/vendor/chart.umd.min.js for the admin Statistics charts. It is the official distribution build; the human-readable source is available at https://github.com/chartjs/Chart.js/releases/tag/v4.4.9 . No other third-party libraries are bundled.
+Chart.js v4.5.1 (MIT license) is included at admin/js/vendor/chart.umd.min.js for the admin Statistics charts. It is the official distribution build; the human-readable source is available at https://github.com/chartjs/Chart.js/releases/tag/v4.5.1 . No other third-party libraries are bundled.
+
+= Reference URLs in the good-bot database =
+The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL for each known bot (e.g. developer.amazon.com/amazonbot, api.slack.com/robots) purely as reference metadata shown alongside detections. These URLs are never requested by the plugin — no connection of any kind is made to them.
 
 == Screenshots ==
 
@@ -188,6 +191,12 @@ Chart.js v4.4.9 (MIT license) is included at admin/js/vendor/chart.umd.min.js fo
 8. Challenge page — invisible proof-of-work for suspicious visitors
 
 == Changelog ==
+
+= 2.2.3 =
+* Changed: All CSS and JavaScript is now loaded via the WordPress dependency APIs (wp_register_style/script, wp_add_inline_script, wp_print_styles/scripts) — no more raw style/script tags
+* Changed: The "Protected by WebDecoy" credit on the challenge page is now opt-in (Settings > Blocking) and off by default
+* Changed: Updated bundled Chart.js to v4.5.1 (latest stable)
+* Changed: Removed the load_plugin_textdomain() call (unneeded since WordPress 4.6 for directory-hosted plugins)
 
 = 2.2.2 =
 * Fixed: A PHP 7.4 fatal error in good-bot verification (use of a PHP 8 function)
