@@ -244,20 +244,26 @@ $options = get_option('webdecoy_options', []);
     <?php endif; ?>
 </div>
 
-<!-- Chart Data -->
-<script>
-window.webdecoyChartData = {
-    trend: {
-        labels: <?php echo wp_json_encode(array_keys($daily_data)); ?>,
-        data: <?php echo wp_json_encode(array_values($daily_data)); ?>
-    },
-    threats: {
-        labels: <?php echo wp_json_encode(array_column($threat_distribution, 'threat_level')); ?>,
-        data: <?php echo wp_json_encode(array_map('intval', array_column($threat_distribution, 'count'))); ?>
-    },
-    signals: {
-        labels: <?php echo wp_json_encode(array_keys($top_signals)); ?>,
-        data: <?php echo wp_json_encode(array_values($top_signals)); ?>
-    }
-};
-</script>
+<?php
+// Attach the chart data to the footer-enqueued charts script. The
+// 'webdecoy-charts' handle is enqueued in admin_scripts() for this page hook
+// with in_footer=true, so attaching inline data here (during page render,
+// before admin footer scripts print) guarantees it lands before the script.
+wp_add_inline_script(
+    'webdecoy-charts',
+    'window.webdecoyChartData = ' . wp_json_encode([
+        'trend' => [
+            'labels' => array_keys($daily_data),
+            'data'   => array_values($daily_data),
+        ],
+        'threats' => [
+            'labels' => array_column($threat_distribution, 'threat_level'),
+            'data'   => array_map('intval', array_column($threat_distribution, 'count')),
+        ],
+        'signals' => [
+            'labels' => array_keys($top_signals),
+            'data'   => array_values($top_signals),
+        ],
+    ]) . ';',
+    'before'
+);

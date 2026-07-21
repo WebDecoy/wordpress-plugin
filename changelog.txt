@@ -1,5 +1,12 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.2.3 - 2026-07-21 =
+* Changed: All CSS and JavaScript is now loaded via the WordPress dependency APIs — the challenge/block interstitials use wp_register_style/script + wp_print_styles/scripts with static asset files (public/css/, public/js/webdecoy-challenge.js), and the Statistics page attaches chart data via wp_add_inline_script. No more raw <style>/<script> tags.
+* Changed: The "Protected by WebDecoy" credit on the challenge page is now an explicit admin opt-in (Settings → Blocking → Challenge Page Credit) and off by default, per WordPress.org guideline 10.
+* Changed: Updated bundled Chart.js from v4.4.9 to v4.5.1 (latest stable).
+* Changed: Removed load_plugin_textdomain() — unneeded since WordPress 4.6 for directory-hosted plugins (minimum is WP 6.1).
+* Docs: readme now notes that good-bot documentation URLs in the bundled bot database are reference metadata only and are never requested.
+
 = 2.2.2 - 2026-07-20 =
 * Fixed: A PHP 7.4 fatal error in good-bot verification (str_ends_with is PHP 8.0+)
 * Fixed: Timezone-safe date handling throughout (date() -> gmdate())

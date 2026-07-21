@@ -493,6 +493,17 @@ $options = get_option('webdecoy_options', []);
                         </td>
                     </tr>
                     <tr>
+                        <th scope="row"><?php esc_html_e('Challenge Page Credit', 'webdecoy'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="webdecoy_options[challenge_show_credit]" value="1"
+                                       <?php checked($options['challenge_show_credit'] ?? false); ?> />
+                                <?php esc_html_e('Show a "Protected by WebDecoy" link on the challenge page', 'webdecoy'); ?>
+                            </label>
+                            <p class="description"><?php esc_html_e('Optional attribution shown to visitors who see the challenge page. Off by default.', 'webdecoy'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
                         <th scope="row">
                             <label for="webdecoy_block_duration"><?php esc_html_e('Block Duration', 'webdecoy'); ?></label>
                         </th>

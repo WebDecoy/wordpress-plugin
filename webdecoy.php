@@ -3,7 +3,7 @@
  * Plugin Name: WebDecoy Bot Detection
  * Plugin URI: https://webdecoy.com/wordpress
  * Description: Protect your WordPress site from bots, spam, and carding attacks with WebDecoy's advanced threat detection.
- * Version: 2.2.2
+ * Version: 2.2.3
  * Requires at least: 6.1
  * Requires PHP: 7.4
  * Author: WebDecoy
@@ -41,7 +41,7 @@ if (!function_exists('str_starts_with')) {
 }
 
 // Plugin constants
-define('WEBDECOY_VERSION', '2.2.2');
+define('WEBDECOY_VERSION', '2.2.3');
 define('WEBDECOY_PLUGIN_FILE', __FILE__);
 define('WEBDECOY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WEBDECOY_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -270,6 +270,10 @@ final class WebDecoy_Plugin
             'pow_enabled' => true,
             'pow_difficulty' => 4,
             'challenge_duration' => 15,
+            // "Protected by WebDecoy" credit on the challenge page. Off by
+            // default: WordPress.org guideline 10 requires user-facing
+            // attribution to be an explicit admin opt-in.
+            'challenge_show_credit' => false,
         ];
 
         $saved = get_option('webdecoy_options', []);
@@ -709,7 +713,6 @@ final class WebDecoy_Plugin
         add_action('webdecoy_flush_violations', [$this, 'cron_flush_violations']);
 
         // Load text domain
-        add_action('init', [$this, 'load_textdomain']);
 
         // Declare HPOS compatibility for WooCommerce
         add_action('before_woocommerce_init', [$this, 'declare_hpos_compatibility']);
@@ -797,14 +800,6 @@ final class WebDecoy_Plugin
     {
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-activator.php';
         WebDecoy_Activator::deactivate();
-    }
-
-    /**
-     * Load text domain
-     */
-    public function load_textdomain(): void
-    {
-        load_plugin_textdomain('webdecoy', false, dirname(WEBDECOY_PLUGIN_BASENAME) . '/languages');
     }
 
     /**
@@ -1852,6 +1847,7 @@ final class WebDecoy_Plugin
         $sanitized['pow_enabled'] = !empty($input['pow_enabled']);
         $sanitized['pow_difficulty'] = max(2, min(7, intval($input['pow_difficulty'] ?? 4)));
         $sanitized['challenge_duration'] = max(5, min(60, intval($input['challenge_duration'] ?? 15)));
+        $sanitized['challenge_show_credit'] = !empty($input['challenge_show_credit']);
 
         return $sanitized;
     }
@@ -1961,7 +1957,7 @@ final class WebDecoy_Plugin
                 'chartjs',
                 WEBDECOY_PLUGIN_URL . 'admin/js/vendor/chart.umd.min.js',
                 [],
-                '4.4.9',
+                '4.5.1',
                 true
             );
 
