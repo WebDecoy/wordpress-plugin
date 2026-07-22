@@ -149,19 +149,25 @@ $options = get_option('webdecoy_options', []);
         <!-- Detection Trend -->
         <div class="webdecoy-chart-card webdecoy-chart-wide">
             <h3><?php esc_html_e('Detection Trend (30 Days)', 'webdecoy'); ?></h3>
-            <canvas id="webdecoyTrendChart" height="300"></canvas>
+            <div class="webdecoy-chart-box">
+                <canvas id="webdecoyTrendChart"></canvas>
+            </div>
         </div>
 
         <!-- Threat Distribution -->
         <div class="webdecoy-chart-card">
             <h3><?php esc_html_e('Threat Level Distribution', 'webdecoy'); ?></h3>
-            <canvas id="webdecoyThreatChart" height="300"></canvas>
+            <div class="webdecoy-chart-box">
+                <canvas id="webdecoyThreatChart"></canvas>
+            </div>
         </div>
 
         <!-- Top Signals -->
         <div class="webdecoy-chart-card">
             <h3><?php esc_html_e('Top Detection Signals', 'webdecoy'); ?></h3>
-            <canvas id="webdecoySignalsChart" height="300"></canvas>
+            <div class="webdecoy-chart-box">
+                <canvas id="webdecoySignalsChart"></canvas>
+            </div>
         </div>
     </div>
 
