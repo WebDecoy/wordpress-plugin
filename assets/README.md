@@ -32,7 +32,12 @@ rsvg-convert -w 772 -h 250 banner.svg > banner-772x250.png
 
 ## Notes
 
-- The icon uses a shield with a web/honeycomb pattern in dark navy and green.
-- The banner uses a dark gradient background with the plugin name and tagline.
+- Both assets use the WebDecoy duck mascot (white duck, pink hoodie, shades) —
+  the same artwork as `frontend/src/assets/duck-logo.svg` in the app monorepo,
+  embedded as a base64 PNG. Brand colors: hoodie pink `#F90289`, ink
+  `#111C26`, bill orange `#F99717`.
+- The banner wordmark/tagline are live `<text>` set in Avenir Next — render the
+  PNGs on macOS (or a machine with Avenir Next installed) or the type falls
+  back to a different face.
 - Upload the generated PNGs (not the SVGs) to the WordPress.org SVN `assets/`
   directory. SVG files are kept here as editable sources only.

@@ -59,3 +59,28 @@ always point at a ZIP that actually exists there with a matching SHA-256.
 git tag -a v<version> -m "v<version> — <summary>"
 git push origin v<version>
 ```
+
+## 5. WordPress.org SVN release
+
+The directory listing at <https://wordpress.org/plugins/webdecoy> is driven by
+the SVN repo (`https://plugins.svn.wordpress.org/webdecoy`). A working copy
+lives at `.svn-wporg/` (git-ignored, excluded from builds). Credentials:
+username `webdecoy1`, SVN password set separately at
+<https://profiles.wordpress.org/me/profile/edit/group/3/?screen=svn-password>.
+
+```bash
+./build.sh <version> --org
+rm -rf .svn-wporg/trunk/* && unzip -q dist/webdecoy-<version>-wporg.zip -d /tmp/wporg
+cp -R /tmp/wporg/webdecoy/. .svn-wporg/trunk/ && rm -rf /tmp/wporg
+cd .svn-wporg
+svn add --force trunk assets
+svn status   # sanity-check: no unexpected deletes/adds; `svn rm` any removed files
+svn ci -m "Release <version>" --username webdecoy1
+svn cp trunk tags/<version>
+svn ci -m "Tag <version>" --username webdecoy1
+```
+
+`readme.txt`'s `Stable tag:` must match the SVN tag name — the directory serves
+whatever tag `Stable tag:` in `trunk/readme.txt` points at. Listing images
+(icon/banner PNGs, regenerated from `assets/*.svg` per `assets/README.md`) and
+`screenshot-N.png` files go in the SVN top-level `assets/` dir, not trunk.

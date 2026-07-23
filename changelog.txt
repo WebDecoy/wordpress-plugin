@@ -1,5 +1,11 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.3.0 - 2026-07-23 =
+* Added: One-click WebDecoy Cloud connect (Settings → WebDecoy Cloud). Clicking Connect opens app.webdecoy.com to approve; on return the plugin exchanges a one-time token server-side and stores the provisioned API keys (encrypted at rest). Manual API key entry remains available under "Advanced: manual configuration".
+* Added: "Send me a monthly security report" opt-in at connect time.
+* Added: Plan entitlements sync (twice daily via cron) — a feature switchboard for upcoming plan-aware capabilities; any sync error fails open to the free tier.
+* Fixed: Statistics page charts grew unbounded (thousands of pixels tall) once detection data existed — Chart.js canvases are now wrapped in fixed-height containers.
+
 = 2.2.3 - 2026-07-21 =
 * Changed: All CSS and JavaScript is now loaded via the WordPress dependency APIs — the challenge/block interstitials use wp_register_style/script + wp_print_styles/scripts with static asset files (public/css/, public/js/webdecoy-challenge.js), and the Statistics page attaches chart data via wp_add_inline_script. No more raw <style>/<script> tags.
 * Changed: The "Protected by WebDecoy" credit on the challenge page is now an explicit admin opt-in (Settings → Blocking → Challenge Page Credit) and off by default, per WordPress.org guideline 10.
