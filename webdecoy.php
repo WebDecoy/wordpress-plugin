@@ -139,6 +139,13 @@ final class WebDecoy_Plugin
     private ?\WebDecoy\BotDetector $detector = null;
 
     /**
+     * Cloud connect controller (one-click connect + entitlements sync).
+     *
+     * @var WebDecoy_Cloud_Connect|null
+     */
+    private ?WebDecoy_Cloud_Connect $cloud_connect = null;
+
+    /**
      * Get plugin instance
      *
      * @return WebDecoy_Plugin
@@ -176,6 +183,13 @@ final class WebDecoy_Plugin
             'site_key' => '',
             // Optional scope passed to the clearance client (advanced).
             'clearance_scope' => '',
+
+            // Cloud connection metadata, populated by the one-click connect flow
+            // (WebDecoy_Cloud_Connect). Managed outside the settings form; the
+            // sanitizer carries these forward so a normal save never wipes them.
+            'organization_id' => '',
+            'organization_name' => '',
+            'plan' => '',
 
             // Proxy / client IP resolution. By default the plugin uses the direct
             // connection IP (REMOTE_ADDR) and IGNORES forwarding headers, which are
@@ -778,6 +792,12 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-decoy-response.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-rate-limit-rule.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-wp-traps.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-cloud-connect.php';
+
+        // One-click Cloud connect + entitlements sync. Makes no external request
+        // until the admin explicitly clicks "Connect".
+        $this->cloud_connect = new WebDecoy_Cloud_Connect();
+        $this->cloud_connect->register();
 
         if (class_exists('WooCommerce')) {
             require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-woocommerce.php';
@@ -1775,6 +1795,15 @@ final class WebDecoy_Plugin
         $sanitized['site_key'] = sanitize_text_field($input['site_key'] ?? '');
         $sanitized['clearance_scope'] = sanitize_text_field($input['clearance_scope'] ?? '');
 
+        // Cloud connection metadata is owned by the connect flow, not this form.
+        // Carry the stored values forward so saving settings never wipes them.
+        $existing = get_option('webdecoy_options', []);
+        foreach (['organization_id', 'organization_name', 'plan'] as $connect_key) {
+            if (is_array($existing) && isset($existing[$connect_key])) {
+                $sanitized[$connect_key] = sanitize_text_field((string) $existing[$connect_key]);
+            }
+        }
+
         // Proxy / client IP resolution
         $sanitized['behind_cloudflare'] = !empty($input['behind_cloudflare']);
         $sanitized['trusted_proxies'] = $this->sanitize_trusted_proxies($input['trusted_proxies'] ?? '');
@@ -2742,6 +2771,95 @@ final class WebDecoy_Plugin
     public function get_options(): array
     {
         return $this->options;
+    }
+
+    /**
+     * Persist Cloud credentials returned by the connect exchange.
+     *
+     * Called by {@see WebDecoy_Cloud_Connect} after a successful token exchange.
+     * The API key is encrypted at rest exactly like the manual-entry path; the
+     * publishable site key and org metadata are stored alongside it.
+     *
+     * @param string $api_key           Plaintext secret API key.
+     * @param string $site_key          Publishable site key (org id).
+     * @param string $organization_id   Cloud organization id.
+     * @param string $organization_name Human-readable org name.
+     * @param string $plan              Plan slug (e.g. free_connected).
+     */
+    public function store_cloud_credentials(string $api_key, string $site_key, string $organization_id, string $organization_name, string $plan): void
+    {
+        $options = get_option('webdecoy_options', []);
+        if (!is_array($options)) {
+            $options = [];
+        }
+
+        if ($api_key !== '') {
+            $options['api_key'] = $this->is_encrypted($api_key) ? $api_key : $this->encrypt_value($api_key);
+        }
+        $options['site_key'] = sanitize_text_field($site_key);
+        $options['organization_id'] = sanitize_text_field($organization_id);
+        $options['organization_name'] = sanitize_text_field($organization_name);
+        $options['plan'] = sanitize_text_field($plan);
+
+        $this->update_options_raw($options);
+
+        // Reflect the change in the in-request cache with the API key decrypted,
+        // matching load_options() so downstream getters see the plaintext key.
+        $this->options = $options;
+        if ($api_key !== '') {
+            $this->options['api_key'] = $this->is_encrypted($api_key) ? $this->decrypt_value($api_key) : $api_key;
+        }
+
+        // Force a fresh API status check on next use now that creds changed.
+        $this->clear_api_status_cache();
+    }
+
+    /**
+     * Clear all Cloud credentials + org metadata locally (no remote call).
+     * Used by the Disconnect action.
+     */
+    public function clear_cloud_credentials(): void
+    {
+        $options = get_option('webdecoy_options', []);
+        if (!is_array($options)) {
+            $options = [];
+        }
+
+        $options['api_key'] = '';
+        $options['site_key'] = '';
+        $options['organization_id'] = '';
+        $options['organization_name'] = '';
+        $options['plan'] = '';
+
+        $this->update_options_raw($options);
+
+        $this->options['api_key'] = '';
+        $this->options['site_key'] = '';
+        $this->options['organization_id'] = '';
+        $this->options['organization_name'] = '';
+        $this->options['plan'] = '';
+
+        $this->clear_api_status_cache();
+    }
+
+    /**
+     * Write the options option verbatim, bypassing the Settings API sanitizer.
+     *
+     * sanitize_options() is written for a full form POST: it rebuilds the array
+     * from string form fields and would mangle the array-typed values (e.g.
+     * custom_allowlist) already present in a stored, complete options array. For
+     * these trusted, pre-shaped writes we detach the sanitize filter for the
+     * duration of the update, then restore it if it was attached.
+     *
+     * @param array<string,mixed> $options Complete, pre-sanitized options array.
+     */
+    private function update_options_raw(array $options): void
+    {
+        $had_filter = remove_filter('sanitize_option_webdecoy_options', [$this, 'sanitize_options']);
+        update_option('webdecoy_options', $options);
+        if ($had_filter) {
+            add_filter('sanitize_option_webdecoy_options', [$this, 'sanitize_options']);
+        }
     }
 
 }
