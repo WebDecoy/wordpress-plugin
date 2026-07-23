@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: security, bot detection, spam protection, woocommerce, firewall
 Requires at least: 6.1
 Tested up to: 7.0
-Stable tag: 2.2.3
+Stable tag: 2.3.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -109,8 +109,8 @@ The threshold is fully configurable to match your site's needs.
 = Optional: Connect to WebDecoy Cloud =
 
 1. Go to **WebDecoy > Settings > WebDecoy Cloud** tab
-2. Enter your API key from your [WebDecoy dashboard](https://app.webdecoy.com)
-3. Click "Test Connection" to verify
+2. Click **Connect to WebDecoy Cloud** — you approve the connection on app.webdecoy.com and are returned automatically; your API keys are provisioned for you
+3. Prefer manual setup? Expand **Advanced: manual configuration** and enter an API key from your [WebDecoy dashboard](https://app.webdecoy.com)
 4. Cloud features (threat intel, VPN detection, etc.) activate automatically
 
 == Frequently Asked Questions ==
@@ -157,12 +157,14 @@ When a suspicious visitor is detected and your block action is set to "Challenge
 
 == External Services ==
 
-This plugin can optionally connect to the following external services when you provide an API key:
+This plugin can optionally connect to the following external services when you connect a WebDecoy Cloud account — either with the one-click Connect button or by entering an API key manually:
 
-= WebDecoy Cloud — ingest.webdecoy.com and api.webdecoy.com =
-This plugin only contacts WebDecoy Cloud when you explicitly connect an account by entering an API key on the WebDecoy Cloud settings tab. With no API key configured, no data is ever sent to these services.
+= WebDecoy Cloud — app.webdecoy.com, api.webdecoy.com and ingest.webdecoy.com =
+This plugin only contacts WebDecoy Cloud after you explicitly start a connection on the WebDecoy Cloud settings tab. With no connection made and no API key configured, no data is ever sent to these services.
 
 What is sent, and when:
+* When you click "Connect to WebDecoy Cloud": your browser is redirected to app.webdecoy.com to approve the connection (carrying your site URL, site name, a one-time nonce, and your monthly-report preference). After you approve, the plugin exchanges a one-time token with api.webdecoy.com (sending the token, your site URL and the nonce) to receive the site's API keys. Cancelling sends nothing further.
+* After connecting: the plugin fetches your plan entitlements from ingest.webdecoy.com (authenticated with your API key) twice daily.
 * When a detection or rule violation occurs: the visitor's IP address, user agent, request path, threat score and detection flags are sent to ingest.webdecoy.com so the event appears in your cloud dashboard.
 * When you use an IP-reputation filter rule (e.g. ip.abuse_score, ip.tor): the visitor's IP address is sent to ingest.webdecoy.com to look up reputation/geo data.
 * When validating your key or forwarding a WooCommerce checkout detection: your API key, organization ID and the detection data above are sent to api.webdecoy.com / ingest.webdecoy.com.
@@ -191,6 +193,12 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 8. Challenge page — invisible proof-of-work for suspicious visitors
 
 == Changelog ==
+
+= 2.3.0 =
+* Added: One-click WebDecoy Cloud connect — approve on app.webdecoy.com and your API keys are provisioned automatically; manual key entry moved under "Advanced: manual configuration"
+* Added: Optional monthly security report opt-in when connecting
+* Added: Plan entitlements sync after connecting (twice daily, fails open to the free tier)
+* Fixed: Statistics page charts could grow endlessly tall once detection data existed (Chart.js containers now have a fixed height)
 
 = 2.2.3 =
 * Changed: All CSS and JavaScript is now loaded via the WordPress dependency APIs (wp_register_style/script, wp_add_inline_script, wp_print_styles/scripts) — no more raw style/script tags
