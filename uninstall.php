@@ -47,11 +47,14 @@ if (file_exists($activator_file)) {
     delete_option('webdecoy_api_last_error');
     delete_option('webdecoy_encryption_key');
     delete_option('webdecoy_entitlements');
+    delete_option('webdecoy_actor_feed_cursor');
+    delete_option('webdecoy_critical_moment_last');
 
     // Clear scheduled events
     wp_clear_scheduled_hook('webdecoy_cleanup_expired');
     wp_clear_scheduled_hook('webdecoy_sync_blocked_ips');
     wp_clear_scheduled_hook('webdecoy_sync_entitlements');
+    wp_clear_scheduled_hook('webdecoy_sync_actor_feed');
 }
 
 // Delete all transients with webdecoy_ prefix
@@ -94,11 +97,14 @@ if (is_multisite()) {
         delete_option('webdecoy_api_last_error');
         delete_option('webdecoy_encryption_key');
         delete_option('webdecoy_entitlements');
+        delete_option('webdecoy_actor_feed_cursor');
+        delete_option('webdecoy_critical_moment_last');
 
         // Clear scheduled events for this site
         wp_clear_scheduled_hook('webdecoy_cleanup_expired');
         wp_clear_scheduled_hook('webdecoy_sync_blocked_ips');
         wp_clear_scheduled_hook('webdecoy_sync_entitlements');
+        wp_clear_scheduled_hook('webdecoy_sync_actor_feed');
 
         // Delete transients for this site
         $wpdb->query(

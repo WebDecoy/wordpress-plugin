@@ -756,7 +756,7 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                         </p>
 
                         <p class="webdecoy-connected-actions">
-                            <a href="<?php echo esc_url(WebDecoy_Cloud_Connect::billing_url()); ?>" class="button button-primary" target="_blank" rel="noopener">
+                            <a href="<?php echo esc_url(WebDecoy_Cloud_Connect::wp_upgrade_url('wp_pro')); ?>" class="button button-primary" target="_blank" rel="noopener">
                                 <?php esc_html_e('Upgrade', 'webdecoy'); ?>
                             </a>
                             <button type="submit" form="webdecoy-disconnect-form" class="button button-secondary">

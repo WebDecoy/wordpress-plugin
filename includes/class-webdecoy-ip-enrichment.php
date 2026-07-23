@@ -53,6 +53,21 @@ class WebDecoy_IP_Enrichment
             return null;
         }
 
+        // Entitlement gate (P1 contract §3): enrichment is a paid Cloud feature.
+        // When we positively know the org isn't entitled (a synced entitlements
+        // cache with features.enrichment false), fail silently to no-enrichment —
+        // no remote call is made, and ip.* fields resolve to undefined just as
+        // they do without a key. A never-synced cache (fetched_at 0, e.g. a
+        // manual-key install) falls through and lets the server make the call
+        // (it 403s wordpress-channel orgs that lack enrichment).
+        if (class_exists('WebDecoy_Cloud_Connect')) {
+            $entitlements = WebDecoy_Cloud_Connect::get_entitlements();
+            $fetched_at = isset($entitlements['fetched_at']) ? (int) $entitlements['fetched_at'] : 0;
+            if ($fetched_at > 0 && empty($entitlements['features']['enrichment'])) {
+                return null;
+            }
+        }
+
         $cacheKey = 'webdecoy_enrich_' . md5($ip);
         $cached = get_transient($cacheKey);
         if (is_array($cached)) {

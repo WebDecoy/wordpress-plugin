@@ -146,6 +146,20 @@ final class WebDecoy_Plugin
     private ?WebDecoy_Cloud_Connect $cloud_connect = null;
 
     /**
+     * Actor feed controller (hourly network-block sync — Pro+ only).
+     *
+     * @var WebDecoy_Actor_Feed|null
+     */
+    private ?WebDecoy_Actor_Feed $actor_feed = null;
+
+    /**
+     * Post-CRITICAL moment controller (one-shot upgrade notice).
+     *
+     * @var WebDecoy_Critical_Moment|null
+     */
+    private ?WebDecoy_Critical_Moment $critical_moment = null;
+
+    /**
      * Get plugin instance
      *
      * @return WebDecoy_Plugin
@@ -793,11 +807,24 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-rate-limit-rule.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-wp-traps.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-cloud-connect.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-actor-intel.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-actor-feed.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-critical-moment.php';
 
         // One-click Cloud connect + entitlements sync. Makes no external request
         // until the admin explicitly clicks "Connect".
         $this->cloud_connect = new WebDecoy_Cloud_Connect();
         $this->cloud_connect->register();
+
+        // Actor feed: hourly network-block sync. Self-guards to make no external
+        // request unless connected AND entitled to the actor feed (Pro+).
+        $this->actor_feed = new WebDecoy_Actor_Feed();
+        $this->actor_feed->register();
+
+        // Post-CRITICAL moment: one-shot, throttled upgrade notice. Queued from
+        // the CRITICAL detection insert sites; renders in wp-admin only.
+        $this->critical_moment = new WebDecoy_Critical_Moment();
+        $this->critical_moment->register();
 
         if (class_exists('WooCommerce')) {
             require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-woocommerce.php';
@@ -1072,6 +1099,27 @@ final class WebDecoy_Plugin
         if ($reporter !== null) {
             $reporter->report([$event]);
         }
+    }
+
+    /**
+     * Queue the post-CRITICAL upgrade moment when a detection is recorded at
+     * CRITICAL severity (the decoy/canary exfiltration path). No-op for any
+     * lower severity and self-throttled to at most one notice every 7 days.
+     * Never makes an external request at this point — the intel lookup that
+     * personalises the copy is deferred to the admin render.
+     *
+     * @param string $ip
+     * @param string $threat_level
+     */
+    private function flag_critical_moment(string $ip, string $threat_level): void
+    {
+        if ($this->critical_moment === null) {
+            return;
+        }
+        if ($threat_level !== \WebDecoy\DetectionResult::THREAT_CRITICAL) {
+            return;
+        }
+        $this->critical_moment->maybe_queue($ip);
     }
 
     /**
@@ -1440,6 +1488,8 @@ final class WebDecoy_Plugin
             'flags' => json_encode($flags_data),
             'created_at' => current_time('mysql'),
         ]);
+
+        $this->flag_critical_moment($ip, $result->getThreatLevel());
     }
 
     /**
@@ -1545,6 +1595,9 @@ final class WebDecoy_Plugin
                 ]),
                 'created_at' => current_time('mysql'),
             ]);
+
+            // Confirmed decoy exfiltration is always CRITICAL — surface the moment.
+            $this->flag_critical_moment($ip, \WebDecoy\DetectionResult::THREAT_CRITICAL);
 
             $blocker = new WebDecoy_Blocker();
             $duration = $this->options['block_duration'] > 0 ? $this->options['block_duration'] : null;
@@ -2252,6 +2305,8 @@ final class WebDecoy_Plugin
             'flags' => $flags_json,
             'created_at' => current_time('mysql'),
         ]);
+
+        $this->flag_critical_moment($ip, $threat_level);
     }
 
     /**
