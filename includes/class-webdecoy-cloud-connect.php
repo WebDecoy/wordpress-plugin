@@ -47,8 +47,14 @@ class WebDecoy_Cloud_Connect
      */
     private const ENTITLEMENTS_ENDPOINT = 'https://ingest.webdecoy.com/api/v1/sdk/entitlements';
 
-    /** Where the "Upgrade" link points once connected. */
+    /** Where the generic "Upgrade" link points once connected. */
     private const BILLING_URL = 'https://app.webdecoy.com/billing';
+
+    /** WordPress-channel checkout entry point (contract §4). */
+    private const WP_BILLING_URL = 'https://app.webdecoy.com/billing/wordpress';
+
+    /** Valid WordPress plan slugs the checkout accepts. */
+    private const WP_PLANS = ['wp_pro', 'wp_woo', 'wp_agency'];
 
     /** Transient holding the pending connect nonce (site-scoped, one flow at a time). */
     private const NONCE_TRANSIENT = 'webdecoy_connect_nonce';
@@ -357,11 +363,40 @@ class WebDecoy_Cloud_Connect
     }
 
     /**
-     * The URL the "Upgrade" link points to.
+     * The URL the generic "Upgrade" link points to.
      */
     public static function billing_url(): string
     {
         return self::BILLING_URL;
+    }
+
+    /**
+     * The WordPress-channel checkout URL for a given plan (contract §4):
+     * `.../billing/wordpress?organization_id={id}&plan={wp_pro|wp_woo|wp_agency}`.
+     *
+     * The org id defaults to the stored one when not supplied. An unrecognized
+     * plan falls back to `wp_pro`.
+     */
+    public static function wp_upgrade_url(string $plan = 'wp_pro', string $organization_id = ''): string
+    {
+        if (!in_array($plan, self::WP_PLANS, true)) {
+            $plan = 'wp_pro';
+        }
+
+        if ($organization_id === '') {
+            $options = get_option('webdecoy_options', []);
+            if (is_array($options) && isset($options['organization_id'])) {
+                $organization_id = (string) $options['organization_id'];
+            }
+        }
+
+        // http_build_query encodes each value exactly once (add_query_arg does not).
+        $query = http_build_query([
+            'organization_id' => $organization_id,
+            'plan'            => $plan,
+        ]);
+
+        return self::WP_BILLING_URL . '?' . $query;
     }
 
     // ---------------------------------------------------------------------
