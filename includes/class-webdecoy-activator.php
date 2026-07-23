@@ -47,6 +47,7 @@ class WebDecoy_Activator
         // Clear scheduled events
         wp_clear_scheduled_hook('webdecoy_cleanup_expired');
         wp_clear_scheduled_hook('webdecoy_sync_blocked_ips');
+        wp_clear_scheduled_hook('webdecoy_sync_entitlements');
 
         // Flush rewrite rules
         flush_rewrite_rules();
@@ -258,11 +259,13 @@ class WebDecoy_Activator
         // Delete options
         delete_option('webdecoy_options');
         delete_option('webdecoy_db_version');
+        delete_option('webdecoy_entitlements');
 
         // Clear scheduled events
         wp_clear_scheduled_hook('webdecoy_cleanup_expired');
         wp_clear_scheduled_hook('webdecoy_sync_blocked_ips');
         wp_clear_scheduled_hook('webdecoy_flush_violations');
+        wp_clear_scheduled_hook('webdecoy_sync_entitlements');
     }
 }
 

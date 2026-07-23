@@ -871,3 +871,132 @@
 .webdecoy-cloud-upsell .button {
     margin-right: 8px;
 }
+
+/* ==========================================================================
+   Cloud Connect (one-click connect + connected state)
+   ========================================================================== */
+
+.webdecoy-connect-cta {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    padding: 24px;
+    margin: 16px 0 20px;
+}
+
+.webdecoy-connect-cta .button-hero {
+    display: block;
+    margin-top: 12px;
+}
+
+.webdecoy-digest-consent {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: #1d2327;
+}
+
+.webdecoy-digest-consent input {
+    margin: 0;
+}
+
+/* Connected state card */
+.webdecoy-connected-card {
+    background: linear-gradient(135deg, #f0fff4 0%, #e8f7ee 100%);
+    border: 1px solid #b6e3c6;
+    border-radius: 8px;
+    padding: 24px;
+    margin: 16px 0 20px;
+}
+
+.webdecoy-connected-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.webdecoy-connected-head > .dashicons {
+    color: #1a7f37;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+}
+
+.webdecoy-connected-title {
+    flex: 1 1 auto;
+}
+
+.webdecoy-connected-title strong {
+    font-size: 15px;
+    color: #14532d;
+}
+
+.webdecoy-connected-org {
+    color: #3c4858;
+    font-size: 13px;
+    margin-top: 2px;
+}
+
+.webdecoy-plan-badge {
+    display: inline-block;
+    background: #1a7f37;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 6px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.webdecoy-digest-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #3c4858;
+    margin: 16px 0 0;
+}
+
+.webdecoy-digest-status .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+.webdecoy-connected-actions {
+    margin: 20px 0 0;
+}
+
+.webdecoy-connected-actions .button {
+    margin-right: 8px;
+}
+
+/* Advanced fold */
+.webdecoy-advanced-config {
+    margin-top: 8px;
+    border-top: 1px solid #dcdcde;
+    padding-top: 12px;
+}
+
+.webdecoy-advanced-config > summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #2271b1;
+    padding: 6px 0;
+    list-style: revert;
+}
+
+.webdecoy-advanced-config[open] > summary {
+    margin-bottom: 8px;
+}
+
+.webdecoy-text-link {
+    text-decoration: none;
+}
+
+/* Empty helper forms carry no visible UI. */
+.webdecoy-action-form {
+    display: inline;
+    margin: 0;
+}
