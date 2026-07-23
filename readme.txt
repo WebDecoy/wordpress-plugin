@@ -78,6 +78,7 @@ WebDecoy is a **free, fully-functional** bot detection and protection plugin tha
 
 Connect an API key to unlock cloud-powered intelligence:
 
+* **WAF Integrations** — Arm your existing edge: push confirmed attackers to Cloudflare or AWS WAF so they're blocked before a request ever reaches WordPress, plus webhooks for any other firewall
 * **IP Reputation** — AbuseIPDB integration, threat scoring
 * **VPN/Proxy Detection** — Identify visitors hiding behind VPNs, proxies, and Tor
 * **GeoIP Enrichment** — Geographic data from MaxMind
@@ -121,7 +122,7 @@ The threshold is fully configurable to match your site's needs.
 
 = What does WebDecoy Cloud add? =
 
-WebDecoy Cloud adds threat intelligence feeds (AbuseIPDB, VPNAPI, MaxMind), centralized monitoring across multiple sites, indefinite detection history, and automated response features like webhooks and email alerts. [Compare plans](https://webdecoy.com/pricing).
+WebDecoy Cloud adds threat intelligence feeds (AbuseIPDB, VPNAPI, MaxMind), centralized monitoring across multiple sites, indefinite detection history, automated response features like webhooks and email alerts, and WAF integrations — confirmed attackers can be pushed to Cloudflare or AWS WAF so they're blocked at the edge, before ever reaching your server. [Compare plans](https://webdecoy.com/pricing).
 
 = Does WebDecoy slow down my site? =
 
