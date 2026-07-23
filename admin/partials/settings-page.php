@@ -11,6 +11,20 @@ if (!defined('ABSPATH')) {
 }
 
 $options = get_option('webdecoy_options', []);
+
+// Which tab to show active on load. Defaults to Protection; the Cloud connect
+// return redirect lands here with ?tab=cloud so the connected/connect UI is
+// visible without needing the JS hash router. Read-only UI selector, no state
+// change, so no nonce is required.
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$wd_active_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : 'detection';
+if ($wd_active_tab !== 'cloud') {
+    $wd_active_tab = 'detection';
+}
+
+// Cloud connection state for the Cloud tab.
+$wd_cloud_connected = class_exists('WebDecoy_Cloud_Connect') && WebDecoy_Cloud_Connect::is_connected();
+$wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Connect::get_entitlements() : [];
 ?>
 
 <div class="wrap webdecoy-settings-wrap">
@@ -23,7 +37,7 @@ $options = get_option('webdecoy_options', []);
 
         <div class="webdecoy-tabs">
             <nav class="nav-tab-wrapper">
-                <a href="#tab-detection" class="nav-tab nav-tab-active"><?php esc_html_e('Protection', 'webdecoy'); ?></a>
+                <a href="#tab-detection" class="nav-tab<?php echo $wd_active_tab === 'detection' ? ' nav-tab-active' : ''; ?>"><?php esc_html_e('Protection', 'webdecoy'); ?></a>
                 <a href="#tab-tripwires" class="nav-tab"><?php esc_html_e('Tripwires', 'webdecoy'); ?></a>
                 <a href="#tab-rules" class="nav-tab"><?php esc_html_e('Rules', 'webdecoy'); ?></a>
                 <a href="#tab-bots" class="nav-tab"><?php esc_html_e('Good Bots', 'webdecoy'); ?></a>
@@ -33,11 +47,11 @@ $options = get_option('webdecoy_options', []);
                 <?php if (class_exists('WooCommerce')) : ?>
                     <a href="#tab-woocommerce" class="nav-tab"><?php esc_html_e('WooCommerce', 'webdecoy'); ?></a>
                 <?php endif; ?>
-                <a href="#tab-cloud" class="nav-tab"><?php esc_html_e('WebDecoy Cloud', 'webdecoy'); ?></a>
+                <a href="#tab-cloud" class="nav-tab<?php echo $wd_active_tab === 'cloud' ? ' nav-tab-active' : ''; ?>"><?php esc_html_e('WebDecoy Cloud', 'webdecoy'); ?></a>
             </nav>
 
             <!-- Detection/Protection Settings Tab -->
-            <div id="tab-detection-tab" class="webdecoy-tab-content active">
+            <div id="tab-detection-tab" class="webdecoy-tab-content<?php echo $wd_active_tab === 'detection' ? ' active' : ''; ?>">
                 <h2><?php esc_html_e('Detection Settings', 'webdecoy'); ?></h2>
 
                 <table class="form-table">
@@ -710,119 +724,184 @@ $options = get_option('webdecoy_options', []);
             <?php endif; ?>
 
             <!-- WebDecoy Cloud Tab -->
-            <div id="tab-cloud-tab" class="webdecoy-tab-content">
+            <div id="tab-cloud-tab" class="webdecoy-tab-content<?php echo $wd_active_tab === 'cloud' ? ' active' : ''; ?>">
                 <h2><?php esc_html_e('WebDecoy Cloud', 'webdecoy'); ?></h2>
-                <p class="description"><?php esc_html_e('Optionally connect to WebDecoy Cloud for threat intelligence, IP reputation data, and centralized monitoring across all your sites.', 'webdecoy'); ?></p>
 
-                <table class="form-table">
-                    <tr>
-                        <th scope="row">
-                            <label for="webdecoy_api_key"><?php esc_html_e('API Key', 'webdecoy'); ?></label>
-                        </th>
-                        <td>
-                            <input type="password" id="webdecoy_api_key" name="webdecoy_options[api_key]"
-                                   value="<?php echo esc_attr($options['api_key'] ?? ''); ?>"
-                                   class="regular-text" autocomplete="off" />
-                            <button type="button" class="button button-secondary webdecoy-toggle-visibility">
-                                <?php esc_html_e('Show', 'webdecoy'); ?>
-                            </button>
-                            <p class="description"><?php esc_html_e('Your WebDecoy API key (starts with sk_live_)', 'webdecoy'); ?></p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">
-                            <label for="webdecoy_site_key"><?php esc_html_e('Site Key', 'webdecoy'); ?></label>
-                        </th>
-                        <td>
-                            <input type="text" id="webdecoy_site_key" name="webdecoy_options[site_key]"
-                                   value="<?php echo esc_attr($options['site_key'] ?? ''); ?>"
-                                   class="regular-text" autocomplete="off" />
-                            <p class="description">
-                                <?php esc_html_e('Your publishable site key (organization ID). Unlike the API key this is not secret — it enables the browser to silently obtain a clearance token so that tripwire and decoy hits durably lock out the offending device. Required for enforcement; safe to leave blank for detection-only.', 'webdecoy'); ?>
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('API Status', 'webdecoy'); ?></th>
-                        <td>
+                <?php if ($wd_cloud_connected) : ?>
+                    <?php
+                    $wd_org_name = isset($options['organization_name']) ? (string) $options['organization_name'] : '';
+                    $wd_plan_slug = isset($options['plan']) ? (string) $options['plan'] : '';
+                    $wd_plan_label = WebDecoy_Cloud_Connect::plan_label($wd_plan_slug);
+                    $wd_digest_on = !empty($wd_entitlements['digest']['enabled']);
+                    ?>
+                    <div class="webdecoy-connected-card">
+                        <div class="webdecoy-connected-head">
+                            <span class="dashicons dashicons-yes-alt"></span>
+                            <div class="webdecoy-connected-title">
+                                <strong><?php esc_html_e('Connected to WebDecoy Cloud', 'webdecoy'); ?></strong>
+                                <?php if ($wd_org_name !== '') : ?>
+                                    <div class="webdecoy-connected-org"><?php echo esc_html($wd_org_name); ?></div>
+                                <?php endif; ?>
+                            </div>
+                            <span class="webdecoy-plan-badge"><?php echo esc_html($wd_plan_label); ?></span>
+                        </div>
+
+                        <p class="webdecoy-digest-status">
+                            <span class="dashicons dashicons-email"></span>
                             <?php
-                            $api_status = get_transient('webdecoy_api_status');
-                            $last_check = get_option('webdecoy_api_last_check');
-                            $last_error = get_option('webdecoy_api_last_error');
+                            echo $wd_digest_on
+                                ? esc_html__('Monthly security report: On', 'webdecoy')
+                                : esc_html__('Monthly security report: Off', 'webdecoy');
                             ?>
-                            <?php if ($api_status === 'active') : ?>
-                                <span class="webdecoy-status webdecoy-status-active">
-                                    <span class="dashicons dashicons-yes-alt"></span>
-                                    <?php esc_html_e('Active', 'webdecoy'); ?>
-                                </span>
-                            <?php elseif ($api_status === 'inactive') : ?>
-                                <span class="webdecoy-status webdecoy-status-inactive">
-                                    <span class="dashicons dashicons-warning"></span>
-                                    <?php esc_html_e('Inactive', 'webdecoy'); ?>
-                                </span>
-                                <?php if ($last_error) : ?>
-                                    <p class="description webdecoy-error-text">
-                                        <?php echo esc_html($last_error); ?>
+                        </p>
+
+                        <p class="webdecoy-connected-actions">
+                            <a href="<?php echo esc_url(WebDecoy_Cloud_Connect::billing_url()); ?>" class="button button-primary" target="_blank" rel="noopener">
+                                <?php esc_html_e('Upgrade', 'webdecoy'); ?>
+                            </a>
+                            <button type="submit" form="webdecoy-disconnect-form" class="button button-secondary">
+                                <?php esc_html_e('Disconnect', 'webdecoy'); ?>
+                            </button>
+                        </p>
+                    </div>
+                <?php else : ?>
+                    <p class="description"><?php esc_html_e('Connect this site to WebDecoy Cloud in one click for threat intelligence, IP reputation data, cross-site protection, and centralized monitoring. No data leaves your site until you click Connect.', 'webdecoy'); ?></p>
+
+                    <div class="webdecoy-connect-cta">
+                        <label class="webdecoy-digest-consent">
+                            <input type="checkbox" name="digest" value="1" form="webdecoy-connect-form" />
+                            <?php esc_html_e('Send me a monthly security report', 'webdecoy'); ?>
+                        </label>
+                        <button type="submit" form="webdecoy-connect-form" class="button button-primary button-hero">
+                            <?php esc_html_e('Connect to WebDecoy Cloud', 'webdecoy'); ?>
+                        </button>
+                        <p class="description"><?php esc_html_e('Opens WebDecoy Cloud to approve the connection, then returns here automatically.', 'webdecoy'); ?></p>
+                    </div>
+
+                    <div class="webdecoy-cloud-upsell">
+                        <h3><?php esc_html_e('What WebDecoy Cloud adds', 'webdecoy'); ?></h3>
+                        <ul>
+                            <li><?php esc_html_e('IP reputation data (AbuseIPDB integration)', 'webdecoy'); ?></li>
+                            <li><?php esc_html_e('VPN, proxy, and Tor exit node detection', 'webdecoy'); ?></li>
+                            <li><?php esc_html_e('Cross-site threat intelligence from all WebDecoy users', 'webdecoy'); ?></li>
+                            <li><?php esc_html_e('Advanced cloud analytics with indefinite data retention', 'webdecoy'); ?></li>
+                            <li><?php esc_html_e('Webhook and email alert automation', 'webdecoy'); ?></li>
+                        </ul>
+                        <p>
+                            <a href="https://webdecoy.com/pricing" class="webdecoy-text-link" target="_blank" rel="noopener">
+                                <?php esc_html_e('Explore plans and pricing', 'webdecoy'); ?>
+                            </a>
+                        </p>
+                    </div>
+                <?php endif; ?>
+
+                <details class="webdecoy-advanced-config">
+                    <summary><?php esc_html_e('Advanced: manual configuration', 'webdecoy'); ?></summary>
+                    <p class="description"><?php esc_html_e('Enter API credentials by hand instead of using one-click connect. Most sites do not need this.', 'webdecoy'); ?></p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="webdecoy_api_key"><?php esc_html_e('API Key', 'webdecoy'); ?></label>
+                            </th>
+                            <td>
+                                <input type="password" id="webdecoy_api_key" name="webdecoy_options[api_key]"
+                                       value="<?php echo esc_attr($options['api_key'] ?? ''); ?>"
+                                       class="regular-text" autocomplete="off" />
+                                <button type="button" class="button button-secondary webdecoy-toggle-visibility">
+                                    <?php esc_html_e('Show', 'webdecoy'); ?>
+                                </button>
+                                <p class="description"><?php esc_html_e('Your WebDecoy API key (starts with sk_live_)', 'webdecoy'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="webdecoy_site_key"><?php esc_html_e('Site Key', 'webdecoy'); ?></label>
+                            </th>
+                            <td>
+                                <input type="text" id="webdecoy_site_key" name="webdecoy_options[site_key]"
+                                       value="<?php echo esc_attr($options['site_key'] ?? ''); ?>"
+                                       class="regular-text" autocomplete="off" />
+                                <p class="description">
+                                    <?php esc_html_e('Your publishable site key (organization ID). Unlike the API key this is not secret — it enables the browser to silently obtain a clearance token so that tripwire and decoy hits durably lock out the offending device. Required for enforcement; safe to leave blank for detection-only.', 'webdecoy'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('API Status', 'webdecoy'); ?></th>
+                            <td>
+                                <?php
+                                $api_status = get_transient('webdecoy_api_status');
+                                $last_check = get_option('webdecoy_api_last_check');
+                                $last_error = get_option('webdecoy_api_last_error');
+                                ?>
+                                <?php if ($api_status === 'active') : ?>
+                                    <span class="webdecoy-status webdecoy-status-active">
+                                        <span class="dashicons dashicons-yes-alt"></span>
+                                        <?php esc_html_e('Active', 'webdecoy'); ?>
+                                    </span>
+                                <?php elseif ($api_status === 'inactive') : ?>
+                                    <span class="webdecoy-status webdecoy-status-inactive">
+                                        <span class="dashicons dashicons-warning"></span>
+                                        <?php esc_html_e('Inactive', 'webdecoy'); ?>
+                                    </span>
+                                    <?php if ($last_error) : ?>
+                                        <p class="description webdecoy-error-text">
+                                            <?php echo esc_html($last_error); ?>
+                                        </p>
+                                    <?php endif; ?>
+                                <?php elseif ($api_status === 'error') : ?>
+                                    <span class="webdecoy-status webdecoy-status-error">
+                                        <span class="dashicons dashicons-info"></span>
+                                        <?php esc_html_e('Connection Error', 'webdecoy'); ?>
+                                    </span>
+                                <?php else : ?>
+                                    <span class="webdecoy-status webdecoy-status-unknown">
+                                        <span class="dashicons dashicons-minus"></span>
+                                        <?php esc_html_e('Not checked yet', 'webdecoy'); ?>
+                                    </span>
+                                <?php endif; ?>
+                                <?php if ($last_check) : ?>
+                                    <p class="description">
+                                        <?php printf(
+                                            /* translators: %s: date and time the API connection was last checked */
+                                            esc_html__('Last checked: %s', 'webdecoy'),
+                                            esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($last_check)))
+                                        ); ?>
                                     </p>
                                 <?php endif; ?>
-                            <?php elseif ($api_status === 'error') : ?>
-                                <span class="webdecoy-status webdecoy-status-error">
-                                    <span class="dashicons dashicons-info"></span>
-                                    <?php esc_html_e('Connection Error', 'webdecoy'); ?>
-                                </span>
-                            <?php else : ?>
-                                <span class="webdecoy-status webdecoy-status-unknown">
-                                    <span class="dashicons dashicons-minus"></span>
-                                    <?php esc_html_e('Not checked yet', 'webdecoy'); ?>
-                                </span>
-                            <?php endif; ?>
-                            <?php if ($last_check) : ?>
-                                <p class="description">
-                                    <?php printf(
-                                        /* translators: %s: date and time the API connection was last checked */
-                                        esc_html__('Last checked: %s', 'webdecoy'),
-                                        esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($last_check)))
-                                    ); ?>
-                                </p>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Connection Test', 'webdecoy'); ?></th>
-                        <td>
-                            <button type="button" id="webdecoy-test-connection" class="button button-secondary">
-                                <?php esc_html_e('Test Connection', 'webdecoy'); ?>
-                            </button>
-                            <span id="webdecoy-connection-status"></span>
-                            <p class="description"><?php esc_html_e('Test your API credentials and refresh the status.', 'webdecoy'); ?></p>
-                        </td>
-                    </tr>
-                </table>
-
-                <?php if (empty($options['api_key'])) : ?>
-                <div class="webdecoy-cloud-upsell">
-                    <h3><?php esc_html_e('Upgrade to WebDecoy Cloud', 'webdecoy'); ?></h3>
-                    <p><?php esc_html_e('Your plugin already provides powerful local protection. WebDecoy Cloud adds:', 'webdecoy'); ?></p>
-                    <ul>
-                        <li><?php esc_html_e('IP reputation data (AbuseIPDB integration)', 'webdecoy'); ?></li>
-                        <li><?php esc_html_e('VPN, proxy, and Tor exit node detection', 'webdecoy'); ?></li>
-                        <li><?php esc_html_e('Cross-site threat intelligence from all WebDecoy users', 'webdecoy'); ?></li>
-                        <li><?php esc_html_e('Advanced cloud analytics with indefinite data retention', 'webdecoy'); ?></li>
-                        <li><?php esc_html_e('Webhook and email alert automation', 'webdecoy'); ?></li>
-                    </ul>
-                    <p>
-                        <a href="https://webdecoy.com/pricing" class="button button-primary" target="_blank" rel="noopener">
-                            <?php esc_html_e('Explore Plans', 'webdecoy'); ?>
-                        </a>
-                        <a href="https://app.webdecoy.com/register" class="button button-secondary" target="_blank" rel="noopener">
-                            <?php esc_html_e('Start Free Trial', 'webdecoy'); ?>
-                        </a>
-                    </p>
-                </div>
-                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Connection Test', 'webdecoy'); ?></th>
+                            <td>
+                                <button type="button" id="webdecoy-test-connection" class="button button-secondary">
+                                    <?php esc_html_e('Test Connection', 'webdecoy'); ?>
+                                </button>
+                                <span id="webdecoy-connection-status"></span>
+                                <p class="description"><?php esc_html_e('Test your API credentials and refresh the status.', 'webdecoy'); ?></p>
+                            </td>
+                        </tr>
+                    </table>
+                </details>
             </div>
         </div>
 
         <?php submit_button(); ?>
+    </form>
+
+    <?php
+    // Standalone forms for the Cloud connect/disconnect actions. They live
+    // outside the settings form to avoid invalid nested forms; the Cloud-tab
+    // controls (the digest checkbox, Connect, and Disconnect buttons) are
+    // associated with them via the HTML5 form="" attribute. Each posts to
+    // admin-post.php and is nonce-protected in WebDecoy_Cloud_Connect.
+    ?>
+    <form id="webdecoy-connect-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="webdecoy-action-form">
+        <input type="hidden" name="action" value="webdecoy_cloud_connect" />
+        <?php wp_nonce_field('webdecoy_cloud_connect'); ?>
+    </form>
+    <form id="webdecoy-disconnect-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="webdecoy-action-form">
+        <input type="hidden" name="action" value="webdecoy_cloud_disconnect" />
+        <?php wp_nonce_field('webdecoy_cloud_disconnect'); ?>
     </form>
 </div>
