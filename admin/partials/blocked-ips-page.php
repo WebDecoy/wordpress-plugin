@@ -134,7 +134,15 @@ $stats = $blocker->get_stats();
                             <em><?php esc_html_e('Never (permanent)', 'webdecoy'); ?></em>
                         <?php endif; ?>
                     </td>
-                    <td><?php echo esc_html($block['created_by'] ?? 'system'); ?></td>
+                    <td>
+                        <?php if (($block['created_by'] ?? '') === 'webdecoy-network') : ?>
+                            <span class="webdecoy-badge webdecoy-badge-network" title="<?php esc_attr_e('Auto-blocked from WebDecoy network threat intelligence', 'webdecoy'); ?>">
+                                <?php esc_html_e('Network', 'webdecoy'); ?>
+                            </span>
+                        <?php else : ?>
+                            <?php echo esc_html($block['created_by'] ?? 'system'); ?>
+                        <?php endif; ?>
+                    </td>
                     <td>
                         <a href="<?php echo esc_url(wp_nonce_url(add_query_arg('unblock', $block['ip_address']), 'webdecoy_unblock')); ?>"
                            class="button button-small"

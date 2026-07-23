@@ -322,6 +322,71 @@
     color: #721c24;
 }
 
+/* Network-block badge (rows auto-synced from WebDecoy network intelligence). */
+.webdecoy-badge-network {
+    background: #e7f0fb;
+    color: #1e50a0;
+}
+
+/* Actor-intel "Known" badge on the Detections list. */
+.webdecoy-badge-known {
+    background: #fbeaea;
+    color: #a02222;
+}
+
+/* ==========================================================================
+   Actor Intel column (Detections)
+   ========================================================================== */
+
+.column-intel { width: 200px; }
+
+.webdecoy-intel-locked {
+    color: #a7aaad;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.webdecoy-intel-na,
+.webdecoy-intel-new {
+    color: #646970;
+}
+
+.webdecoy-intel-known {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+}
+
+.webdecoy-intel-meta {
+    font-size: 11px;
+    color: #646970;
+}
+
+.webdecoy-chip {
+    display: inline-block;
+    font-size: 10px;
+    line-height: 1.6;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: #f0f0f0;
+    color: #3c434a;
+}
+
+.webdecoy-chip-alert {
+    background: #fbeaea;
+    color: #a02222;
+}
+
+/* ==========================================================================
+   Post-CRITICAL moment notice
+   ========================================================================== */
+
+.webdecoy-critical-moment .button {
+    margin-top: 4px;
+}
+
 /* ==========================================================================
    Filters & Actions Bar
    ========================================================================== */

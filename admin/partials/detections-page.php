@@ -126,6 +126,27 @@ $stats = $detector->get_stats(7);
 
 // Instantiate blocker once for the loop (performance optimization)
 $blocker = new WebDecoy_Blocker();
+
+// Actor intel column. ZERO external calls unless connected: unconnected installs
+// render a static lock and make no request. When connected, resolve the unique
+// IPs on THIS page in a single batched request (uncached IPs only; each cached
+// 1h). On any failure the map is simply empty and cells fall back to em-dashes.
+$wd_intel_connected = class_exists('WebDecoy_Cloud_Connect') && WebDecoy_Cloud_Connect::is_connected();
+$wd_intel_map = [];
+if ($wd_intel_connected && !empty($detections) && class_exists('WebDecoy_Actor_Intel')) {
+    $wd_intel_options = function_exists('webdecoy') ? webdecoy()->get_options() : [];
+    $wd_intel_key = isset($wd_intel_options['api_key']) ? (string) $wd_intel_options['api_key'] : '';
+    if ($wd_intel_key !== '') {
+        $wd_page_ips = [];
+        foreach ($detections as $wd_row) {
+            if (!empty($wd_row['ip_address'])) {
+                $wd_page_ips[] = (string) $wd_row['ip_address'];
+            }
+        }
+        $wd_intel_client = new WebDecoy_Actor_Intel($wd_intel_key);
+        $wd_intel_map = $wd_intel_client->lookup($wd_page_ips);
+    }
+}
 ?>
 
 <div class="wrap">
@@ -241,6 +262,7 @@ $blocker = new WebDecoy_Blocker();
                     <th class="column-score"><?php esc_html_e('Score', 'webdecoy'); ?></th>
                     <th class="column-level"><?php esc_html_e('Level', 'webdecoy'); ?></th>
                     <th class="column-mitre"><?php esc_html_e('MITRE Tactic', 'webdecoy'); ?></th>
+                    <th class="column-intel"><?php esc_html_e('Actor Intel', 'webdecoy'); ?></th>
                     <th class="column-source"><?php esc_html_e('Source', 'webdecoy'); ?></th>
                     <th class="column-ua"><?php esc_html_e('User Agent', 'webdecoy'); ?></th>
                     <th class="column-actions"><?php esc_html_e('Actions', 'webdecoy'); ?></th>
@@ -330,6 +352,58 @@ $blocker = new WebDecoy_Blocker();
                             <span class="webdecoy-mitre-na">—</span>
                         <?php endif; ?>
                     </td>
+                    <td class="column-intel">
+                        <?php if (!$wd_intel_connected) : ?>
+                            <span class="webdecoy-intel-locked dashicons dashicons-lock" title="<?php esc_attr_e('Connect to WebDecoy Cloud to see actor intelligence', 'webdecoy'); ?>"></span>
+                        <?php else :
+                            $wd_ip = (string) $detection['ip_address'];
+                            $wd_entry = isset($wd_intel_map[$wd_ip]) && is_array($wd_intel_map[$wd_ip]) ? $wd_intel_map[$wd_ip] : null;
+                            if ($wd_entry === null) : ?>
+                                <span class="webdecoy-intel-na">—</span>
+                            <?php elseif (empty($wd_entry['known'])) : ?>
+                                <span class="webdecoy-intel-new" title="<?php esc_attr_e('Not yet seen elsewhere on the WebDecoy network', 'webdecoy'); ?>"><?php esc_html_e('New', 'webdecoy'); ?></span>
+                            <?php else :
+                                $wd_count = (int) $wd_entry['network_detections'];
+                                $wd_first = (int) $wd_entry['first_seen'];
+                                ?>
+                                <span class="webdecoy-intel-known">
+                                    <span class="webdecoy-badge webdecoy-badge-known" title="<?php esc_attr_e('Known across the WebDecoy network', 'webdecoy'); ?>"><?php esc_html_e('Known', 'webdecoy'); ?></span>
+                                    <?php if ($wd_count > 0) : ?>
+                                        <span class="webdecoy-intel-meta">
+                                            <?php
+                                            /* translators: %s: number of detections across the network */
+                                            echo esc_html(sprintf(_n('%s detection', '%s detections', $wd_count, 'webdecoy'), number_format_i18n($wd_count)));
+                                            ?>
+                                        </span>
+                                    <?php endif; ?>
+                                    <?php if ($wd_first > 0) : ?>
+                                        <span class="webdecoy-intel-meta" title="<?php echo esc_attr(date_i18n(get_option('date_format'), $wd_first)); ?>">
+                                            <?php
+                                            /* translators: %s: human-readable time difference, e.g. "3 days" */
+                                            echo esc_html(sprintf(__('first seen %s ago', 'webdecoy'), human_time_diff($wd_first, time())));
+                                            ?>
+                                        </span>
+                                    <?php endif; ?>
+                                    <?php if (empty($wd_entry['redacted'])) : ?>
+                                        <?php if (!empty($wd_entry['tor'])) : ?>
+                                            <span class="webdecoy-chip webdecoy-chip-alert" title="<?php esc_attr_e('Tor exit node', 'webdecoy'); ?>"><?php esc_html_e('Tor', 'webdecoy'); ?></span>
+                                        <?php endif; ?>
+                                        <?php if (!empty($wd_entry['vpn'])) : ?>
+                                            <span class="webdecoy-chip" title="<?php esc_attr_e('VPN or proxy', 'webdecoy'); ?>"><?php esc_html_e('VPN', 'webdecoy'); ?></span>
+                                        <?php endif; ?>
+                                        <?php if ($wd_entry['abuse_score'] !== null && (int) $wd_entry['abuse_score'] > 0) : ?>
+                                            <span class="webdecoy-chip webdecoy-chip-alert" title="<?php esc_attr_e('AbuseIPDB confidence score', 'webdecoy'); ?>">
+                                                <?php
+                                                /* translators: %d: AbuseIPDB confidence score 0-100 */
+                                                echo esc_html(sprintf(__('Abuse %d', 'webdecoy'), (int) $wd_entry['abuse_score']));
+                                                ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </span>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </td>
                     <td>
                         <?php echo esc_html(str_replace('_', ' ', ucfirst($detection['source']))); ?>
                     </td>
@@ -359,7 +433,7 @@ $blocker = new WebDecoy_Blocker();
                     </td>
                 </tr>
                 <tr class="webdecoy-detail-row" style="display:none;">
-                    <td colspan="9">
+                    <td colspan="10">
                         <div class="webdecoy-detection-detail">
                             <strong><?php esc_html_e('User Agent:', 'webdecoy'); ?></strong>
                             <code><?php echo esc_html($detection['user_agent']); ?></code>
