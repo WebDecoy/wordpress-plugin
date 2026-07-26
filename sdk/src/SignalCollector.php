@@ -412,6 +412,69 @@ class SignalCollector
     }
 
     /**
+     * Header-name prefixes added by a proxy or CDN rather than by the client.
+     *
+     * Excluded for the same reason the edge sensor excludes them: they are
+     * constant for every request through that infrastructure, so they carry no
+     * information, but including them would make the same visitor fingerprint
+     * differently here than anywhere else they are seen.
+     *
+     * @var string[]
+     */
+    private const PROXY_HEADER_PREFIXES = [
+        'cf-',
+        'x-forwarded-',
+        'x-real-ip',
+        'true-client-ip',
+        'cdn-loop',
+        'x-vercel-',
+        'fastly-',
+        'x-amz-cf-',
+    ];
+
+    /**
+     * Client fingerprint material for a detection forwarded to the ingest
+     * service (the `cs` payload field).
+     *
+     * This site's server is reporting somebody else's request, and it beacons
+     * over its own HTTP connection — so without this the ingest service has
+     * nothing but the beacon's own headers to identify the visitor with, and
+     * those are identical for every visitor this site ever reports. It grouped
+     * them all into one "actor" as a result.
+     *
+     * Header VALUES are not forwarded. The identity is composed from the SET of
+     * header names plus Accept-Language and Accept-Encoding, so those two are
+     * sent and every other header contributes its name alone — nothing here can
+     * carry a cookie or an Authorization header off this server.
+     *
+     * There is no TLS material: PHP is handed a decrypted request and never
+     * sees the ClientHello, so no JA3/JA4 is derivable. The header-name set
+     * carries the identity on its own, which is weaker but honest.
+     *
+     * @return array{hn: string[], al: string, ae: string}
+     */
+    public function getClientSignals(): array
+    {
+        $names = [];
+        foreach (array_keys($this->getHeaders()) as $header) {
+            $name = strtolower((string) $header);
+            foreach (self::PROXY_HEADER_PREFIXES as $prefix) {
+                if (strpos($name, $prefix) === 0) {
+                    continue 2;
+                }
+            }
+            $names[] = $name;
+        }
+        sort($names);
+
+        return [
+            'hn' => array_values(array_unique($names)),
+            'al' => $this->sanitizeString($this->getAcceptLanguage()),
+            'ae' => $this->sanitizeString($this->getAcceptEncoding()),
+        ];
+    }
+
+    /**
      * Get current page URL
      *
      * @return string Full URL

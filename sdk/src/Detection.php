@@ -26,6 +26,8 @@ class Detection
     private ?string $threatLevel = null;
     private array $metadata = [];
     private ?int $timestamp = null;
+    /** @var array Visitor fingerprint material for forwarded detections (`cs`). */
+    private array $clientSignals = [];
 
     /**
      * Create a Detection from an array of data
@@ -129,6 +131,14 @@ class Detection
 
         if ($this->source) {
             $payload['source'] = $this->source;
+        }
+
+        // The visitor's own fingerprint material. Required on any forwarded
+        // detection: the ingest service sees THIS SERVER's headers on the
+        // beacon, not the visitor's, and composing an identity from those gives
+        // every visitor a single shared one. See SignalCollector::getClientSignals.
+        if (!empty($this->clientSignals)) {
+            $payload['cs'] = $this->clientSignals;
         }
 
         // Include metadata (MITRE tactic info, etc.)
@@ -293,6 +303,24 @@ class Detection
     public function setHoneypotValue(?string $honeypotValue): self
     {
         $this->honeypotValue = $honeypotValue;
+        return $this;
+    }
+
+    public function getClientSignals(): array
+    {
+        return $this->clientSignals;
+    }
+
+    /**
+     * Set the visitor's fingerprint material, from
+     * SignalCollector::getClientSignals(). Required on any detection this
+     * server forwards on someone else's behalf — without it the ingest service
+     * identifies the visitor by THIS server's beacon headers, which are the
+     * same for every visitor.
+     */
+    public function setClientSignals(array $clientSignals): self
+    {
+        $this->clientSignals = $clientSignals;
         return $this;
     }
 
