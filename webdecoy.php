@@ -3,7 +3,7 @@
  * Plugin Name: WebDecoy Bot Detection
  * Plugin URI: https://webdecoy.com/wordpress
  * Description: Protect your WordPress site from bots, spam, and carding attacks with WebDecoy's advanced threat detection.
- * Version: 2.3.0
+ * Version: 2.3.1
  * Requires at least: 6.1
  * Requires PHP: 7.4
  * Author: WebDecoy
@@ -41,7 +41,7 @@ if (!function_exists('str_starts_with')) {
 }
 
 // Plugin constants
-define('WEBDECOY_VERSION', '2.3.0');
+define('WEBDECOY_VERSION', '2.3.1');
 define('WEBDECOY_PLUGIN_FILE', __FILE__);
 define('WEBDECOY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WEBDECOY_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -2348,6 +2348,16 @@ final class WebDecoy_Plugin
             // Add server-side data
             'ip' => $ip,
             'source' => 'wordpress_plugin',
+            // The visitor's own fingerprint material.
+            //
+            // This is a server-to-server beacon, so the ingest service sees THIS
+            // site's outbound request headers on it, not the visitor's. It used
+            // to identify visitors from those — identical on every beacon this
+            // site sends — which collapsed every visitor we ever reported into a
+            // single shared "actor". Header names only, plus Accept-Language and
+            // Accept-Encoding; no header values otherwise, so nothing sensitive
+            // leaves the site.
+            'cs' => $this->build_client_signals(),
         ];
 
         // Send to ingest (fire-and-forget, don't block)
@@ -2361,6 +2371,32 @@ final class WebDecoy_Plugin
             ],
             'body' => json_encode($payload),
         ]);
+    }
+
+    /**
+     * The visitor's fingerprint material for a forwarded detection (`cs`).
+     *
+     * Delegates to the SDK's SignalCollector, which is the canonical
+     * implementation and is shared with any other host framework. Falls back to
+     * an empty array if the SDK is unavailable for any reason — the ingest
+     * service treats absent client signals as "compose no network identity",
+     * which is correct: no actor is better than one shared by every visitor.
+     *
+     * @return array
+     */
+    private function build_client_signals(): array
+    {
+        if (!class_exists('\\WebDecoy\\SignalCollector')) {
+            return [];
+        }
+
+        try {
+            $collector = new \WebDecoy\SignalCollector();
+            return $collector->getClientSignals();
+        } catch (\Throwable $e) {
+            // A detection beacon is never worth breaking the page over.
+            return [];
+        }
     }
 
     /**

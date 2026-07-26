@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: security, bot detection, spam protection, woocommerce, firewall
 Requires at least: 6.1
 Tested up to: 7.0
-Stable tag: 2.3.0
+Stable tag: 2.3.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -194,6 +194,9 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 8. Challenge page — invisible proof-of-work for suspicious visitors
 
 == Changelog ==
+
+= 2.3.1 =
+* Fixed: Detections forwarded from your site are now identified by the visitor's own request signature. Previously they were identified by your server's outgoing connection, which is the same for every visitor — so every visitor a site reported was grouped into a single "actor" in the dashboard. Only request header NAMES plus Accept-Language and Accept-Encoding are sent; no header values leave your site.
 
 = 2.3.0 =
 * Added: One-click WebDecoy Cloud connect — approve on app.webdecoy.com and your API keys are provisioned automatically; manual key entry moved under "Advanced: manual configuration"

@@ -1,5 +1,8 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.3.1 - 2026-07-26 =
+* Fixed: Forwarded detections carry the visitor's own request signature (`cs`). The plugin beacons detections over its own HTTP connection, so the ingest service was identifying visitors by THIS SITE's outbound request headers — identical on every beacon — which collapsed every visitor a site reported into one shared "actor". Header names only, plus Accept-Language and Accept-Encoding; no header values otherwise leave the site, and proxy/CDN-injected names (cf-*, x-forwarded-*) are excluded so a visitor fingerprints consistently wherever they are seen.
+
 = 2.3.0 - 2026-07-23 =
 * Added: One-click WebDecoy Cloud connect (Settings → WebDecoy Cloud). Clicking Connect opens app.webdecoy.com to approve; on return the plugin exchanges a one-time token server-side and stores the provisioned API keys (encrypted at rest). Manual API key entry remains available under "Advanced: manual configuration".
 * Added: "Send me a monthly security report" opt-in at connect time.
