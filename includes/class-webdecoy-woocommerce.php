@@ -58,8 +58,11 @@ class WebDecoy_WooCommerce
 
         $ip = $this->get_client_ip();
 
-        // Check if already blocked
-        if ($this->blocker->is_blocked($ip)) {
+        // Check if already blocked. Monitor mode, WEBDECOY_DISABLE and an
+        // unconfigured proxy all mean "watch, don't act" — and that has to hold on
+        // the checkout path too, or the admin notice promising nothing is blocked
+        // is a lie to a merchant losing orders.
+        if ($this->blocker->is_blocked($ip) && !$this->suppressed()) {
             wc_add_notice(
                 __('Your checkout has been blocked due to suspicious activity.', 'webdecoy'),
                 'error'
@@ -437,6 +440,37 @@ class WebDecoy_WooCommerce
     }
 
     /**
+     * True when the plugin is in a watch-only state — monitor mode, WEBDECOY_DISABLE,
+     * or an unconfigured reverse proxy. Public so the Store API closure can consult it.
+     *
+     * Fails CLOSED to "not suppressed" only if the main plugin class is unavailable,
+     * which cannot happen while this class is loaded by it.
+     */
+    public function suppressed(): bool
+    {
+        if (defined('WEBDECOY_DISABLE') && WEBDECOY_DISABLE) {
+            return true;
+        }
+        if (function_exists('webdecoy')) {
+            return webdecoy()->enforcement_suppressed();
+        }
+        return !empty($this->options['monitor_mode']);
+    }
+
+    /**
+     * Record a detection - public accessor for the Store API / Blocks integration,
+     * which refuses the order via RouteException and must still leave a record.
+     *
+     * @param string $ip
+     * @param string $reason
+     * @param int|null $score
+     */
+    public function log_detection_public(string $ip, string $reason, ?int $score = null): void
+    {
+        $this->log_detection($ip, $reason, $score);
+    }
+
+    /**
      * Detect card testing - public accessor for Blocks integration
      *
      * @param string $ip
@@ -669,9 +703,9 @@ add_action('woocommerce_blocks_loaded', function () {
             $woo = new WebDecoy_WooCommerce($options);
             $ip = $woo->get_client_ip_public();
 
-            // Check if already blocked
+            // Check if already blocked — suppressed states apply here too.
             $blocker = new WebDecoy_Blocker();
-            if ($blocker->is_blocked($ip)) {
+            if ($blocker->is_blocked($ip) && !$woo->suppressed()) {
                 throw new \Automattic\WooCommerce\StoreApi\Exceptions\RouteException(
                     'webdecoy_blocked',
                     esc_html(__('Your checkout has been blocked due to suspicious activity.', 'webdecoy')),
@@ -679,13 +713,16 @@ add_action('woocommerce_blocks_loaded', function () {
                 );
             }
 
+            // As on the classic checkout path, refusing the order IS the response.
+            // The RouteException below already stops it with a 429/403. Writing a
+            // sitewide IP block from here would, behind an unconfigured proxy where
+            // every shopper shares one address, 403 the whole store on every page
+            // from a single checkout false positive.
+            // Refs WebDecoy/wordpress-plugin#52.
+
             // Check velocity
             if (!$woo->check_velocity_public($ip)) {
-                $blocker->block(
-                    $ip,
-                    'Checkout velocity exceeded (Blocks)',
-                    $options['block_duration'] > 0 ? $options['block_duration'] : null
-                );
+                $woo->log_detection_public($ip, 'velocity_exceeded');
 
                 throw new \Automattic\WooCommerce\StoreApi\Exceptions\RouteException(
                     'webdecoy_velocity',
@@ -696,11 +733,7 @@ add_action('woocommerce_blocks_loaded', function () {
 
             // Check for card testing patterns
             if ($woo->detect_card_testing_public($ip)) {
-                $blocker->block(
-                    $ip,
-                    'Card testing detected (Blocks)',
-                    $options['block_duration'] > 0 ? $options['block_duration'] : null
-                );
+                $woo->log_detection_public($ip, 'card_testing');
 
                 throw new \Automattic\WooCommerce\StoreApi\Exceptions\RouteException(
                     'webdecoy_carding',

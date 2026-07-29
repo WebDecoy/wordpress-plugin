@@ -146,15 +146,18 @@ class WebDecoy_Blocker
             return 'reserved, private, or loopback address';
         }
 
-        // The address this request actually arrived from, when the plugin has reason to
-        // believe it is a proxy rather than the visitor. If forwarding headers are
-        // present but no proxy is trusted, getIP() correctly returns REMOTE_ADDR — which
-        // is the proxy. Blocking it takes out everyone behind it.
+        // The address this request arrived from, when the site is known to sit behind
+        // an unconfigured proxy. In that state getIP() correctly returns REMOTE_ADDR —
+        // which is the proxy — so blocking it takes out everyone behind it.
+        //
+        // The "behind a proxy" signal is the stored flag, NOT this request's headers:
+        // keying off the headers would let an attacker who reaches the origin directly
+        // send X-Forwarded-For and make guard() refuse to block them.
         $remote = isset($_SERVER['REMOTE_ADDR'])
             ? trim(sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])))
             : '';
-        if ($remote !== '' && $addr === $remote && self::forwarding_headers_present()) {
-            return 'address is this request\'s proxy front door (forwarding headers present, no trusted proxy configured)';
+        if ($remote !== '' && $addr === $remote && get_option('webdecoy_proxy_detected', false)) {
+            return 'address is this site\'s proxy front door (proxy detected, no trusted proxy configured)';
         }
 
         // Any address inside a configured trusted proxy range is infrastructure by
@@ -171,16 +174,39 @@ class WebDecoy_Blocker
     }
 
     /**
-     * True when the request carries a header that means "there is a proxy in front".
+     * Headers that mean "a proxy resolved the client for us". Deliberately broad:
+     * this list only ever drives an ADMIN-side detection (see
+     * WebDecoy_Plugin::maybe_flag_proxy()), so a false positive costs a notice while
+     * a false negative costs the safety backstop entirely.
      */
-    public static function forwarding_headers_present(): bool
+    private const FORWARDING_HEADERS = [
+        'HTTP_CF_CONNECTING_IP'  => 'CF-Connecting-IP',
+        'HTTP_TRUE_CLIENT_IP'    => 'True-Client-IP',
+        'HTTP_X_FORWARDED_FOR'   => 'X-Forwarded-For',
+        'HTTP_X_REAL_IP'         => 'X-Real-IP',
+        'HTTP_FORWARDED'         => 'Forwarded',
+        'HTTP_X_SUCURI_CLIENTIP' => 'X-Sucuri-ClientIP',
+        'HTTP_FASTLY_CLIENT_IP'  => 'Fastly-Client-IP',
+        'HTTP_INCAP_CLIENT_IP'   => 'Incap-Client-IP',
+        'HTTP_X_CLUSTER_CLIENT_IP' => 'X-Cluster-Client-IP',
+    ];
+
+    /**
+     * The human-readable name of the first forwarding header on this request, or ''.
+     *
+     * DO NOT call this to decide enforcement behaviour on a front-end request — the
+     * headers are client-controlled, so that would be a bypass. It exists for the
+     * admin-side proxy detection only.
+     */
+    public static function forwarding_header_seen(): string
     {
-        foreach (['HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP'] as $h) {
-            if (!empty($_SERVER[$h])) {
-                return true;
+        foreach (self::FORWARDING_HEADERS as $key => $label) {
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- presence check only; the value is never used
+            if (!empty($_SERVER[$key])) {
+                return $label;
             }
         }
-        return false;
+        return '';
     }
 
     /**

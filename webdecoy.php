@@ -374,8 +374,39 @@ final class WebDecoy_Plugin
      */
     public function proxy_misconfigured(): bool
     {
-        return WebDecoy_Blocker::forwarding_headers_present()
-            && $this->get_trusted_proxies() === [];
+        // NEVER infer this from the CURRENT request's headers. Forwarding headers are
+        // client-controlled, so `forwarding_headers_present() && no trusted proxy`
+        // would let any visitor send `X-Forwarded-For:` and switch the whole
+        // enforcement stack off for their own request — a complete bypass, and worse
+        // than the bug this state exists to contain.
+        //
+        // The flag is written only from an authenticated administrator's request
+        // (maybe_flag_proxy(), on admin_init), which is a trustworthy sample of how
+        // traffic actually reaches this site and cannot be forged by a visitor.
+        return $this->get_trusted_proxies() === []
+            && (bool) get_option('webdecoy_proxy_detected', false);
+    }
+
+    /**
+     * Record whether this site sits behind an unconfigured reverse proxy, sampled
+     * from an administrator's own request. Front-end code reads the stored flag; it
+     * must never read the headers directly. See proxy_misconfigured().
+     */
+    public function maybe_flag_proxy(): void
+    {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
+        $seen = WebDecoy_Blocker::forwarding_header_seen();
+        $flagged = (bool) get_option('webdecoy_proxy_detected', false);
+
+        if ($seen !== '' && !$flagged) {
+            update_option('webdecoy_proxy_detected', $seen, false);
+        } elseif ($seen === '' && $flagged) {
+            // The proxy is gone, or the admin is reaching the origin directly.
+            delete_option('webdecoy_proxy_detected');
+        }
     }
 
     /**
@@ -465,15 +496,12 @@ final class WebDecoy_Plugin
         // The dangerous state: a proxy in front, and we were never told about it,
         // so every visitor resolves to the same address.
         if ($this->proxy_misconfigured()) {
-            $headers = [];
-            foreach (['HTTP_CF_CONNECTING_IP' => 'CF-Connecting-IP', 'HTTP_X_FORWARDED_FOR' => 'X-Forwarded-For', 'HTTP_X_REAL_IP' => 'X-Real-IP'] as $key => $label) {
-                if (!empty($_SERVER[$key])) {
-                    $headers[] = $label;
-                }
+            // The stored flag holds the header name that was seen on an admin request.
+            $seen = (string) get_option('webdecoy_proxy_detected', '');
+            if ($seen === '' || $seen === '1') {
+                $seen = __('a forwarding header', 'webdecoy');
             }
-            // Escape each header name individually, THEN join with markup. Escaping
-            // the joined string would turn the separator's tags into literal text.
-            $header_html = '<code>' . implode('</code>, <code>', array_map('esc_html', $headers)) . '</code>';
+            $header_html = '<code>' . esc_html($seen) . '</code>';
             printf(
                 '<div class="notice notice-error"><p><strong>%s</strong> %s</p><p>%s</p><p><a class="button button-primary" href="%s">%s</a></p></div>',
                 esc_html__('WebDecoy is not blocking: this site is behind a proxy it has not been told about.', 'webdecoy'),
@@ -810,6 +838,9 @@ final class WebDecoy_Plugin
             add_action('admin_menu', [$this, 'admin_menu']);
             add_action('admin_init', [$this, 'register_settings']);
             add_action('admin_init', [$this, 'maybe_upgrade']);
+            // Sample "are we behind a proxy" from a trusted (admin) request, so the
+            // front end never has to consult a client-controlled header.
+            add_action('admin_init', [$this, 'maybe_flag_proxy']);
             add_action('admin_notices', [$this, 'render_state_notices']);
             add_action('wp_dashboard_setup', [$this, 'dashboard_widget']);
             add_action('admin_enqueue_scripts', [$this, 'admin_scripts']);
