@@ -3,7 +3,7 @@
  * Plugin Name: WebDecoy Bot Detection
  * Plugin URI: https://webdecoy.com/wordpress
  * Description: Protect your WordPress site from bots, spam, and carding attacks with WebDecoy's advanced threat detection.
- * Version: 2.3.1
+ * Version: 2.3.2
  * Requires at least: 6.1
  * Requires PHP: 7.4
  * Author: WebDecoy
@@ -41,7 +41,7 @@ if (!function_exists('str_starts_with')) {
 }
 
 // Plugin constants
-define('WEBDECOY_VERSION', '2.3.1');
+define('WEBDECOY_VERSION', '2.3.2');
 define('WEBDECOY_PLUGIN_FILE', __FILE__);
 define('WEBDECOY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WEBDECOY_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -225,9 +225,16 @@ final class WebDecoy_Plugin
             'custom_allowlist' => [],
 
             // Blocking Settings
+            // Monitor mode is the safe default: everything is detected, logged and
+            // reported, and nothing is ever blocked, throttled or 403'd. Turn it off
+            // deliberately, once the Detections page shows what enforcement would do.
+            'monitor_mode' => true,
             'ip_allowlist' => [], // IPs/CIDRs that bypass all detection
             'block_action' => 'block',
-            'block_duration' => 24,
+            // 93% of hostile addresses are gone inside an hour, so a longer default
+            // buys almost nothing against the adversary and carries a full extra day
+            // of exposure to blocking whoever inherits the address next.
+            'block_duration' => 1,
             'show_block_page' => true,
             'block_page_message' => 'Access to this site has been restricted.',
 
@@ -352,6 +359,209 @@ final class WebDecoy_Plugin
         }
 
         return array_values(array_filter(array_map('trim', $proxies)));
+    }
+
+    /**
+     * True when the request arrived through a proxy the plugin has not been told
+     * about. In that state SignalCollector::getIP() correctly refuses the spoofable
+     * forwarding headers and returns REMOTE_ADDR — which is the proxy, not the
+     * visitor — so every visitor resolves to the same address and any IP-keyed
+     * action hits all of them at once.
+     *
+     * This is a detection of OUR misconfiguration. It must never cause the plugin to
+     * start trusting the headers: that would let any client choose their own identity
+     * and frame a third party into the block table.
+     */
+    public function proxy_misconfigured(): bool
+    {
+        // NEVER infer this from the CURRENT request's headers. Forwarding headers are
+        // client-controlled, so `forwarding_headers_present() && no trusted proxy`
+        // would let any visitor send `X-Forwarded-For:` and switch the whole
+        // enforcement stack off for their own request — a complete bypass, and worse
+        // than the bug this state exists to contain.
+        //
+        // The flag is written only from an authenticated administrator's request
+        // (maybe_flag_proxy(), on admin_init), which is a trustworthy sample of how
+        // traffic actually reaches this site and cannot be forged by a visitor.
+        return $this->get_trusted_proxies() === []
+            && (bool) get_option('webdecoy_proxy_detected', false);
+    }
+
+    /**
+     * Record whether this site sits behind an unconfigured reverse proxy, sampled
+     * from an administrator's own request. Front-end code reads the stored flag; it
+     * must never read the headers directly. See proxy_misconfigured().
+     */
+    public function maybe_flag_proxy(): void
+    {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
+        $seen = WebDecoy_Blocker::forwarding_header_seen();
+        $flagged = (bool) get_option('webdecoy_proxy_detected', false);
+
+        if ($seen !== '' && !$flagged) {
+            update_option('webdecoy_proxy_detected', $seen, false);
+        } elseif ($seen === '' && $flagged) {
+            // The proxy is gone, or the admin is reaching the origin directly.
+            delete_option('webdecoy_proxy_detected');
+        }
+    }
+
+    /**
+     * Why enforcement is currently suppressed, or '' when it is live.
+     *
+     * Detection, logging and cloud reporting continue in every suppressed state —
+     * only the act of blocking, throttling or serving a 403 is withheld.
+     */
+    public function suppression_reason(): string
+    {
+        if (defined('WEBDECOY_DISABLE') && WEBDECOY_DISABLE) {
+            return 'disabled';
+        }
+        if (!empty($this->options['monitor_mode'])) {
+            return 'monitor';
+        }
+        if ($this->proxy_misconfigured()) {
+            return 'proxy';
+        }
+        return '';
+    }
+
+    /** Convenience wrapper: is any enforcement action allowed on this request? */
+    public function enforcement_suppressed(): bool
+    {
+        return $this->suppression_reason() !== '';
+    }
+
+    /**
+     * One-time migrations, keyed on the stored schema version.
+     */
+    public function maybe_upgrade(): void
+    {
+        $stored = get_option('webdecoy_schema_version', '0');
+        if (version_compare($stored, '2.3.2', '>=')) {
+            return;
+        }
+
+        // 2.3.2: the cross-site actor feed no longer writes to the block table.
+        // Remove every row it wrote, so upgrading actually stops the enforcement
+        // rather than leaving up to 2,000 stale addresses blocked until they age
+        // out. Refs WebDecoy/app#476.
+        if (class_exists('WebDecoy_Actor_Feed')) {
+            $purged = WebDecoy_Actor_Feed::purge_feed_blocks();
+            if ($purged > 0) {
+                set_transient('webdecoy_upgrade_notice_232', $purged, DAY_IN_SECONDS);
+            }
+        }
+
+        // 2.3.2: bring sites still sitting on the old 24-hour default down to the
+        // new 1-hour default. A site that deliberately chose some other number keeps
+        // it; only the untouched default moves. 24 is indistinguishable from a
+        // deliberate 24, and on a safety release the shorter block is the safer of
+        // the two mistakes.
+        $saved = get_option('webdecoy_options', []);
+        if (!is_array($saved)) {
+            $saved = [];
+        }
+        $dirty = false;
+
+        // 2.3.2: PERSIST the new monitor_mode default. load_options() merges it in at
+        // runtime, but the settings form reads the stored array directly — without this
+        // the checkbox renders unchecked while the plugin is in monitor mode, and
+        // because an unchecked box submits nothing and sanitize_options() rebuilds the
+        // array from scratch, the next save of ANY setting writes false and silently
+        // turns full enforcement on.
+        if (!array_key_exists('monitor_mode', $saved)) {
+            $saved['monitor_mode'] = true;
+            $dirty = true;
+        }
+
+        if (isset($saved['block_duration']) && (int) $saved['block_duration'] === 24) {
+            $saved['block_duration'] = 1;
+            $dirty = true;
+        }
+
+        if ($dirty) {
+            $this->update_options_raw($saved);
+            $this->load_options();
+        }
+
+        update_option('webdecoy_schema_version', '2.3.2', true);
+    }
+
+    /**
+     * Tell the administrator, on every admin screen, when the plugin is watching
+     * rather than acting — and why. A security plugin that has silently stopped
+     * enforcing is worse than one that never did.
+     */
+    public function render_state_notices(): void
+    {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
+        $settings_url = admin_url('admin.php?page=webdecoy-settings');
+
+        if (defined('WEBDECOY_DISABLE') && WEBDECOY_DISABLE) {
+            printf(
+                '<div class="notice notice-warning"><p><strong>%s</strong> %s</p></div>',
+                esc_html__('WebDecoy is disabled.', 'webdecoy'),
+                esc_html__('WEBDECOY_DISABLE is defined in wp-config.php, so nothing is detected or blocked on the front end. Remove it to resume.', 'webdecoy')
+            );
+            return;
+        }
+
+        // The dangerous state: a proxy in front, and we were never told about it,
+        // so every visitor resolves to the same address.
+        if ($this->proxy_misconfigured()) {
+            // The stored flag holds the header name that was seen on an admin request.
+            $seen = (string) get_option('webdecoy_proxy_detected', '');
+            if ($seen === '' || $seen === '1') {
+                $seen = __('a forwarding header', 'webdecoy');
+            }
+            $header_html = '<code>' . esc_html($seen) . '</code>';
+            printf(
+                '<div class="notice notice-error"><p><strong>%s</strong> %s</p><p>%s</p><p><a class="button button-primary" href="%s">%s</a></p></div>',
+                esc_html__('WebDecoy is not blocking: this site is behind a proxy it has not been told about.', 'webdecoy'),
+                wp_kses(
+                    sprintf(
+                        /* translators: %s: comma-separated list of HTTP header names */
+                        esc_html__('Your requests arrive with %s, but no trusted proxy is configured. Until that is fixed every visitor looks like the same address, so blocking anyone would block everyone.', 'webdecoy'),
+                        $header_html
+                    ),
+                    ['code' => []]
+                ),
+                esc_html__('Detection, logging and reporting continue as normal. Only blocking, rate limiting and the 403 page are withheld.', 'webdecoy'),
+                esc_url($settings_url),
+                esc_html__('Configure trusted proxies', 'webdecoy')
+            );
+            return;
+        }
+
+        if (!empty($this->options['monitor_mode'])) {
+            $stats = get_option('webdecoy_suppressed_actions', []);
+            $total = 0;
+            if (is_array($stats)) {
+                foreach ($stats as $day) {
+                    $total += (int) ($day['count'] ?? 0);
+                }
+            }
+            printf(
+                '<div class="notice notice-info"><p><strong>%s</strong> %s</p><p><a class="button" href="%s">%s</a></p></div>',
+                esc_html__('WebDecoy is in monitor mode.', 'webdecoy'),
+                $total > 0
+                    ? sprintf(
+                        /* translators: %d: number of actions that were withheld */
+                        esc_html__('Everything is detected and logged; nothing is blocked. Enforcing would have acted on %d requests in the last 30 days.', 'webdecoy'),
+                        (int) $total
+                    )
+                    : esc_html__('Everything is detected and logged; nothing is blocked. No request has met the bar for enforcement yet.', 'webdecoy'),
+                esc_url($settings_url),
+                esc_html__('Review and turn on blocking', 'webdecoy')
+            );
+        }
     }
 
     /**
@@ -647,6 +857,11 @@ final class WebDecoy_Plugin
         if (is_admin()) {
             add_action('admin_menu', [$this, 'admin_menu']);
             add_action('admin_init', [$this, 'register_settings']);
+            add_action('admin_init', [$this, 'maybe_upgrade']);
+            // Sample "are we behind a proxy" from a trusted (admin) request, so the
+            // front end never has to consult a client-controlled header.
+            add_action('admin_init', [$this, 'maybe_flag_proxy']);
+            add_action('admin_notices', [$this, 'render_state_notices']);
             add_action('wp_dashboard_setup', [$this, 'dashboard_widget']);
             add_action('admin_enqueue_scripts', [$this, 'admin_scripts']);
         }
@@ -854,6 +1069,13 @@ final class WebDecoy_Plugin
      */
     public function early_check(): void
     {
+        // Emergency off switch. `define('WEBDECOY_DISABLE', true);` in wp-config.php
+        // stops the plugin doing anything on the front end, so an owner who has locked
+        // themselves out can recover over FTP without touching the database.
+        if (defined('WEBDECOY_DISABLE') && WEBDECOY_DISABLE) {
+            return;
+        }
+
         // Skip if disabled
         if (!$this->options['enabled']) {
             return;
@@ -873,7 +1095,8 @@ final class WebDecoy_Plugin
             return;
         }
 
-        if ($blocker->is_blocked($ip)) {
+        // Detection continues in every suppressed state; only the 403 is withheld.
+        if ($blocker->is_blocked($ip) && !$this->enforcement_suppressed()) {
             $this->block_request(__('Your IP has been blocked.', 'webdecoy'));
             return;
         }
@@ -1225,8 +1448,99 @@ final class WebDecoy_Plugin
      * @param \WebDecoy\Rules\RuleEngineResult $result
      * @param string $ip
      */
+    /**
+     * The configured block duration in hours, or null for permanent.
+     */
+    private function block_duration(): ?int
+    {
+        $hours = (int) ($this->options['block_duration'] ?? 1);
+        return $hours > 0 ? $hours : null;
+    }
+
+    /**
+     * The single gate every automatic block passes through.
+     *
+     * Returns false — and blocks nothing — whenever enforcement is suppressed, so the
+     * caller can skip serving a 403 too. Manual blocks from the admin UI deliberately
+     * do NOT come through here: a human typing an address has already decided.
+     *
+     * @return bool True when the block was actually written.
+     */
+    private function enforce_block(string $ip, string $reason, ?int $duration = null): bool
+    {
+        $suppression = $this->suppression_reason();
+        if ($suppression !== '') {
+            do_action('webdecoy_enforcement_suppressed', $ip, $suppression, null);
+            $this->record_suppressed_action($suppression, $reason);
+            return false;
+        }
+
+        $blocker = new WebDecoy_Blocker();
+        return $blocker->block($ip, $reason, $duration ?? $this->block_duration());
+    }
+
+    /**
+     * Count what enforcement would have done, so monitor mode produces a number
+     * rather than silence. Kept as a bounded option — no new table, no per-request
+     * write beyond a single autoloaded counter.
+     */
+    private function record_suppressed_action(string $suppression, string $reason): void
+    {
+        $stats = get_option('webdecoy_suppressed_actions', []);
+        if (!is_array($stats)) {
+            $stats = [];
+        }
+        $day = gmdate('Y-m-d');
+        if (!isset($stats[$day])) {
+            $stats[$day] = ['count' => 0, 'by' => []];
+        }
+        $stats[$day]['count']++;
+        $key = substr($reason, 0, 80);
+        $stats[$day]['by'][$key] = ($stats[$day]['by'][$key] ?? 0) + 1;
+        if (count($stats[$day]['by']) > 25) {
+            arsort($stats[$day]['by']);
+            $stats[$day]['by'] = array_slice($stats[$day]['by'], 0, 25, true);
+        }
+        // Keep 30 days.
+        if (count($stats) > 30) {
+            ksort($stats);
+            $stats = array_slice($stats, -30, null, true);
+        }
+        update_option('webdecoy_suppressed_actions', $stats, false);
+        unset($suppression);
+    }
+
     private function handle_rule_decision(\WebDecoy\Rules\RuleEngineResult $result, string $ip): void
     {
+        // Monitor mode, the kill switch, or an unconfigured proxy: the violation has
+        // already been logged and reported by the caller. Take no action on the
+        // request itself. This is the single gate for every enforcement path below —
+        // 429, deceptive response, local IP block and 403 alike.
+        $suppression = $this->suppression_reason();
+        if ($suppression !== '') {
+            /**
+             * Fires when enforcement was withheld for a request that would otherwise
+             * have been acted on. The counterfactual, for the Detections page.
+             *
+             * @param string $ip
+             * @param string $suppression One of 'disabled', 'monitor', 'proxy'.
+             * @param \WebDecoy\Rules\RuleEngineResult $result
+             */
+            do_action('webdecoy_enforcement_suppressed', $ip, $suppression, $result);
+            // Deliberately NOT counted for THROTTLE. Rate limiting is high-volume by
+            // nature, it previously performed no database write on this path, and one
+            // option write per throttled request would turn a bot flood into an
+            // options-table flood — on every install, since monitor mode is the
+            // default. The rate limiter's own counters already carry that number.
+            if ($result->action !== \WebDecoy\Rules\RuleResult::THROTTLE) {
+                $this->record_suppressed_action(
+                    $suppression,
+                    $result->reason ?? ('Rule enforced: ' . ($result->rule ?? 'rule'))
+                );
+            }
+            return;
+        }
+
         if ($result->action === \WebDecoy\Rules\RuleResult::THROTTLE) {
             $meta = is_array($result->metadata) ? $result->metadata : [];
             $retryAfter = isset($meta['retryAfter']) ? max(1, intval($meta['retryAfter'])) : 60;
@@ -1385,16 +1699,28 @@ final class WebDecoy_Plugin
                 return;
             }
 
+            // The challenge page is a 403 with an interstitial. It is enforcement, so
+            // it passes the same gate as a block. Checked AFTER the verified-cookie
+            // test so a visitor who already solved it is not counted as withheld.
+            $suppression = $this->suppression_reason();
+            if ($suppression !== '') {
+                do_action('webdecoy_enforcement_suppressed', $ip, $suppression, null);
+                $this->record_suppressed_action(
+                    $suppression,
+                    'Challenge (score: ' . $result->getScore() . ')'
+                );
+                return;
+            }
+
             // Serve challenge page
             $this->serve_challenge_page($ip);
             return;
         }
 
         // Default action: block
-        $blocker = new WebDecoy_Blocker();
-        $duration = $this->options['block_duration'] > 0 ? $this->options['block_duration'] : null;
-        $blocker->block($ip, 'Bot detection score: ' . $result->getScore(), $duration);
-        $this->block_request($this->options['block_page_message']);
+        if ($this->enforce_block($ip, 'Bot detection score: ' . $result->getScore())) {
+            $this->block_request($this->options['block_page_message']);
+        }
     }
 
     /**
@@ -1549,11 +1875,16 @@ final class WebDecoy_Plugin
         $result = $detector->analyze();
 
         if ($result->shouldBlock($this->options['min_score_to_block'])) {
-            wp_die(
-                esc_html__('Your comment has been blocked due to suspicious activity.', 'webdecoy'),
-                esc_html__('Comment Blocked', 'webdecoy'),
-                ['response' => 403, 'back_link' => true]
-            );
+            // Reachable at default sensitivity and serves a literal 403 — same gate.
+            $suppression = $this->suppression_reason();
+            if ($suppression === '') {
+                wp_die(
+                    esc_html__('Your comment has been blocked due to suspicious activity.', 'webdecoy'),
+                    esc_html__('Comment Blocked', 'webdecoy'),
+                    ['response' => 403, 'back_link' => true]
+                );
+            }
+            $this->record_suppressed_action($suppression, 'Comment refused: score ' . $result->getScore());
         }
 
         return $commentdata;
@@ -1572,6 +1903,13 @@ final class WebDecoy_Plugin
      */
     public function check_canary_login($user, string $username, string $password)
     {
+        // The kill switch has to be unconditional to be a kill switch. A canary hit is
+        // zero-false-positive evidence, so it is still refused in monitor mode — but
+        // never when the owner has explicitly turned the plugin off in wp-config.php.
+        if (defined('WEBDECOY_DISABLE') && WEBDECOY_DISABLE) {
+            return $user;
+        }
+
         if ($username === '' && $password === '') {
             return $user;
         }
@@ -1599,9 +1937,7 @@ final class WebDecoy_Plugin
             // Confirmed decoy exfiltration is always CRITICAL — surface the moment.
             $this->flag_critical_moment($ip, \WebDecoy\DetectionResult::THREAT_CRITICAL);
 
-            $blocker = new WebDecoy_Blocker();
-            $duration = $this->options['block_duration'] > 0 ? $this->options['block_duration'] : null;
-            $blocker->block($ip, 'Canary credential use (decoy exfiltration)', $duration);
+            $this->enforce_block($ip, 'Canary credential use (decoy exfiltration)');
 
             return new \WP_Error(
                 'webdecoy_canary',
@@ -1633,6 +1969,14 @@ final class WebDecoy_Plugin
         $result = $detector->analyze();
 
         if ($result->shouldBlock($this->options['min_score_to_block'])) {
+            // Refusing a login is enforcement, and it is the one refusal a locked-out
+            // owner cannot work around — so it must honour WEBDECOY_DISABLE and
+            // monitor mode like every other action.
+            $suppression = $this->suppression_reason();
+            if ($suppression !== '') {
+                $this->record_suppressed_action($suppression, 'Login refused: score ' . $result->getScore());
+                return $user;
+            }
             return new \WP_Error(
                 'webdecoy_blocked',
                 __('Login blocked due to suspicious activity.', 'webdecoy')
@@ -1657,6 +2001,11 @@ final class WebDecoy_Plugin
         $result = $detector->analyze();
 
         if ($result->shouldBlock($this->options['min_score_to_block'])) {
+            $suppression = $this->suppression_reason();
+            if ($suppression !== '') {
+                $this->record_suppressed_action($suppression, 'Registration refused: score ' . $result->getScore());
+                return;
+            }
             $errors->add(
                 'webdecoy_blocked',
                 __('Registration blocked due to suspicious activity.', 'webdecoy')
@@ -1720,10 +2069,10 @@ final class WebDecoy_Plugin
         if (isset($_POST[$honeypot_name]) && !empty($_POST[$honeypot_name])) {
             // Honeypot triggered - definitely a bot
             $ip = $this->get_client_ip();
-            $blocker = new WebDecoy_Blocker();
-            $blocker->block($ip, 'Honeypot triggered: ' . $context);
-
-            $this->block_request(__('Suspicious activity detected.', 'webdecoy'));
+            // Previously passed no duration at all, which meant a permanent block.
+            if ($this->enforce_block($ip, 'Honeypot triggered: ' . $context)) {
+                $this->block_request(__('Suspicious activity detected.', 'webdecoy'));
+            }
         }
     }
 
@@ -1878,8 +2227,9 @@ final class WebDecoy_Plugin
         // stored as an array of valid entries.
         $allowlist = $this->sanitize_trusted_proxies($input['ip_allowlist'] ?? '');
         $sanitized['ip_allowlist'] = $allowlist === '' ? [] : explode("\n", $allowlist);
+        $sanitized['monitor_mode'] = !empty($input['monitor_mode']);
         $sanitized['block_action'] = in_array($input['block_action'] ?? 'block', ['block', 'challenge', 'log']) ? $input['block_action'] : 'block';
-        $sanitized['block_duration'] = max(0, intval($input['block_duration'] ?? 24));
+        $sanitized['block_duration'] = max(0, intval($input['block_duration'] ?? 1));
         $sanitized['show_block_page'] = !empty($input['show_block_page']);
         $sanitized['block_page_message'] = sanitize_textarea_field($input['block_page_message'] ?? '');
 
@@ -2218,10 +2568,8 @@ final class WebDecoy_Plugin
 
         if ($score >= $this->options['min_score_to_block'] && $action === 'block') {
             // Only block if action is set to 'block'
-            $blocker = new WebDecoy_Blocker();
-            $duration = $this->options['block_duration'] > 0 ? $this->options['block_duration'] : null;
             $flags = implode(', ', $detection['f'] ?? []);
-            $blocker->block($ip, "Client detection (score: {$score}): {$flags}", $duration);
+            $this->enforce_block($ip, "Client detection (score: {$score}): {$flags}");
         }
 
         // Forward to WebDecoy ingest service if premium
@@ -2495,8 +2843,9 @@ final class WebDecoy_Plugin
             return;
         }
 
+        // force: a human typed this address, so the safety guards do not apply.
         $blocker = new WebDecoy_Blocker();
-        $blocker->block($ip, $reason, $duration > 0 ? $duration : null);
+        $blocker->block($ip, $reason, $duration > 0 ? $duration : null, true);
 
         wp_send_json_success(['message' => __('IP blocked successfully.', 'webdecoy')]);
     }
@@ -2547,21 +2896,34 @@ final class WebDecoy_Plugin
 
         $blocker = new WebDecoy_Blocker();
         $blocked = 0;
+        $refused = 0;
 
+        // Not forced: these addresses came from detection rows, not from a human
+        // typing them, so behind an unconfigured proxy they may all be the front
+        // door. The guards apply and refusals are reported back.
         foreach ($ips as $ip) {
             if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                $duration = $this->options['block_duration'] > 0 ? $this->options['block_duration'] : null;
-                $blocker->block($ip, 'Bulk block from detections page', $duration);
-                $blocked++;
+                if ($blocker->block($ip, 'Bulk block from detections page', $this->block_duration())) {
+                    $blocked++;
+                } else {
+                    $refused++;
+                }
             }
         }
 
         wp_send_json_success([
-            'message' => sprintf(
-                /* translators: %d: number of IPs blocked */
-                __('%d IPs blocked.', 'webdecoy'),
-                $blocked
-            ),
+            'message' => $refused > 0
+                ? sprintf(
+                    /* translators: 1: number of IPs blocked, 2: number refused */
+                    __('%1$d IPs blocked. %2$d refused as infrastructure addresses — check that your trusted proxy settings match how this site is served.', 'webdecoy'),
+                    $blocked,
+                    $refused
+                )
+                : sprintf(
+                    /* translators: %d: number of IPs blocked */
+                    __('%d IPs blocked.', 'webdecoy'),
+                    $blocked
+                ),
         ]);
     }
 
@@ -2963,6 +3325,17 @@ final class WebDecoy_Plugin
 function webdecoy(): WebDecoy_Plugin
 {
     return WebDecoy_Plugin::instance();
+}
+
+/**
+ * Trusted-proxy ranges, reachable from classes that do not hold a plugin reference.
+ * Used by WebDecoy_Blocker::guard() to refuse blocking infrastructure addresses.
+ *
+ * @return string[]
+ */
+function webdecoy_plugin_trusted_proxies(): array
+{
+    return WebDecoy_Plugin::instance()->get_trusted_proxies();
 }
 
 // Initialize plugin

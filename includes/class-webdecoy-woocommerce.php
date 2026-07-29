@@ -58,8 +58,21 @@ class WebDecoy_WooCommerce
 
         $ip = $this->get_client_ip();
 
+        // Monitor mode, WEBDECOY_DISABLE and an unconfigured proxy all mean "watch,
+        // don't act". That has to hold on the checkout path too — an error notice in
+        // woocommerce_checkout_process aborts the order, so an ungated refusal here
+        // means a store takes no money while the admin banner says nothing is blocked,
+        // and none of the three off switches help. Detection and logging stay
+        // unconditional; only the notice is withheld.
+        //
+        // The checkout path also never writes a sitewide IP block: behind an
+        // unconfigured proxy every shopper shares one address, so one false positive
+        // would 403 the whole store on every page. Refusing this order is already the
+        // proportionate response. Refs #52, #56.
+        $suppressed = $this->suppressed();
+
         // Check if already blocked
-        if ($this->blocker->is_blocked($ip)) {
+        if ($this->blocker->is_blocked($ip) && !$suppressed) {
             wc_add_notice(
                 __('Your checkout has been blocked due to suspicious activity.', 'webdecoy'),
                 'error'
@@ -69,35 +82,25 @@ class WebDecoy_WooCommerce
 
         // Check velocity
         if (!$this->check_velocity($ip)) {
-            $this->blocker->block(
-                $ip,
-                'Checkout velocity exceeded',
-                $this->options['block_duration'] > 0 ? $this->options['block_duration'] : null
-            );
-
-            wc_add_notice(
-                __('Too many checkout attempts. Please try again later.', 'webdecoy'),
-                'error'
-            );
-
             $this->log_detection($ip, 'velocity_exceeded');
+            if (!$suppressed) {
+                wc_add_notice(
+                    __('Too many checkout attempts. Please try again later.', 'webdecoy'),
+                    'error'
+                );
+            }
             return;
         }
 
         // Check for card testing patterns
         if ($this->detect_card_testing($ip)) {
-            $this->blocker->block(
-                $ip,
-                'Card testing detected',
-                $this->options['block_duration'] > 0 ? $this->options['block_duration'] : null
-            );
-
-            wc_add_notice(
-                __('Suspicious checkout activity detected.', 'webdecoy'),
-                'error'
-            );
-
             $this->log_detection($ip, 'card_testing');
+            if (!$suppressed) {
+                wc_add_notice(
+                    __('Suspicious checkout activity detected.', 'webdecoy'),
+                    'error'
+                );
+            }
             return;
         }
 
@@ -106,18 +109,13 @@ class WebDecoy_WooCommerce
         $result = $detector->analyze();
 
         if ($result->shouldBlock($this->options['min_score_to_block'])) {
-            $this->blocker->block(
-                $ip,
-                'Bot detected at checkout: score ' . $result->getScore(),
-                $this->options['block_duration'] > 0 ? $this->options['block_duration'] : null
-            );
-
-            wc_add_notice(
-                __('Your checkout has been blocked due to suspicious activity.', 'webdecoy'),
-                'error'
-            );
-
             $this->log_detection($ip, 'bot_detection', $result->getScore());
+            if (!$suppressed) {
+                wc_add_notice(
+                    __('Your checkout has been blocked due to suspicious activity.', 'webdecoy'),
+                    'error'
+                );
+            }
         }
     }
 
@@ -132,7 +130,9 @@ class WebDecoy_WooCommerce
         $limit = $this->options['checkout_velocity_limit'] ?? 5;
         $window = $this->options['checkout_velocity_window'] ?? 3600;
 
-        $attempts = $this->get_recent_attempts($ip, $window);
+        // A completed order is not a failed checkout attempt. Counting successes
+        // here throttled legitimate repeat buyers. Refs #52.
+        $attempts = $this->get_recent_attempts($ip, $window, false);
 
         return count($attempts) < $limit;
     }
@@ -145,7 +145,12 @@ class WebDecoy_WooCommerce
      */
     private function detect_card_testing(string $ip): bool
     {
-        $attempts = $this->get_recent_attempts($ip, 3600);
+        // Successful orders are not evidence of card testing. track_payment() only
+        // flips a row's status to 'success' and never removes it, so without this
+        // filter three completed sub-$5 orders from one address in an hour — the
+        // normal profile for digital downloads, donations, tips and add-ons — read
+        // as an attack. Refs WebDecoy/wordpress-plugin#52.
+        $attempts = $this->get_recent_attempts($ip, 3600, false);
 
         if (count($attempts) < 2) {
             return false;
@@ -282,15 +287,23 @@ class WebDecoy_WooCommerce
      * @param int $window Time window in seconds
      * @return array
      */
-    private function get_recent_attempts(string $ip, int $window): array
+    private function get_recent_attempts(string $ip, int $window, bool $include_successful = true): array
     {
         global $wpdb;
 
         $table = $wpdb->prefix . 'webdecoy_checkout_attempts';
         $since = gmdate('Y-m-d H:i:s', strtotime("-{$window} seconds"));
 
+        if ($include_successful) {
+            return $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM {$table} WHERE ip_address = %s AND created_at > %s ORDER BY created_at DESC",
+                $ip,
+                $since
+            ), ARRAY_A) ?: [];
+        }
+
         return $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM {$table} WHERE ip_address = %s AND created_at > %s ORDER BY created_at DESC",
+            "SELECT * FROM {$table} WHERE ip_address = %s AND created_at > %s AND status <> 'success' ORDER BY created_at DESC",
             $ip,
             $since
         ), ARRAY_A) ?: [];
@@ -431,6 +444,37 @@ class WebDecoy_WooCommerce
     public function check_velocity_public(string $ip): bool
     {
         return $this->check_velocity($ip);
+    }
+
+    /**
+     * True when the plugin is in a watch-only state — monitor mode, WEBDECOY_DISABLE,
+     * or an unconfigured reverse proxy. Public so the Store API closure can consult it.
+     *
+     * Fails CLOSED to "not suppressed" only if the main plugin class is unavailable,
+     * which cannot happen while this class is loaded by it.
+     */
+    public function suppressed(): bool
+    {
+        if (defined('WEBDECOY_DISABLE') && WEBDECOY_DISABLE) {
+            return true;
+        }
+        if (function_exists('webdecoy')) {
+            return webdecoy()->enforcement_suppressed();
+        }
+        return !empty($this->options['monitor_mode']);
+    }
+
+    /**
+     * Record a detection - public accessor for the Store API / Blocks integration,
+     * which refuses the order via RouteException and must still leave a record.
+     *
+     * @param string $ip
+     * @param string $reason
+     * @param int|null $score
+     */
+    public function log_detection_public(string $ip, string $reason, ?int $score = null): void
+    {
+        $this->log_detection($ip, $reason, $score);
     }
 
     /**
@@ -583,11 +627,17 @@ class WebDecoy_WooCommerce
             $ip = $this->get_client_ip();
             $this->log_detection($ip, 'honeytoken_coupon', 100);
 
-            if (($this->options['block_action'] ?? 'block') === 'block') {
+            // This is a real write to the sitewide block table, so it passes the same
+            // gate as every other enforcement action — it was firing in monitor mode
+            // under a banner reading "nothing is blocked" (#56). Rejecting the coupon
+            // is not enforcement: the code does not exist, and answering as though it
+            // does not is the deception working.
+            if (($this->options['block_action'] ?? 'block') === 'block' && !$this->suppressed()) {
+                $duration = (int) ($this->options['block_duration'] ?? 1);
                 $this->blocker->block(
                     $ip,
                     'Honeytoken coupon applied',
-                    ($this->options['block_duration'] ?? 24) > 0 ? $this->options['block_duration'] : null
+                    $duration > 0 ? $duration : null
                 );
             }
 
@@ -666,9 +716,12 @@ add_action('woocommerce_blocks_loaded', function () {
             $woo = new WebDecoy_WooCommerce($options);
             $ip = $woo->get_client_ip_public();
 
+            // Suppressed states apply here exactly as on the classic path (#56).
+            $suppressed = $woo->suppressed();
+
             // Check if already blocked
             $blocker = new WebDecoy_Blocker();
-            if ($blocker->is_blocked($ip)) {
+            if ($blocker->is_blocked($ip) && !$suppressed) {
                 throw new \Automattic\WooCommerce\StoreApi\Exceptions\RouteException(
                     'webdecoy_blocked',
                     esc_html(__('Your checkout has been blocked due to suspicious activity.', 'webdecoy')),
@@ -676,14 +729,19 @@ add_action('woocommerce_blocks_loaded', function () {
                 );
             }
 
+            // As on the classic checkout path, refusing the order IS the response.
+            // The RouteException below already stops it with a 429/403. Writing a
+            // sitewide IP block from here would, behind an unconfigured proxy where
+            // every shopper shares one address, 403 the whole store on every page
+            // from a single checkout false positive.
+            // Refs WebDecoy/wordpress-plugin#52.
+
             // Check velocity
             if (!$woo->check_velocity_public($ip)) {
-                $blocker->block(
-                    $ip,
-                    'Checkout velocity exceeded (Blocks)',
-                    $options['block_duration'] > 0 ? $options['block_duration'] : null
-                );
-
+                $woo->log_detection_public($ip, 'velocity_exceeded');
+                if ($suppressed) {
+                    return;
+                }
                 throw new \Automattic\WooCommerce\StoreApi\Exceptions\RouteException(
                     'webdecoy_velocity',
                     esc_html(__('Too many checkout attempts. Please try again later.', 'webdecoy')),
@@ -693,12 +751,10 @@ add_action('woocommerce_blocks_loaded', function () {
 
             // Check for card testing patterns
             if ($woo->detect_card_testing_public($ip)) {
-                $blocker->block(
-                    $ip,
-                    'Card testing detected (Blocks)',
-                    $options['block_duration'] > 0 ? $options['block_duration'] : null
-                );
-
+                $woo->log_detection_public($ip, 'card_testing');
+                if ($suppressed) {
+                    return;
+                }
                 throw new \Automattic\WooCommerce\StoreApi\Exceptions\RouteException(
                     'webdecoy_carding',
                     esc_html(__('Suspicious checkout activity detected.', 'webdecoy')),

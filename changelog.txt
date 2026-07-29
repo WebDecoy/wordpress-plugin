@@ -1,5 +1,20 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.3.2 - 2026-07-29 =
+Safety release. Please update. This version deliberately makes the plugin do LESS by default.
+
+* IMPORTANT — Monitor mode is now the default. WebDecoy detects, logs and reports everything, and blocks nothing, until you turn blocking on in Blocking > Monitor mode. Existing sites are switched to monitor mode by this update. Read the Detections page to see what enforcement would have done, then decide.
+* Fixed: behind a reverse proxy (Cloudflare, a load balancer, most managed hosts) every visitor resolved to the proxy's address, because forwarding headers are correctly distrusted unless a trusted proxy is configured — and nothing detected that mismatch. One hostile request could put the proxy's address in the block list and 403 real visitors for 24 hours. The plugin now detects the condition, refuses to block while it holds, and says so in the admin.
+* Fixed: `WebDecoy_Blocker::block()` validated only that a string parsed as an IP. It will no longer accept loopback, private/reserved ranges, a configured trusted proxy, or the current request's proxy front door from an automatic decision, and automatic blocks can no longer write a range wider than /24 (IPv4) or /48 (IPv6). Refusals are recorded and surfaced instead of failing silently. Blocks a human types in the admin are unaffected.
+* Fixed: block expiry was written in UTC and compared against site-local time, so on any site with a UTC offset of +1 or greater a short block was already expired the moment it was written — blocking silently did nothing. All timestamps in the block table are now UTC.
+* Fixed: a honeypot hit blocked the address permanently, because it was the one path that passed no duration.
+* Changed: default block duration is now 1 hour, was 24. 93% of hostile addresses are gone within the hour, so a longer default caught almost nothing and mostly risked blocking whoever inherited the address next.
+* Fixed (WooCommerce): completed orders counted as card-testing attempts. Three successful sub-$5.00 orders from one address in an hour — the normal profile for digital downloads, donations, tips and add-ons — were classified as an attack. Successful orders no longer count toward card-testing patterns or the checkout velocity limit.
+* Changed (WooCommerce): the checkout path now refuses the order and records the detection, and never writes a sitewide IP block. Refusing the checkout is the proportionate response; blocking the whole site from a checkout false positive is not.
+* Changed: the cross-site actor feed no longer writes addresses into your block table. Measured across the network, only 2 of 4,866 addresses were ever seen at more than one site, 82% of feed entries were already a week stale and none were still active — so blocking on it mostly hit whoever holds the address now. The feed is kept as advisory intelligence. Rows it previously wrote are removed when you upgrade.
+* Added: `define('WEBDECOY_DISABLE', true);` in wp-config.php stops the plugin acting on the front end, so you can always recover over FTP without database access.
+* Added: admin notices that say plainly when the plugin is watching rather than acting, and why.
+
 = 2.3.1 - 2026-07-26 =
 * Fixed: Forwarded detections carry the visitor's own request signature (`cs`). The plugin beacons detections over its own HTTP connection, so the ingest service was identifying visitors by THIS SITE's outbound request headers — identical on every beacon — which collapsed every visitor a site reported into one shared "actor". Header names only, plus Accept-Language and Accept-Encoding; no header values otherwise leave the site, and proxy/CDN-injected names (cf-*, x-forwarded-*) are excluded so a visitor fingerprints consistently wherever they are seen.
 

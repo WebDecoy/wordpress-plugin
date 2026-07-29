@@ -22,15 +22,24 @@ if (!defined('ABSPATH')) {
  */
 class WebDecoy_Blocker
 {
+    /** Widest CIDR an automatic block may write. */
+    private const MAX_AUTO_PREFIX_V4 = 24;
+    private const MAX_AUTO_PREFIX_V6 = 48;
+
+    /** How many recent refusals to keep for the admin. */
+    private const REFUSAL_LOG_MAX = 20;
+
     /**
      * Block an IP address or CIDR range
      *
      * @param string $ip IP address or CIDR range to block (supports IPv4 and IPv6)
      * @param string $reason Reason for blocking
      * @param int|null $duration_hours Duration in hours, null for permanent
+     * @param bool $force Skip the safety guards. Only ever true for a block a human
+     *                    typed into the admin UI — never for an automatic decision.
      * @return bool Success
      */
-    public function block(string $ip, string $reason = '', ?int $duration_hours = null): bool
+    public function block(string $ip, string $reason = '', ?int $duration_hours = null, bool $force = false): bool
     {
         global $wpdb;
 
@@ -47,10 +56,25 @@ class WebDecoy_Blocker
             if ($bits < 0 || $bits > $maxBits) {
                 return false;
             }
+            // An automatic decision must never write a range wide enough to take out a
+            // whole network. A human typing 10.0.0.0/8 into the admin can still do it.
+            if (!$force) {
+                $floor = $version === 4 ? self::MAX_AUTO_PREFIX_V4 : self::MAX_AUTO_PREFIX_V6;
+                if ($bits < $floor) {
+                    return $this->refuse($ip, $reason, "CIDR wider than /{$floor} from an automatic decision");
+                }
+            }
         } else {
             // Validate single IP (IPv4 or IPv6)
             if (!filter_var($ip, FILTER_VALIDATE_IP)) {
                 return false;
+            }
+        }
+
+        if (!$force) {
+            $refusal = $this->guard($ip);
+            if ($refusal !== null) {
+                return $this->refuse($ip, $reason, $refusal);
             }
         }
 
@@ -73,7 +97,7 @@ class WebDecoy_Blocker
                 $table,
                 [
                     'reason' => $reason,
-                    'blocked_at' => current_time('mysql'),
+                    'blocked_at' => gmdate('Y-m-d H:i:s'),
                     'expires_at' => $expires_at,
                 ],
                 ['ip_address' => $ip]
@@ -85,7 +109,7 @@ class WebDecoy_Blocker
                 [
                     'ip_address' => $ip,
                     'reason' => $reason,
-                    'blocked_at' => current_time('mysql'),
+                    'blocked_at' => gmdate('Y-m-d H:i:s'),
                     'expires_at' => $expires_at,
                     'created_by' => is_user_logged_in() ? wp_get_current_user()->user_login : 'system',
                 ]
@@ -96,6 +120,135 @@ class WebDecoy_Blocker
         wp_cache_delete('webdecoy_blocked_' . $ip, 'webdecoy');
 
         return $result !== false;
+    }
+
+    /**
+     * Decide whether an automatic block may write this address.
+     *
+     * The failure this exists to prevent: behind a reverse proxy the plugin resolves
+     * every visitor to the proxy's address, so one hostile request can put the site's
+     * own front door in the block table and 403 real visitors. See issues #48 and #49.
+     *
+     * @param string $ip Single IP or CIDR subnet already validated by the caller.
+     * @return string|null Refusal reason, or null when the address is safe to block.
+     */
+    private function guard(string $ip): ?string
+    {
+        $addr = strpos($ip, '/') !== false ? explode('/', $ip)[0] : $ip;
+
+        // Loopback, private, link-local, and other reserved space. These are never a
+        // visitor — they are this server, a container gateway, or a LAN peer.
+        if (!filter_var(
+            $addr,
+            FILTER_VALIDATE_IP,
+            FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+        )) {
+            return 'reserved, private, or loopback address';
+        }
+
+        // The address this request arrived from, when the site is known to sit behind
+        // an unconfigured proxy. In that state getIP() correctly returns REMOTE_ADDR —
+        // which is the proxy — so blocking it takes out everyone behind it.
+        //
+        // The "behind a proxy" signal is the stored flag, NOT this request's headers:
+        // keying off the headers would let an attacker who reaches the origin directly
+        // send X-Forwarded-For and make guard() refuse to block them.
+        $remote = isset($_SERVER['REMOTE_ADDR'])
+            ? trim(sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])))
+            : '';
+        if ($remote !== '' && $addr === $remote && get_option('webdecoy_proxy_detected', false)) {
+            return 'address is this site\'s proxy front door (proxy detected, no trusted proxy configured)';
+        }
+
+        // Any address inside a configured trusted proxy range is infrastructure by
+        // definition — we already told the plugin so.
+        if (function_exists('webdecoy_plugin_trusted_proxies')) {
+            foreach ((array) webdecoy_plugin_trusted_proxies() as $range) {
+                if ($this->ip_in_range($addr, $range)) {
+                    return 'address is inside a configured trusted-proxy range';
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Headers that mean "a proxy resolved the client for us". Deliberately broad:
+     * this list only ever drives an ADMIN-side detection (see
+     * WebDecoy_Plugin::maybe_flag_proxy()), so a false positive costs a notice while
+     * a false negative costs the safety backstop entirely.
+     */
+    private const FORWARDING_HEADERS = [
+        'HTTP_CF_CONNECTING_IP'  => 'CF-Connecting-IP',
+        'HTTP_TRUE_CLIENT_IP'    => 'True-Client-IP',
+        'HTTP_X_FORWARDED_FOR'   => 'X-Forwarded-For',
+        'HTTP_X_REAL_IP'         => 'X-Real-IP',
+        'HTTP_FORWARDED'         => 'Forwarded',
+        'HTTP_X_SUCURI_CLIENTIP' => 'X-Sucuri-ClientIP',
+        'HTTP_FASTLY_CLIENT_IP'  => 'Fastly-Client-IP',
+        'HTTP_INCAP_CLIENT_IP'   => 'Incap-Client-IP',
+        'HTTP_X_CLUSTER_CLIENT_IP' => 'X-Cluster-Client-IP',
+    ];
+
+    /**
+     * The human-readable name of the first forwarding header on this request, or ''.
+     *
+     * DO NOT call this to decide enforcement behaviour on a front-end request — the
+     * headers are client-controlled, so that would be a bypass. It exists for the
+     * admin-side proxy detection only.
+     */
+    public static function forwarding_header_seen(): string
+    {
+        foreach (self::FORWARDING_HEADERS as $key => $label) {
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- presence check only; the value is never used
+            if (!empty($_SERVER[$key])) {
+                return $label;
+            }
+        }
+        return '';
+    }
+
+    /**
+     * Record a refused block so it is visible rather than silent, and fire a hook.
+     *
+     * @return bool Always false — the caller's block did not happen.
+     */
+    private function refuse(string $ip, string $reason, string $refusal): bool
+    {
+        $log = get_option('webdecoy_block_refusals', []);
+        if (!is_array($log)) {
+            $log = [];
+        }
+        array_unshift($log, [
+            'ip' => $ip,
+            'reason' => $reason,
+            'refusal' => $refusal,
+            'at' => gmdate('Y-m-d H:i:s'),
+        ]);
+        update_option('webdecoy_block_refusals', array_slice($log, 0, self::REFUSAL_LOG_MAX), false);
+
+        /**
+         * Fires when an automatic block was refused by the safety guards.
+         *
+         * @param string $ip      The address that would have been blocked.
+         * @param string $reason  The detection reason the caller supplied.
+         * @param string $refusal Why the guard refused.
+         */
+        do_action('webdecoy_block_refused', $ip, $reason, $refusal);
+
+        return false;
+    }
+
+    /**
+     * Recent refusals, newest first, for the admin UI.
+     *
+     * @return array<int,array<string,string>>
+     */
+    public function get_refusals(): array
+    {
+        $log = get_option('webdecoy_block_refusals', []);
+        return is_array($log) ? $log : [];
     }
 
     /**
@@ -145,7 +298,7 @@ class WebDecoy_Blocker
         $exact_blocked = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$table} WHERE ip_address = %s AND (expires_at IS NULL OR expires_at > %s)",
             $ip,
-            current_time('mysql')
+            gmdate('Y-m-d H:i:s')
         ));
 
         if ((int) $exact_blocked > 0) {
@@ -157,7 +310,7 @@ class WebDecoy_Blocker
         // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.LikeWildcardsInQuery -- Searching for CIDR notation IPs containing /
         $cidr_blocks = $wpdb->get_col($wpdb->prepare(
             "SELECT ip_address FROM {$table} WHERE ip_address LIKE '%%/%%' AND (expires_at IS NULL OR expires_at > %s)",
-            current_time('mysql')
+            gmdate('Y-m-d H:i:s')
         ));
 
         foreach ($cidr_blocks as $cidr) {
@@ -195,7 +348,7 @@ class WebDecoy_Blocker
 
         $where = '1=1';
         if (!$args['include_expired']) {
-            $where .= $wpdb->prepare(" AND (expires_at IS NULL OR expires_at > %s)", current_time('mysql'));
+            $where .= $wpdb->prepare(" AND (expires_at IS NULL OR expires_at > %s)", gmdate('Y-m-d H:i:s'));
         }
 
         $orderby = in_array($args['orderby'], ['ip_address', 'blocked_at', 'expires_at']) ? $args['orderby'] : 'blocked_at';
@@ -226,7 +379,7 @@ class WebDecoy_Blocker
 
         $where = '1=1';
         if (!$include_expired) {
-            $where .= $wpdb->prepare(" AND (expires_at IS NULL OR expires_at > %s)", current_time('mysql'));
+            $where .= $wpdb->prepare(" AND (expires_at IS NULL OR expires_at > %s)", gmdate('Y-m-d H:i:s'));
         }
 
         return (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE {$where}");
@@ -247,7 +400,7 @@ class WebDecoy_Blocker
         $result = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$table} WHERE ip_address = %s AND (expires_at IS NULL OR expires_at > %s)",
             $ip,
-            current_time('mysql')
+            gmdate('Y-m-d H:i:s')
         ), ARRAY_A);
 
         return $result ?: null;
@@ -321,7 +474,7 @@ class WebDecoy_Blocker
 
         return $wpdb->query($wpdb->prepare(
             "DELETE FROM {$table} WHERE expires_at IS NOT NULL AND expires_at < %s",
-            current_time('mysql')
+            gmdate('Y-m-d H:i:s')
         ));
     }
 
@@ -592,7 +745,7 @@ class WebDecoy_Blocker
         $total = $wpdb->get_var("SELECT COUNT(*) FROM {$table}");
         $active = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$table} WHERE expires_at IS NULL OR expires_at > %s",
-            current_time('mysql')
+            gmdate('Y-m-d H:i:s')
         ));
         $expired = $total - $active;
         $permanent = $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE expires_at IS NULL");

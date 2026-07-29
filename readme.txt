@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: security, bot detection, spam protection, woocommerce, firewall
 Requires at least: 6.1
 Tested up to: 7.0
-Stable tag: 2.3.1
+Stable tag: 2.3.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -194,6 +194,20 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 8. Challenge page — invisible proof-of-work for suspicious visitors
 
 == Changelog ==
+
+= 2.3.2 =
+Safety release — please update. This version deliberately makes the plugin do less by default.
+
+* **Monitor mode is now the default.** WebDecoy detects, logs and reports everything and blocks nothing until you switch blocking on under Blocking → Monitor mode. Existing sites are moved to monitor mode by this update.
+* Fixed: behind Cloudflare, a load balancer or most managed hosts, every visitor resolved to the proxy's address, so one hostile request could block real visitors for 24 hours. The plugin now detects that condition, refuses to block while it holds, and tells you in the admin.
+* Fixed: automatic blocks can no longer target loopback, private ranges, a trusted proxy, or your own CDN front door, and can no longer write a range wider than /24 (IPv4) or /48 (IPv6).
+* Fixed: block expiry was stored in UTC and compared against site-local time, so on sites at UTC+1 or further east a short block expired the instant it was written.
+* Fixed: a honeypot hit blocked the address permanently instead of for the configured duration.
+* Fixed (WooCommerce): three successful sub-$5 orders in an hour were classified as card testing. Completed orders no longer count toward card-testing patterns or the checkout velocity limit.
+* Changed (WooCommerce): a suspicious checkout is refused and recorded; it no longer blocks the address across your whole site.
+* Changed: default block duration is 1 hour, was 24.
+* Changed: the cross-site actor feed is now advisory intelligence and no longer writes to your block list. Rows it previously wrote are removed on upgrade.
+* Added: `define('WEBDECOY_DISABLE', true);` in wp-config.php as an emergency off switch.
 
 = 2.3.1 =
 * Fixed: Detections forwarded from your site are now identified by the visitor's own request signature. Previously they were identified by your server's outgoing connection, which is the same for every visitor — so every visitor a site reported was grouped into a single "actor" in the dashboard. Only request header NAMES plus Accept-Language and Accept-Encoding are sent; no header values leave your site.

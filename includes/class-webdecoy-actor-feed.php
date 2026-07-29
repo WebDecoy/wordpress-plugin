@@ -52,6 +52,9 @@ class WebDecoy_Actor_Feed
     /** Option persisting the delta cursor (`since`) between syncs. */
     private const CURSOR_OPTION = 'webdecoy_actor_feed_cursor';
 
+    /** Advisory intel store. Read for scoring; never consulted to block. */
+    private const INTEL_OPTION = 'webdecoy_actor_feed_intel';
+
     /** created_by marker for rows this class owns. */
     public const CREATED_BY = 'webdecoy-network';
 
@@ -184,12 +187,26 @@ class WebDecoy_Actor_Feed
             );
         } while ($continue);
 
-        // Exclude the user's allowlist + invalid IPs (pure pass), then apply the
-        // authoritative per-IP allowlist gate (covers CIDR) inside apply_blocks.
+        // Exclude the user's allowlist + invalid IPs (pure pass).
         $insertable = self::exclude_allowlisted($ip_map, $this->allowlist());
 
-        $this->apply_blocks($insertable);
-        $this->enforce_cap();
+        // The feed is INTELLIGENCE, not enforcement. It used to write these
+        // addresses straight into wp_webdecoy_blocked_ips. Measured against
+        // production that was net-negative: only 2 of 4,866 addresses were ever
+        // seen at more than one site (0.04%), 93% of hostile addresses are gone
+        // within the hour, 82% of feed entries were already stale by a week, and
+        // none were still active. Blocking an address the attacker abandoned days
+        // ago does not stop the attacker — it blocks whoever holds it now, which on
+        // a residential range is a real person.
+        //
+        // The data is kept and surfaced (actor intel, scoring input, rate-limit
+        // trigger) where being wrong costs a delay rather than a lockout.
+        // Refs WebDecoy/app#476.
+        $this->record_intel($insertable);
+        // The feed no longer owns rows in the block table, so there is nothing left
+        // to cap there. Any rows it wrote before this version are removed once, on
+        // upgrade, by purge_feed_blocks().
+        self::purge_feed_blocks();
 
         update_option(self::CURSOR_OPTION, $latest_cursor, false);
     }
@@ -235,70 +252,74 @@ class WebDecoy_Actor_Feed
     }
 
     /**
-     * Upsert the given IPs as network-owned blocked rows with a rolling expiry.
-     * Never touches a row owned by anyone else, and never inserts an allowlisted
-     * IP (exact or CIDR).
+     * Store the feed as advisory intelligence. Nothing here blocks a request.
+     *
+     * Replaces apply_blocks(), which wrote these addresses into the live block
+     * table. See the call site for why that was removed (WebDecoy/app#476).
      *
      * @param array<string,array{actor_id:string,last_seen:int}> $ip_map
      */
-    private function apply_blocks(array $ip_map): void
+    private function record_intel(array $ip_map): void
     {
         if ($ip_map === []) {
+            update_option(self::INTEL_OPTION, [], false);
             return;
         }
 
+        $intel = [];
+        foreach ($ip_map as $ip => $meta) {
+            $intel[(string) $ip] = [
+                'actor_id'  => (string) $meta['actor_id'],
+                'last_seen' => (int) $meta['last_seen'],
+            ];
+            if (count($intel) >= self::MAX_NETWORK_ROWS) {
+                break;
+            }
+        }
+
+        update_option(self::INTEL_OPTION, $intel, false);
+    }
+
+    /**
+     * Advisory lookup: has this address been seen attacking another site recently?
+     *
+     * Callers must treat a hit as a scoring input or a reason to rate-limit, never
+     * as grounds to block — see WebDecoy/app#476 for the measurement.
+     *
+     * @return array{actor_id:string,last_seen:int}|null
+     */
+    public function intel_for(string $ip): ?array
+    {
+        $intel = get_option(self::INTEL_OPTION, []);
+        if (!is_array($intel) || !isset($intel[$ip]) || !is_array($intel[$ip])) {
+            return null;
+        }
+        return [
+            'actor_id'  => (string) ($intel[$ip]['actor_id'] ?? ''),
+            'last_seen' => (int) ($intel[$ip]['last_seen'] ?? 0),
+        ];
+    }
+
+    /**
+     * Remove every row this feed previously wrote into the live block table.
+     * Runs once on upgrade so existing installs stop enforcing on stale addresses.
+     */
+    public static function purge_feed_blocks(): int
+    {
         global $wpdb;
         $table = $wpdb->prefix . 'webdecoy_blocked_ips';
-        $now = current_time('mysql');
-        $expires_at = gmdate('Y-m-d H:i:s', time() + (self::EXPIRY_HOURS * self::HOUR));
-        $blocker = $this->blocker();
-
-        foreach ($ip_map as $ip => $meta) {
-            $ip = (string) $ip;
-
-            // Authoritative allowlist gate — covers CIDR ranges the pure filter
-            // can't. Never override a user's explicit allow.
-            if ($blocker->is_allowlisted($ip)) {
-                continue;
-            }
-
-            $reason = sprintf(
-                /* translators: %s: actor id */
-                'WebDecoy network: known attacker (actor %s)',
-                (string) $meta['actor_id']
-            );
-
-            $existing = $wpdb->get_row(
-                $wpdb->prepare("SELECT id, created_by FROM {$table} WHERE ip_address = %s", $ip),
-                ARRAY_A
-            );
-
-            if ($existing === null) {
-                $wpdb->insert($table, [
-                    'ip_address' => $ip,
-                    'reason'     => $reason,
-                    'blocked_at' => $now,
-                    'expires_at' => $expires_at,
-                    'created_by' => self::CREATED_BY,
-                ]);
-            } elseif (($existing['created_by'] ?? '') === self::CREATED_BY) {
-                // Refresh our own row: extend expiry and refresh the last-seen
-                // marker (blocked_at) so eviction ordering stays meaningful.
-                $wpdb->update(
-                    $table,
-                    [
-                        'reason'     => $reason,
-                        'blocked_at' => $now,
-                        'expires_at' => $expires_at,
-                    ],
-                    ['ip_address' => $ip, 'created_by' => self::CREATED_BY]
-                );
-            }
-            // else: a human/system block already exists for this IP — leave it
-            // completely untouched (its reason/expiry are the user's to manage).
-
+        $rows = $wpdb->get_col($wpdb->prepare(
+            "SELECT ip_address FROM {$table} WHERE created_by = %s",
+            self::CREATED_BY
+        ));
+        $deleted = (int) $wpdb->query($wpdb->prepare(
+            "DELETE FROM {$table} WHERE created_by = %s",
+            self::CREATED_BY
+        ));
+        foreach ((array) $rows as $ip) {
             wp_cache_delete('webdecoy_blocked_' . $ip, 'webdecoy');
         }
+        return $deleted;
     }
 
     /**

@@ -98,10 +98,13 @@ $total_today = $wpdb->get_var($wpdb->prepare(
     "SELECT COUNT(*) FROM {$detections_table} WHERE created_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
     gmdate('Y-m-d 00:00:00')
 ));
-// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- static query, no user input
-$active_blocks = $wpdb->get_var(
-    "SELECT COUNT(*) FROM {$blocked_table} WHERE expires_at IS NULL OR expires_at > NOW()" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
-);
+// expires_at is stored in UTC, so it must be compared against a UTC value. MySQL's
+// NOW() resolves in the database session time zone (SYSTEM by default, which
+// WordPress never sets), so it disagrees with the column on any DB host not on UTC.
+$active_blocks = $wpdb->get_var($wpdb->prepare(
+    "SELECT COUNT(*) FROM {$blocked_table} WHERE expires_at IS NULL OR expires_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
+    gmdate('Y-m-d H:i:s')
+));
 
 // WooCommerce stats (if active)
 $woo_stats = null;
