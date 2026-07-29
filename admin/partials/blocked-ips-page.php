@@ -25,7 +25,8 @@ if (isset($_POST['webdecoy_block_ip']) && isset($_POST['_wpnonce']) && wp_verify
     $duration = intval($_POST['duration'] ?? 24);
 
     if (filter_var($ip, FILTER_VALIDATE_IP)) {
-        $blocker->block($ip, $reason, $duration > 0 ? $duration : null);
+        // force: a human typed this address, so the safety guards do not apply.
+        $blocker->block($ip, $reason, $duration > 0 ? $duration : null, true);
         echo '<div class="notice notice-success"><p>' . esc_html__('IP blocked successfully.', 'webdecoy') . '</p></div>';
     } else {
         echo '<div class="notice notice-error"><p>' . esc_html__('Invalid IP address.', 'webdecoy') . '</p></div>';
@@ -126,10 +127,11 @@ $stats = $blocker->get_stats();
                 <tr>
                     <td><code><?php echo esc_html($block['ip_address']); ?></code></td>
                     <td><?php echo esc_html($block['reason'] ?: '-'); ?></td>
-                    <td><?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($block['blocked_at']))); ?></td>
+                    <?php // blocked_at/expires_at are stored UTC; convert before formatting or the site shows UTC labelled as local. ?>
+                    <td><?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime(get_date_from_gmt($block['blocked_at'])))); ?></td>
                     <td>
                         <?php if ($block['expires_at']) : ?>
-                            <?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($block['expires_at']))); ?>
+                            <?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime(get_date_from_gmt($block['expires_at'])))); ?>
                         <?php else : ?>
                             <em><?php esc_html_e('Never (permanent)', 'webdecoy'); ?></em>
                         <?php endif; ?>

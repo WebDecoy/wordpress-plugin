@@ -67,14 +67,14 @@ class WebDecoy_WooCommerce
             return;
         }
 
+        // The checkout path stops the checkout and records the detection. It must
+        // never write a sitewide IP block: behind an unconfigured proxy every
+        // shopper shares one address, so a single false positive at checkout would
+        // 403 the whole store on every page. Refusing this order is already the
+        // proportionate response. Refs WebDecoy/wordpress-plugin#52.
+
         // Check velocity
         if (!$this->check_velocity($ip)) {
-            $this->blocker->block(
-                $ip,
-                'Checkout velocity exceeded',
-                $this->options['block_duration'] > 0 ? $this->options['block_duration'] : null
-            );
-
             wc_add_notice(
                 __('Too many checkout attempts. Please try again later.', 'webdecoy'),
                 'error'
@@ -86,12 +86,6 @@ class WebDecoy_WooCommerce
 
         // Check for card testing patterns
         if ($this->detect_card_testing($ip)) {
-            $this->blocker->block(
-                $ip,
-                'Card testing detected',
-                $this->options['block_duration'] > 0 ? $this->options['block_duration'] : null
-            );
-
             wc_add_notice(
                 __('Suspicious checkout activity detected.', 'webdecoy'),
                 'error'
@@ -106,12 +100,6 @@ class WebDecoy_WooCommerce
         $result = $detector->analyze();
 
         if ($result->shouldBlock($this->options['min_score_to_block'])) {
-            $this->blocker->block(
-                $ip,
-                'Bot detected at checkout: score ' . $result->getScore(),
-                $this->options['block_duration'] > 0 ? $this->options['block_duration'] : null
-            );
-
             wc_add_notice(
                 __('Your checkout has been blocked due to suspicious activity.', 'webdecoy'),
                 'error'
@@ -132,7 +120,9 @@ class WebDecoy_WooCommerce
         $limit = $this->options['checkout_velocity_limit'] ?? 5;
         $window = $this->options['checkout_velocity_window'] ?? 3600;
 
-        $attempts = $this->get_recent_attempts($ip, $window);
+        // A completed order is not a failed checkout attempt. Counting successes
+        // here throttled legitimate repeat buyers. Refs #52.
+        $attempts = $this->get_recent_attempts($ip, $window, false);
 
         return count($attempts) < $limit;
     }
@@ -145,7 +135,12 @@ class WebDecoy_WooCommerce
      */
     private function detect_card_testing(string $ip): bool
     {
-        $attempts = $this->get_recent_attempts($ip, 3600);
+        // Successful orders are not evidence of card testing. track_payment() only
+        // flips a row's status to 'success' and never removes it, so without this
+        // filter three completed sub-$5 orders from one address in an hour — the
+        // normal profile for digital downloads, donations, tips and add-ons — read
+        // as an attack. Refs WebDecoy/wordpress-plugin#52.
+        $attempts = $this->get_recent_attempts($ip, 3600, false);
 
         if (count($attempts) < 2) {
             return false;
@@ -282,15 +277,23 @@ class WebDecoy_WooCommerce
      * @param int $window Time window in seconds
      * @return array
      */
-    private function get_recent_attempts(string $ip, int $window): array
+    private function get_recent_attempts(string $ip, int $window, bool $include_successful = true): array
     {
         global $wpdb;
 
         $table = $wpdb->prefix . 'webdecoy_checkout_attempts';
         $since = gmdate('Y-m-d H:i:s', strtotime("-{$window} seconds"));
 
+        if ($include_successful) {
+            return $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM {$table} WHERE ip_address = %s AND created_at > %s ORDER BY created_at DESC",
+                $ip,
+                $since
+            ), ARRAY_A) ?: [];
+        }
+
         return $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM {$table} WHERE ip_address = %s AND created_at > %s ORDER BY created_at DESC",
+            "SELECT * FROM {$table} WHERE ip_address = %s AND created_at > %s AND status <> 'success' ORDER BY created_at DESC",
             $ip,
             $since
         ), ARRAY_A) ?: [];

@@ -479,6 +479,30 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                 <table class="form-table">
                     <tr>
                         <th scope="row">
+                            <label for="webdecoy_monitor_mode"><?php esc_html_e('Monitor mode', 'webdecoy'); ?></label>
+                        </th>
+                        <td>
+                            <label>
+                                <input type="checkbox" id="webdecoy_monitor_mode" name="webdecoy_options[monitor_mode]"
+                                       value="1" <?php checked(!empty($options['monitor_mode'])); ?> />
+                                <?php esc_html_e('Watch only — detect and log everything, block nothing', 'webdecoy'); ?>
+                            </label>
+                            <p class="description">
+                                <?php esc_html_e('On by default. Every setting below still decides what WOULD happen, and the Detections page shows it, but no visitor is ever blocked, throttled or shown a 403. Turn this off once you have looked at what enforcement would have done.', 'webdecoy'); ?>
+                            </p>
+                            <p class="description">
+                                <?php
+                                printf(
+                                    /* translators: %s: the PHP constant, already formatted as code */
+                                    esc_html__('Emergency off switch: add %s to wp-config.php to stop the plugin acting on the front end entirely, without database access.', 'webdecoy'),
+                                    '<code>define(\'WEBDECOY_DISABLE\', true);</code>'
+                                );
+                                ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
                             <label for="webdecoy_ip_allowlist"><?php esc_html_e('IP Allowlist', 'webdecoy'); ?></label>
                         </th>
                         <td>
@@ -523,7 +547,7 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                         </th>
                         <td>
                             <input type="number" id="webdecoy_block_duration" name="webdecoy_options[block_duration]"
-                                   value="<?php echo esc_attr($options['block_duration'] ?? 24); ?>"
+                                   value="<?php echo esc_attr($options['block_duration'] ?? 1); ?>"
                                    min="0" step="1" class="small-text" />
                             <?php esc_html_e('hours (0 = permanent)', 'webdecoy'); ?>
                         </td>
