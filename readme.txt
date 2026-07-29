@@ -203,8 +203,10 @@ Safety release — please update. This version deliberately makes the plugin do 
 * Fixed: automatic blocks can no longer target loopback, private ranges, a trusted proxy, or your own CDN front door, and can no longer write a range wider than /24 (IPv4) or /48 (IPv6).
 * Fixed: block expiry was stored in UTC and compared against site-local time, so on sites at UTC+1 or further east a short block expired the instant it was written.
 * Fixed: a honeypot hit blocked the address permanently instead of for the configured duration.
-* Fixed (WooCommerce): three successful sub-$5 orders in an hour were classified as card testing. Completed orders no longer count toward card-testing patterns or the checkout velocity limit.
-* Changed (WooCommerce): a suspicious checkout is refused and recorded; it no longer blocks the address across your whole site.
+* Fixed (WooCommerce): three successful sub-$5 orders in an hour were classified as card testing. Completed orders no longer count toward card-testing patterns or the checkout velocity limit. Note: stores using only Cash on Delivery, Bank Transfer or Cheque are not covered by this fix yet, because those gateways never mark an order paid — monitor mode means it cannot cost you an order in this version.
+* Changed (WooCommerce): a suspicious checkout is refused and recorded; it no longer blocks the address across your whole site. Covers both the classic and the Blocks checkout.
+* Fixed: monitor mode and the kill switch now apply everywhere the plugin can act — the checkout, the honeytoken coupon, the challenge page, login, comments and registration all previously kept refusing traffic while the admin said nothing was blocked.
+* Fixed: the monitor-mode setting is stored rather than only defaulted, so the checkbox shows the real state and saving another setting no longer switches enforcement on by accident.
 * Changed: default block duration is 1 hour, was 24.
 * Changed: the cross-site actor feed is now advisory intelligence and no longer writes to your block list. Rows it previously wrote are removed on upgrade.
 * Added: `define('WEBDECOY_DISABLE', true);` in wp-config.php as an emergency off switch.
