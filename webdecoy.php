@@ -462,8 +462,28 @@ final class WebDecoy_Plugin
         // deliberate 24, and on a safety release the shorter block is the safer of
         // the two mistakes.
         $saved = get_option('webdecoy_options', []);
-        if (is_array($saved) && isset($saved['block_duration']) && (int) $saved['block_duration'] === 24) {
+        if (!is_array($saved)) {
+            $saved = [];
+        }
+        $dirty = false;
+
+        // 2.3.2: PERSIST the new monitor_mode default. load_options() merges it in at
+        // runtime, but the settings form reads the stored array directly — without this
+        // the checkbox renders unchecked while the plugin is in monitor mode, and
+        // because an unchecked box submits nothing and sanitize_options() rebuilds the
+        // array from scratch, the next save of ANY setting writes false and silently
+        // turns full enforcement on.
+        if (!array_key_exists('monitor_mode', $saved)) {
+            $saved['monitor_mode'] = true;
+            $dirty = true;
+        }
+
+        if (isset($saved['block_duration']) && (int) $saved['block_duration'] === 24) {
             $saved['block_duration'] = 1;
+            $dirty = true;
+        }
+
+        if ($dirty) {
             $this->update_options_raw($saved);
             $this->load_options();
         }
@@ -1679,6 +1699,19 @@ final class WebDecoy_Plugin
                 return;
             }
 
+            // The challenge page is a 403 with an interstitial. It is enforcement, so
+            // it passes the same gate as a block. Checked AFTER the verified-cookie
+            // test so a visitor who already solved it is not counted as withheld.
+            $suppression = $this->suppression_reason();
+            if ($suppression !== '') {
+                do_action('webdecoy_enforcement_suppressed', $ip, $suppression, null);
+                $this->record_suppressed_action(
+                    $suppression,
+                    'Challenge (score: ' . $result->getScore() . ')'
+                );
+                return;
+            }
+
             // Serve challenge page
             $this->serve_challenge_page($ip);
             return;
@@ -1842,11 +1875,16 @@ final class WebDecoy_Plugin
         $result = $detector->analyze();
 
         if ($result->shouldBlock($this->options['min_score_to_block'])) {
-            wp_die(
-                esc_html__('Your comment has been blocked due to suspicious activity.', 'webdecoy'),
-                esc_html__('Comment Blocked', 'webdecoy'),
-                ['response' => 403, 'back_link' => true]
-            );
+            // Reachable at default sensitivity and serves a literal 403 — same gate.
+            $suppression = $this->suppression_reason();
+            if ($suppression === '') {
+                wp_die(
+                    esc_html__('Your comment has been blocked due to suspicious activity.', 'webdecoy'),
+                    esc_html__('Comment Blocked', 'webdecoy'),
+                    ['response' => 403, 'back_link' => true]
+                );
+            }
+            $this->record_suppressed_action($suppression, 'Comment refused: score ' . $result->getScore());
         }
 
         return $commentdata;
@@ -1865,6 +1903,13 @@ final class WebDecoy_Plugin
      */
     public function check_canary_login($user, string $username, string $password)
     {
+        // The kill switch has to be unconditional to be a kill switch. A canary hit is
+        // zero-false-positive evidence, so it is still refused in monitor mode — but
+        // never when the owner has explicitly turned the plugin off in wp-config.php.
+        if (defined('WEBDECOY_DISABLE') && WEBDECOY_DISABLE) {
+            return $user;
+        }
+
         if ($username === '' && $password === '') {
             return $user;
         }
@@ -1924,6 +1969,14 @@ final class WebDecoy_Plugin
         $result = $detector->analyze();
 
         if ($result->shouldBlock($this->options['min_score_to_block'])) {
+            // Refusing a login is enforcement, and it is the one refusal a locked-out
+            // owner cannot work around — so it must honour WEBDECOY_DISABLE and
+            // monitor mode like every other action.
+            $suppression = $this->suppression_reason();
+            if ($suppression !== '') {
+                $this->record_suppressed_action($suppression, 'Login refused: score ' . $result->getScore());
+                return $user;
+            }
             return new \WP_Error(
                 'webdecoy_blocked',
                 __('Login blocked due to suspicious activity.', 'webdecoy')
@@ -1948,6 +2001,11 @@ final class WebDecoy_Plugin
         $result = $detector->analyze();
 
         if ($result->shouldBlock($this->options['min_score_to_block'])) {
+            $suppression = $this->suppression_reason();
+            if ($suppression !== '') {
+                $this->record_suppressed_action($suppression, 'Registration refused: score ' . $result->getScore());
+                return;
+            }
             $errors->add(
                 'webdecoy_blocked',
                 __('Registration blocked due to suspicious activity.', 'webdecoy')

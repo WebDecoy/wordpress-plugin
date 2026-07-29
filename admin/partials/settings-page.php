@@ -484,7 +484,7 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                         <td>
                             <label>
                                 <input type="checkbox" id="webdecoy_monitor_mode" name="webdecoy_options[monitor_mode]"
-                                       value="1" <?php checked(!empty($options['monitor_mode'])); ?> />
+                                       value="1" <?php checked(!array_key_exists('monitor_mode', $options) || !empty($options['monitor_mode'])); ?> />
                                 <?php esc_html_e('Watch only — detect and log everything, block nothing', 'webdecoy'); ?>
                             </label>
                             <p class="description">

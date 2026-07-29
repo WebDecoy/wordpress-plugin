@@ -160,8 +160,12 @@ class WebDecoy_Activator
             'custom_allowlist' => [],
 
             // Blocking Settings
+            // Monitor mode on by default: detect and log everything, block nothing,
+            // until the owner has seen what enforcement would do. Must match the
+            // defaults in WebDecoy_Plugin::load_options().
+            'monitor_mode' => true,
             'block_action' => 'block',
-            'block_duration' => 24,
+            'block_duration' => 1,
             'show_block_page' => true,
             'block_page_message' => 'Access to this site has been restricted.',
 
