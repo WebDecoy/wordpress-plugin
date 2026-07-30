@@ -229,24 +229,88 @@ class WebDecoy_WooCommerce
     }
 
     /**
+     * Order statuses that mean the store accepted this order, so the checkout
+     * attempt behind it was a real purchase and not a card test.
+     *
+     * `on-hold` is included deliberately: it is where Direct Bank Transfer and
+     * Cheque leave a legitimate order awaiting payment, and nobody tests stolen
+     * cards by promising a bank transfer.
+     *
+     * @var string[]
+     */
+    private const ACCEPTED_ORDER_STATUSES = ['processing', 'completed', 'on-hold', 'refunded'];
+
+    /**
      * Track successful payment
      *
      * @param int $order_id Order ID
      */
     public function track_payment(int $order_id): void
     {
+        $this->resolve_attempt($order_id, 'success');
+    }
+
+    /**
+     * Resolve the open attempt behind an order once its status says what happened.
+     *
+     * This exists because `woocommerce_payment_complete` is not universal: Cash on
+     * Delivery, Direct Bank Transfer and Cheque move an order to processing or
+     * on-hold and never call WC_Order::payment_complete(). On a store using only
+     * those gateways no attempt row was ever marked resolved, so the card-testing
+     * and velocity filters excluded nothing and every real order counted as an
+     * attack. Refs #60.
+     *
+     * @param int $order_id
+     * @param string $status New status for the attempt row.
+     */
+    public function resolve_attempt(int $order_id, string $status): void
+    {
         global $wpdb;
 
         $table = $wpdb->prefix . 'webdecoy_checkout_attempts';
-        $ip = $this->get_client_ip();
 
-        // Update most recent attempt for this IP/order to success
+        // Keyed on order_id ALONE, not on the current request's IP. Payment
+        // completion often arrives on an asynchronous gateway callback (IPN, webhook,
+        // or a cron-driven status change), where get_client_ip() is the gateway's
+        // address or empty — so an IP-scoped UPDATE matched nothing and silently left
+        // the row open. The row was inserted with the customer's IP by track_attempt();
+        // order_id already identifies it.
         // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, built from $wpdb->prefix
         $wpdb->query($wpdb->prepare(
-            "UPDATE {$table} SET status = 'success' WHERE ip_address = %s AND order_id = %d AND status = 'attempt'",
-            $ip,
+            "UPDATE {$table} SET status = %s WHERE order_id = %d AND status = 'attempt'",
+            $status,
             $order_id
         ));
+    }
+
+    /**
+     * Resolve the attempt from an order status transition, covering every gateway
+     * rather than only those that fire woocommerce_payment_complete.
+     *
+     * @param int $order_id
+     * @param string $new_status Status WooCommerce transitioned to, without the wc- prefix.
+     */
+    public function track_status_change(int $order_id, string $new_status): void
+    {
+        if (self::is_accepted_order_status($new_status)) {
+            $this->resolve_attempt($order_id, 'success');
+        }
+    }
+
+    /**
+     * Whether a status counts as the store having accepted the order. Exposed for
+     * tests and for callers that need the same rule without a database round trip.
+     */
+    public static function is_accepted_order_status(string $status): bool
+    {
+        // Strip the wc- PREFIX. Not ltrim($status, 'wc-') — that takes a character
+        // list, so it would eat the leading "c" of "completed" and the "c" of
+        // "cancelled", quietly answering the wrong question for both.
+        if (strncmp($status, 'wc-', 3) === 0) {
+            $status = substr($status, 3);
+        }
+
+        return in_array($status, self::ACCEPTED_ORDER_STATUSES, true);
     }
 
     /**
@@ -270,14 +334,10 @@ class WebDecoy_WooCommerce
             $status = 'declined';
         }
 
-        // Update most recent attempt for this IP/order
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, built from $wpdb->prefix
-        $wpdb->query($wpdb->prepare(
-            "UPDATE {$table} SET status = %s WHERE ip_address = %s AND order_id = %d AND status = 'attempt'",
-            $status,
-            $ip,
-            $order_id
-        ));
+        // Keyed on order_id alone — see resolve_attempt() for why the IP cannot be
+        // part of this predicate.
+        unset($ip, $table);
+        $this->resolve_attempt($order_id, $status);
     }
 
     /**
@@ -302,8 +362,10 @@ class WebDecoy_WooCommerce
             ), ARRAY_A) ?: [];
         }
 
+        // NULL-safe: in MySQL `NULL <> 'success'` is NULL, not TRUE, so a bare
+        // inequality would silently drop any row with no status rather than counting it.
         return $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM {$table} WHERE ip_address = %s AND created_at > %s AND status <> 'success' ORDER BY created_at DESC",
+            "SELECT * FROM {$table} WHERE ip_address = %s AND created_at > %s AND (status IS NULL OR status <> 'success') ORDER BY created_at DESC",
             $ip,
             $since
         ), ARRAY_A) ?: [];
@@ -692,6 +754,19 @@ add_action('woocommerce_order_status_failed', function ($order_id) {
     $woo = new WebDecoy_WooCommerce($options);
     $woo->track_failure($order_id);
 });
+
+// Resolve the attempt from the order's own status, which every gateway reaches.
+// woocommerce_payment_complete above is not enough: Cash on Delivery, Bank Transfer
+// and Cheque never fire it, so on those stores no attempt was ever closed and every
+// real order kept counting toward card-testing and velocity. Refs #60.
+add_action('woocommerce_order_status_changed', function ($order_id, $from, $to) {
+    $options = get_option('webdecoy_options', []);
+    if (empty($options['protect_checkout'])) {
+        return;
+    }
+
+    (new WebDecoy_WooCommerce($options))->track_status_change((int) $order_id, (string) $to);
+}, 10, 3);
 
 /**
  * WooCommerce Blocks Checkout Integration
