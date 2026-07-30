@@ -242,7 +242,19 @@ class WebDecoy_Detector
             'threat_level' => $result->getThreatLevel(),
             'source' => 'wordpress_plugin',
             'flags' => json_encode($result->getFlags()),
-            'created_at' => current_time('mysql'),
+            // STORAGE CONVENTION (#55): every timestamp this plugin writes is UTC,
+            // and conversion happens at the display boundary via get_date_from_gmt().
+            // It was previously current_time('mysql') (site-local) while the readers
+            // built their bounds with gmdate() (UTC), so on any non-UTC site the
+            // "Today / 7d / 30d" filters covered the wrong span and the checkout
+            // velocity window was the wrong width — narrower west of UTC, wider east.
+            //
+            // Rows written before 2.3.4 are still site-local. They are NOT migrated:
+            // shifting them by the current offset is wrong for any site that has ever
+            // changed timezone, and a bad shift is silent and unrecoverable, whereas
+            // the mixed-epoch skew is bounded and ages out — one hour for checkout
+            // attempts, the reporting window for detections.
+            'created_at' => gmdate('Y-m-d H:i:s'),
         ]);
     }
 

@@ -241,7 +241,7 @@ class WebDecoy_WooCommerce
             'status' => 'attempt',
             'amount' => $order->get_total(),
             'card_last4' => $this->get_card_last4($order),
-            'created_at' => current_time('mysql'),
+            'created_at' => gmdate('Y-m-d H:i:s'),
         ]);
     }
 
@@ -436,7 +436,7 @@ class WebDecoy_WooCommerce
             'score' => $final_score,
             'threat_level' => 'HIGH',
             'source' => $source,
-            'created_at' => current_time('mysql'),
+            'created_at' => gmdate('Y-m-d H:i:s'),
         ]);
 
         // Forward to WebDecoy ingest service

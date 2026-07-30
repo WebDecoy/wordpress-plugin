@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: security, bot detection, spam protection, woocommerce, firewall
 Requires at least: 6.1
 Tested up to: 7.0
-Stable tag: 2.3.3
+Stable tag: 2.3.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -194,6 +194,10 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 8. Challenge page — invisible proof-of-work for suspicious visitors
 
 == Changelog ==
+
+= 2.3.4 =
+* Added: tripwires can Challenge (browser proof-of-work) or Log only, not just block or serve deception. Log is the safest way to watch a tripwire you have just armed. Challenge needs JavaScript and a click, so nothing automated completes it — on a tripwire that is the point.
+* Fixed: timestamps are stored in UTC and converted for display. They were written in site-local time and compared against UTC, so on any non-UTC site the Today / 7d / 30d filters covered the wrong span and the WooCommerce checkout window was the wrong width. Older rows are left alone rather than shifted, since shifting is wrong for any site that has changed timezone; the discrepancy ages out.
 
 = 2.3.3 =
 Follow-up to the 2.3.2 safety release. WooCommerce and reporting fixes.

@@ -275,7 +275,8 @@ if ($wd_intel_connected && !empty($detections) && class_exists('WebDecoy_Actor_I
                         <input type="checkbox" class="webdecoy-select-ip" value="<?php echo esc_attr($detection['ip_address']); ?>" />
                     </td>
                     <td>
-                        <?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($detection['created_at']))); ?>
+                        <?php // created_at is stored UTC (#55); convert before formatting or the site shows UTC labelled as local. ?>
+                        <?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime(get_date_from_gmt($detection['created_at'])))); ?>
                     </td>
                     <td>
                         <code><?php echo esc_html($detection['ip_address']); ?></code>

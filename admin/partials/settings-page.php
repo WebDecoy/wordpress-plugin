@@ -248,6 +248,12 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                                 <option value="block" <?php selected($options['tripwire_response'] ?? 'block', 'block'); ?>>
                                     <?php esc_html_e('Block — 403 Forbidden (default)', 'webdecoy'); ?>
                                 </option>
+                                <option value="challenge" <?php selected($options['tripwire_response'] ?? 'block', 'challenge'); ?>>
+                                    <?php esc_html_e('Challenge — ask for proof of work instead of blocking', 'webdecoy'); ?>
+                                </option>
+                                <option value="log" <?php selected($options['tripwire_response'] ?? 'block', 'log'); ?>>
+                                    <?php esc_html_e('Log only — record the hit and let the request through', 'webdecoy'); ?>
+                                </option>
                                 <option value="notfound" <?php selected($options['tripwire_response'] ?? 'block', 'notfound'); ?>>
                                     <?php esc_html_e('Not Found — 404 (hide that anything is protected)', 'webdecoy'); ?>
                                 </option>
@@ -260,6 +266,9 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                             </select>
                             <p class="description">
                                 <?php esc_html_e('Decoy mode serves fake .env / wp-config / SQL-dump / phpinfo content seeded with unique, per-site canary credentials — a later login attempt using one is logged as a critical exfiltration detection. Decoy/Not-Found/Tarpit deliberately keep feeding the scanner (no local IP block) to gather more evidence. Tarpit ties up a PHP worker for up to 10s — use sparingly.', 'webdecoy'); ?>
+                            </p>
+                            <p class="description">
+                                <?php esc_html_e('Challenge asks the visitor to solve a small proof-of-work in their browser. It needs JavaScript and a click, so nothing automated can complete it — on a tripwire that is the point, since these paths exist nowhere on your site and no honest crawler requests them. Log only records the hit and changes nothing about the response, which is the safest way to watch a tripwire you have just armed.', 'webdecoy'); ?>
                             </p>
                         </td>
                     </tr>
