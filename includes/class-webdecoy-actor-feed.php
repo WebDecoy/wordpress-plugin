@@ -2,11 +2,18 @@
 /**
  * WebDecoy Actor Feed
  *
- * Pre-emptive network blocking. When this site is connected to WebDecoy Cloud
- * AND entitled to the actor feed (Pro+), an hourly cron pulls the shared
- * "known attacker" IP feed and mirrors it into the existing blocked-IPs table
- * with a rolling 48h expiry — so those attackers are denied before they ever
- * reach the site.
+ * Cross-site attacker INTELLIGENCE. When this site is connected to WebDecoy Cloud
+ * AND entitled to the actor feed (Pro+), an hourly cron pulls the shared "known
+ * attacker" list and stores it locally, where {@see self::intel_for()} answers
+ * "has this address been seen attacking other sites recently?".
+ *
+ * It does NOT block. Until 2.3.2 it mirrored the feed into the blocked-IPs table
+ * with a rolling 48h expiry, which was measured net-negative: only 2 of 4,866
+ * addresses were ever seen at more than one site, 93% of hostile addresses are gone
+ * within the hour, 82% of feed entries were already a week stale and none were still
+ * active — so blocking on it mostly hit whoever holds the address now. Treat a hit
+ * as a scoring input or a reason to rate-limit, never as grounds to block.
+ * Refs WebDecoy/app#476.
  *
  * Zero external calls unless connected AND entitled. The cron is only scheduled
  * while both hold ({@see self::maybe_reconcile_schedule()}), and the handler
@@ -14,14 +21,17 @@
  * ({@see self::sync()}). A `403 upgrade_required` from the feed also unschedules
  * quietly.
  *
- * Coexistence with the user's own blocks — hard invariants enforced here:
- *  - network rows carry `created_by = 'webdecoy-network'`. Rows created by
- *    anyone else (a human admin, 'system', rate-limiter) are NEVER updated or
- *    deleted by this class.
- *  - an IP present in the user's ip_allowlist is NEVER inserted (exact match and
- *    CIDR range, via {@see WebDecoy_Blocker::is_allowlisted()}).
- *  - at most {@see self::MAX_NETWORK_ROWS} network rows are kept; the oldest
- *    (least-recently-seen) are evicted first.
+ * Invariants:
+ *  - nothing here writes to the blocked-IPs table. {@see self::purge_feed_blocks()}
+ *    removes the rows earlier versions wrote, and is the only statement this class
+ *    still issues against that table. Rows created by anyone else — a human admin,
+ *    'system', the rate limiter — are never touched.
+ *  - an address in the user's ip_allowlist is never stored. Exact match only:
+ *    {@see self::exclude_allowlisted()} is a pure filter with no CIDR support. That
+ *    is acceptable because the store is advisory — a stored address grants nothing
+ *    and denies nothing — but do not reintroduce a blocking consumer without
+ *    restoring a CIDR-aware allowlist gate.
+ *  - at most {@see self::MAX_NETWORK_ROWS} addresses are kept per sync.
  *
  * @package WebDecoy
  */
@@ -61,8 +71,6 @@ class WebDecoy_Actor_Feed
     /** Entitlement feature key that gates the whole mechanism. */
     private const FEATURE = 'actor_feed';
 
-    /** Rolling block lifetime (hours). Refreshed every sync for live feed IPs. */
-    private const EXPIRY_HOURS = 48;
 
     /** Hard cap on the number of network-owned rows. */
     private const MAX_NETWORK_ROWS = 2000;
@@ -72,9 +80,6 @@ class WebDecoy_Actor_Feed
 
     /** Seconds per hour — literal to keep the class loadable without WordPress. */
     private const HOUR = 3600;
-
-    /** @var WebDecoy_Blocker|null Lazily created for allowlist checks. */
-    private $blocker = null;
 
     /**
      * Wire up the cron. The handler is registered unconditionally (wp-cron can
@@ -323,44 +328,6 @@ class WebDecoy_Actor_Feed
     }
 
     /**
-     * Trim network-owned rows back to the cap, evicting the oldest first.
-     *
-     * blocked_at proxies last_seen: it is refreshed to "now" for every IP still
-     * present in the feed each sync, so the smallest blocked_at is the row that
-     * has gone longest without appearing in the feed — the right one to drop.
-     */
-    private function enforce_cap(): void
-    {
-        global $wpdb;
-        $table = $wpdb->prefix . 'webdecoy_blocked_ips';
-
-        $count = (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$table} WHERE created_by = %s",
-            self::CREATED_BY
-        ));
-        if ($count <= self::MAX_NETWORK_ROWS) {
-            return;
-        }
-
-        $excess = $count - self::MAX_NETWORK_ROWS;
-        $ids = $wpdb->get_col($wpdb->prepare(
-            "SELECT id FROM {$table} WHERE created_by = %s ORDER BY blocked_at ASC, id ASC LIMIT %d",
-            self::CREATED_BY,
-            $excess
-        ));
-
-        if (!$ids) {
-            return;
-        }
-
-        $placeholders = implode(',', array_fill(0, count($ids), '%d'));
-        $wpdb->query($wpdb->prepare(
-            "DELETE FROM {$table} WHERE id IN ({$placeholders})",
-            $ids
-        ));
-    }
-
-    /**
      * Decrypted API key from the plugin's in-request options.
      */
     private function api_key(): string
@@ -387,13 +354,6 @@ class WebDecoy_Actor_Feed
         return is_array($allow) ? $allow : [];
     }
 
-    private function blocker(): WebDecoy_Blocker
-    {
-        if ($this->blocker === null) {
-            $this->blocker = new WebDecoy_Blocker();
-        }
-        return $this->blocker;
-    }
 
     // ---------------------------------------------------------------------
     // Pure helpers (no WordPress calls) — unit-tested in tests/ActorFeedTest.php.
