@@ -1,13 +1,13 @@
 {
     "name": "WebDecoy Bot Detection",
     "slug": "webdecoy",
-    "version": "2.3.4",
+    "version": "2.4.0",
     "author": "<a href=\"https://webdecoy.com\">WebDecoy</a>",
     "author_profile": "https://webdecoy.com",
     "requires": "6.1",
     "tested": "7.0",
     "requires_php": "7.4",
-    "download_url": "https://cdn.webdecoy.com/wordpress/webdecoy-2.3.4.zip",
+    "download_url": "https://cdn.webdecoy.com/wordpress/webdecoy-2.4.0.zip",
     "sections": {
         "description": "<p>WebDecoy provides enterprise-grade bot detection and fraud protection for WordPress websites. Unlike simple CAPTCHA solutions, WebDecoy uses a layered defense approach that analyzes visitors from multiple angles — including deterministic tripwires that catch scanners with zero false positives.</p><h4>Key Features</h4><ul><li>Deterministic tripwires (hidden honeypot paths) — zero-false-positive bot blocking</li><li>Server-side and client-side bot detection</li><li>Invisible proof-of-work challenge (no external CAPTCHA service)</li><li>Comment, login, and registration spam protection</li><li>WooCommerce carding attack prevention</li><li>60+ good bots automatically allowed</li><li>AI crawler detection and blocking</li><li>Optional WebDecoy Cloud: centralized dashboard, rotation-proof device lockouts, and WAF integrations (push confirmed attackers to Cloudflare or AWS WAF — blocked before they reach WordPress)</li></ul>",
         "installation": "<ol><li>Upload the plugin files to <code>/wp-content/plugins/webdecoy</code></li><li>Activate the plugin through the Plugins menu</li><li>Tripwires and local protection are active out of the box — no API key required</li><li>Optionally go to WebDecoy &gt; Settings &gt; WebDecoy Cloud to connect for centralized monitoring and enforcement</li></ol>",

@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: security, bot detection, spam protection, woocommerce, firewall
 Requires at least: 6.1
 Tested up to: 7.0
-Stable tag: 2.3.4
+Stable tag: 2.4.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -194,6 +194,9 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 8. Challenge page — invisible proof-of-work for suspicious visitors
 
 == Changelog ==
+
+= 2.4.0 =
+* Added: filter rules can read what the WebDecoy edge validator concluded about a request, using new edge.* fields — edge.class, edge.clearance, edge.present, and the shorthands edge.verified / edge.crawler / edge.script / edge.browser. edge.class is one of: verified (an identity Cloudflare attested, such as Googlebot — never degrade these), crawler (says it is a crawler, unproven), script (an HTTP client library, not a browser), or browser (nothing non-human fired). This was always matchable as req.header("x-wd-class"), but nothing said so; the Rules screen now documents the fields and what each value means. If the validator is not in front of a request, edge.present is false and every edge.* condition is false — that means "no information", not "human". Safe for blocking, throttling, logging and metering; the Rules screen also explains why you should not use it to serve different page content on a cacheable URL.
 
 = 2.3.4 =
 * Added: tripwires can Challenge (browser proof-of-work) or Log only, not just block or serve deception. Log is the safest way to watch a tripwire you have just armed. Challenge needs JavaScript and a click, so nothing automated completes it — on a tripwire that is the point.
