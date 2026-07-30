@@ -118,6 +118,41 @@ $t('undefined operands fail open (false), never error', function () use ($true) 
     $true(!evalExpr('req.header("x-missing") == "y"', $bare), 'missing header = undefined = false');
 });
 
+// edge.* fields (#481) — the edge validator's verdict, forwarded to the origin.
+$t('edge.* fields read the validator tag', function () use ($true) {
+    $c = ctx_enriched('/', 'GET', ['x-wd-class' => 'script', 'x-wd-clearance' => 'valid']);
+    $true(evalExpr('edge.class == "script"', $c), 'edge.class');
+    $true(evalExpr('edge.script', $c), 'edge.script shorthand');
+    $true(evalExpr('edge.present', $c), 'edge.present');
+    $true(evalExpr('edge.clearance == "valid"', $c), 'edge.clearance');
+    $true(!evalExpr('edge.browser', $c), 'script is not browser');
+    // The raw-header form still works, so no site owner has to migrate.
+    $true(evalExpr('req.header("x-wd-class") == "script"', $c), 'raw header form still matches');
+});
+
+$t('edge.* is false when the edge did not front the request', function () use ($true) {
+    // The important case. A rule using this decides whether to serve someone
+    // less, so "no edge here" must never read as a class — least of all browser.
+    $c = ctx_enriched('/', 'GET', []);
+    $true(!evalExpr('edge.present', $c), 'no tag = not present');
+    $true(!evalExpr('edge.class == "script"', $c), 'undefined class = comparison false');
+    $true(!evalExpr('edge.browser', $c), 'absence is not browser');
+    $true(!evalExpr('edge.verified', $c), 'absence is not verified');
+});
+
+$t('an unrecognised class value is dropped, not passed through', function () use ($true) {
+    // Outside the closed set means version skew or something that is not our
+    // worker. Either way a rule must not act on it.
+    $c = ctx_enriched('/', 'GET', ['x-wd-class' => 'definitely-a-human']);
+    $true(!evalExpr('edge.present', $c), 'unknown class is not presence');
+    $true(!evalExpr('edge.class == "definitely-a-human"', $c), 'unknown value not readable');
+});
+
+$t('edge.class is case- and whitespace-tolerant', function () use ($true) {
+    $c = ctx_enriched('/', 'GET', ['x-wd-class' => '  Crawler ']);
+    $true(evalExpr('edge.crawler', $c), 'trimmed and lowercased');
+});
+
 echo "\nFilterRule\n";
 
 $t('parses at construction and fires with configured action', function () use ($eq) {

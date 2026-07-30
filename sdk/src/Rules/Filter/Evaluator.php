@@ -160,7 +160,62 @@ final class Evaluator
             }
         }
 
+        // The edge validator's verdict (#481). Matching this always worked via
+        // req.header("x-wd-class") — the plugin forwards the whole HTTP_* set into
+        // the rule context — so a named field is not new capability. It is
+        // discoverable, spelled once instead of in every site owner's expression,
+        // and survives us renaming a header.
+        //
+        // Derived from the headers already on the context rather than added as a
+        // constructor argument, so a released plugin's RuleContext signature does
+        // not change under anyone.
+        if ($namespace === 'edge') {
+            $class = self::edgeClass($context);
+            $clearance = $context->header('x-wd-clearance');
+            $clearance = is_string($clearance) && trim($clearance) !== '' ? trim($clearance) : null;
+
+            switch ($prop) {
+                case 'present':
+                    return $class !== null || $clearance !== null;
+                case 'clearance':
+                    return $clearance;
+                case 'class':
+                    // null when the edge did not classify, so a comparison against
+                    // it is false rather than accidentally true — the property that
+                    // matters when a rule decides whether to serve someone less.
+                    return $class;
+                case 'verified':
+                    return $class === 'verified';
+                case 'crawler':
+                    return $class === 'crawler';
+                case 'script':
+                    return $class === 'script';
+                case 'browser':
+                    return $class === 'browser';
+                default:
+                    return null;
+            }
+        }
+
         return null;
+    }
+
+    /**
+     * The sensor's client classification, or null when the edge did not classify.
+     *
+     * A value outside the closed set is DROPPED rather than passed through: it
+     * means version skew or something that is not our worker, and either way a
+     * rule must not act on it. Absence must never read as 'browser'.
+     */
+    private static function edgeClass(RuleContext $context): ?string
+    {
+        $raw = $context->header('x-wd-class');
+        if (!is_string($raw)) {
+            return null;
+        }
+        $v = strtolower(trim($raw));
+
+        return in_array($v, ['verified', 'crawler', 'script', 'browser'], true) ? $v : null;
     }
 
     /**
