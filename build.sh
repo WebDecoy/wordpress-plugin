@@ -51,7 +51,12 @@ echo "Copying plugin files..."
 # holds the bundled Chart.js.
 rsync -a \
     --exclude='/build' --exclude='/dist' --exclude='/build.sh' \
-    --exclude='/.git' --exclude='/.github' --exclude='/.svn-wporg' \
+    --exclude='/.svn-wporg' \
+    `# Every top-level dot entry. Named individually before, which meant each new` \
+    `# editor or tool directory (.claude, .idea, .vscode, .cursor) silently entered` \
+    `# the build and, from there, the WordPress.org SVN trunk. Nothing the plugin` \
+    `# ships lives in a dotfile, so exclude the class rather than chasing members.` \
+    --exclude='/.*' \
     --exclude='/vendor' --exclude='/sdk/vendor' \
     --exclude='node_modules' --exclude='/tests' \
     --exclude='/composer.json' --exclude='/composer.lock' \
