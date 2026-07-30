@@ -1,5 +1,15 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.3.3 - 2026-07-29 =
+Follow-up to the 2.3.2 safety release. Four WooCommerce and reporting fixes; no behaviour change for anyone not running WooCommerce.
+
+* Fixed (WooCommerce): the 2.3.2 card-testing fix did not apply to stores using Cash on Delivery, Direct Bank Transfer or Cheque. Those gateways never mark an order paid, so no checkout attempt was ever closed and every genuine order kept counting toward card testing and the hourly checkout limit. Whether an order was real is now decided from the order's own status, which every gateway reaches. This completes the fix promised in 2.3.2.
+* Fixed (WooCommerce): a customer retrying a declined card could be mistaken for card testing on their own. Attempts are recorded per checkout submission, and WooCommerce reuses the same order across retries, so several attempts against one order looked like several attacks. The small-amount, decline-count and rapid-succession patterns now need more than one order or more than one card before they fire. Detecting several different cards from one address is unchanged.
+* Fixed (WooCommerce): payment results arriving from a gateway callback — the normal case for redirect and webhook gateways — did not close the checkout attempt they belonged to, because the record was matched on the address of the callback rather than the order. Attempts stayed open and kept counting.
+* Fixed: the cross-site attacker list is read again. In 2.3.2 it was collected hourly and then consulted by nothing, so a Pro site paid for the sync and got no benefit. It now answers "has this address attacked other sites?" for the CRITICAL trap notice, which previously made a live network request while rendering the page.
+* Fixed: two notices claimed an attacker had been blocked network-wide, or would have been blocked on Pro. Neither is true since 2.3.2 stopped the list from blocking anything. They now say the actor is recognised, which is what actually happened.
+* Fixed: the monitor-mode summary could report that nothing had met the bar for enforcement while rate limiting was being withheld on every request. Rate limiting is now included in the count.
+
 = 2.3.2 - 2026-07-29 =
 Safety release. Please update. This version deliberately makes the plugin do LESS by default.
 

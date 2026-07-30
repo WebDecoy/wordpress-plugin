@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: security, bot detection, spam protection, woocommerce, firewall
 Requires at least: 6.1
 Tested up to: 7.0
-Stable tag: 2.3.2
+Stable tag: 2.3.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -194,6 +194,16 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 8. Challenge page — invisible proof-of-work for suspicious visitors
 
 == Changelog ==
+
+= 2.3.3 =
+Follow-up to the 2.3.2 safety release. WooCommerce and reporting fixes.
+
+* Fixed (WooCommerce): the 2.3.2 card-testing fix did not reach stores using Cash on Delivery, Bank Transfer or Cheque — those gateways never mark an order paid, so every genuine order kept counting as a card-testing attempt. Now decided from the order's status, which every gateway reaches.
+* Fixed (WooCommerce): a customer retrying a declined card could look like card testing on their own. The small-amount, decline-count and rapid-succession patterns now require more than one order or more than one card.
+* Fixed (WooCommerce): payment results arriving from a gateway callback did not close the checkout attempt they belonged to, so attempts stayed open and kept counting.
+* Fixed: the cross-site attacker list is actually read again — in 2.3.2 it was synced hourly and consulted by nothing.
+* Fixed: two notices claimed an attacker was blocked network-wide, or would be on Pro. Neither has been true since 2.3.2 stopped that list from blocking. They now say the actor is recognised.
+* Fixed: the monitor-mode summary no longer reports that nothing met the bar for enforcement while rate limiting is being withheld.
 
 = 2.3.2 =
 Safety release — please update. This version deliberately makes the plugin do less by default.
