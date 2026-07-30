@@ -367,15 +367,24 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                     <li><code>ip.country in ["CN","RU"] and req.path matches "^/wp-login"</code></li>
                     <li><code>ip.abuse_score &gt; 50</code></li>
                     <li><code>req.header("x-requested-with") == "XMLHttpRequest"</code></li>
+                    <li><code>edge.script and req.path matches "^/wp-json"</code></li>
                 </ul>
                 <p class="description">
-                    <?php esc_html_e('Fields: ip.vpn / ip.proxy / ip.tor / ip.relay / ip.hosting, ip.country / ip.country_name / ip.city / ip.timezone, ip.asn / ip.asn_org, ip.abuse_score / ip.total_reports / ip.is_high_risk, req.path / req.method / req.ip / req.user_agent, req.header("name"). Operators: and, or, not, ==, !=, >, >=, <, <=, in, not in, matches (regex).', 'webdecoy'); ?>
+                    <?php esc_html_e('Fields: ip.vpn / ip.proxy / ip.tor / ip.relay / ip.hosting, ip.country / ip.country_name / ip.city / ip.timezone, ip.asn / ip.asn_org, ip.abuse_score / ip.total_reports / ip.is_high_risk, req.path / req.method / req.ip / req.user_agent, req.header("name"), edge.class / edge.clearance / edge.present and the shorthands edge.verified / edge.crawler / edge.script / edge.browser. Operators: and, or, not, ==, !=, >, >=, <, <=, in, not in, matches (regex).', 'webdecoy'); ?>
                 </p>
                 <?php if (!$has_api_key) : ?>
                     <p class="description webdecoy-error-text">
                         <?php esc_html_e('Note: ip.* fields require a WebDecoy Cloud API key (for IP enrichment). Without one, ip.* conditions are always false; req.* rules still work.', 'webdecoy'); ?>
                     </p>
                 <?php endif; ?>
+
+                <p class="description">
+                    <strong><?php esc_html_e('edge.* fields', 'webdecoy'); ?></strong>
+                    <?php esc_html_e('are set by the WebDecoy edge validator running on Cloudflare in front of this site. edge.class is one of: verified (an identity Cloudflare attested — Googlebot and friends; never degrade these), crawler (says it is a crawler, unproven), script (an HTTP client library, not a browser), browser (nothing non-human fired). If the validator is not in front of a request, edge.present is false and every edge.* condition is false — that means "no information", not "human".', 'webdecoy'); ?>
+                </p>
+                <p class="description">
+                    <?php esc_html_e('Safe to use for blocking, throttling, logging and metering. Do NOT use an edge.* rule to serve different page CONTENT on a cacheable URL: Cloudflare\'s cache key ignores this header outside Enterprise plans, so the first version cached is served to everyone including Googlebot, and on a cache hit your site never runs at all.', 'webdecoy'); ?>
+                </p>
 
                 <table class="widefat webdecoy-rules-table" style="margin-top:1em;max-width:60em;">
                     <thead>
