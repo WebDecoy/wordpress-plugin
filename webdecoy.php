@@ -3,7 +3,7 @@
  * Plugin Name: WebDecoy Bot Detection
  * Plugin URI: https://webdecoy.com/wordpress
  * Description: Protect your WordPress site from bots, spam, and carding attacks with WebDecoy's advanced threat detection.
- * Version: 2.3.3
+ * Version: 2.3.4
  * Requires at least: 6.1
  * Requires PHP: 7.4
  * Author: WebDecoy
@@ -41,7 +41,7 @@ if (!function_exists('str_starts_with')) {
 }
 
 // Plugin constants
-define('WEBDECOY_VERSION', '2.3.3');
+define('WEBDECOY_VERSION', '2.3.4');
 define('WEBDECOY_PLUGIN_FILE', __FILE__);
 define('WEBDECOY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WEBDECOY_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -1571,6 +1571,38 @@ final class WebDecoy_Plugin
         // edge enforcement still happens via the reported clearance token.
         if ($result->rule === 'tripwire') {
             $mode = $this->options['tripwire_response'] ?? 'block';
+
+            // log — record and do nothing. The caller has already written the
+            // violation and reported it, so there is nothing left to do here.
+            //
+            // Note this is NOT the same as the `tripwire_dry_run` setting, which is
+            // handled inside the rule and collapses the result to ALLOW at
+            // sdk/src/Rules/TripwireRule.php:139 — before RuleEngine gets a chance to
+            // record it. Dry run is therefore silent; this is observable.
+            if ($mode === 'log') {
+                return;
+            }
+
+            // challenge — serve the proof-of-work interstitial rather than a 403 and
+            // a block. The middle option for an operator who wants the tripwire armed
+            // but is not ready to hard-block on it.
+            //
+            // Understand what this does to a non-browser client: the challenge needs
+            // JavaScript AND a human click (public/js/webdecoy-challenge.js binds
+            // startChallenge to a click on #challengeBox), so nothing automated can
+            // ever complete it. On a tripwire that is the intent — the path requested
+            // exists nowhere on the site and is reachable only from a hidden element
+            // or a robots.txt disallow, so a well-behaved crawler never asks for it.
+            // It is still a denial for any non-JS caller, which is why `block`
+            // remains the default rather than this.
+            if ($mode === 'challenge') {
+                if ($this->is_challenge_verified($ip)) {
+                    return;
+                }
+                $this->serve_challenge_page($ip);
+                return;
+            }
+
             if ($mode !== 'block') {
                 $path = (is_array($result->metadata) && isset($result->metadata['path'])) ? (string) $result->metadata['path'] : '';
                 $decoy = new WebDecoy_Decoy_Response();
@@ -1623,7 +1655,7 @@ final class WebDecoy_Plugin
             'threat_level' => \WebDecoy\DetectionResult::THREAT_HIGH,
             'source' => 'wordpress_plugin',
             'flags' => wp_json_encode($flags_data),
-            'created_at' => current_time('mysql'),
+            'created_at' => gmdate('Y-m-d H:i:s'),
         ]);
     }
 
@@ -1664,7 +1696,7 @@ final class WebDecoy_Plugin
                 'threat_level' => \WebDecoy\DetectionResult::THREAT_HIGH,
                 'source' => 'wordpress_plugin',
                 'flags' => wp_json_encode($flags_data),
-                'created_at' => current_time('mysql'),
+                'created_at' => gmdate('Y-m-d H:i:s'),
             ]);
         }
     }
@@ -1814,7 +1846,7 @@ final class WebDecoy_Plugin
             'threat_level' => $result->getThreatLevel(),
             'source' => 'wordpress_plugin',
             'flags' => json_encode($flags_data),
-            'created_at' => current_time('mysql'),
+            'created_at' => gmdate('Y-m-d H:i:s'),
         ]);
 
         $this->flag_critical_moment($ip, $result->getThreatLevel());
@@ -1933,7 +1965,7 @@ final class WebDecoy_Plugin
                     'flags' => ['canary_credential_use'],
                     'metadata' => ['reason' => 'Login attempt with a decoy (canary) credential'],
                 ]),
-                'created_at' => current_time('mysql'),
+                'created_at' => gmdate('Y-m-d H:i:s'),
             ]);
 
             // Confirmed decoy exfiltration is always CRITICAL — surface the moment.
@@ -2251,7 +2283,10 @@ final class WebDecoy_Plugin
         $sanitized['tripwire_patterns'] = $this->sanitize_pattern_list($input['tripwire_patterns'] ?? '');
         $sanitized['tripwire_action'] = in_array($input['tripwire_action'] ?? 'block', ['block', 'throttle'], true) ? $input['tripwire_action'] : 'block';
         $sanitized['tripwire_dry_run'] = !empty($input['tripwire_dry_run']);
-        $sanitized['tripwire_response'] = in_array($input['tripwire_response'] ?? 'block', ['block', 'notfound', 'decoy', 'tarpit'], true) ? $input['tripwire_response'] : 'block';
+        // Kept in step with block_action above, which has always accepted challenge
+        // and log. The deterministic path had the harsher options and none of the
+        // gentler ones, which was backwards. Refs #53.
+        $sanitized['tripwire_response'] = in_array($input['tripwire_response'] ?? 'block', ['block', 'challenge', 'log', 'notfound', 'decoy', 'tarpit'], true) ? $input['tripwire_response'] : 'block';
         $sanitized['honeytoken_enabled'] = !empty($input['honeytoken_enabled']);
         $sanitized['honeytoken_rotate'] = !empty($input['honeytoken_rotate']);
         $sanitized['traps_fake_plugins'] = !empty($input['traps_fake_plugins']);
@@ -2653,7 +2688,7 @@ final class WebDecoy_Plugin
             'threat_level' => $threat_level,
             'source' => 'wordpress_plugin',
             'flags' => $flags_json,
-            'created_at' => current_time('mysql'),
+            'created_at' => gmdate('Y-m-d H:i:s'),
         ]);
 
         $this->flag_critical_moment($ip, $threat_level);

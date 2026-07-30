@@ -59,6 +59,67 @@ else
     echo "    ! rsvg-convert not found — add PNGs to ${SVN_DIR}/assets/ manually"
 fi
 
+echo "==> Asserting trunk carries nothing WordPress.org forbids"
+# Two failure modes this has already caught in practice:
+#   1. Syncing from a build/ tree left behind by release.sh (the CDN variant)
+#      instead of the --org variant. That stages includes/class-webdecoy-updater.php,
+#      a self-updater that pulls releases from our own CDN — an outright guideline
+#      violation that gets plugins pulled from the directory.
+#   2. rsync carrying local dotfile directories (.claude, .idea, .vscode) into trunk.
+# Neither is visible in a casual `svn status` read, and both are unrecoverable once
+# committed: wp.org SVN history is public and permanent.
+WPORG_FORBIDDEN=(
+    "includes/class-webdecoy-updater.php"
+    "public/js/webdecoy-clearance.js"
+    "release.sh"
+    "build.sh"
+    "cdn-files"
+    "bin"
+    "dist"
+    "build"
+    "tests"
+    "vendor"
+    "node_modules"
+    "composer.json"
+    "composer.lock"
+    "phpcs.xml.dist"
+    "phpstan.neon"
+    ".svn-wporg"
+)
+violations=0
+for path in "${WPORG_FORBIDDEN[@]}"; do
+    if [ -e "${SVN_DIR}/trunk/${path}" ]; then
+        echo "    ✗ trunk/${path} must not ship to WordPress.org"
+        violations=$((violations + 1))
+    fi
+done
+# Any dotfile or dot-directory at the top of trunk, other than SVN's own.
+while IFS= read -r dotpath; do
+    [ -z "${dotpath}" ] && continue
+    echo "    ✗ ${dotpath#"${SVN_DIR}/"} is a local artifact and must not ship"
+    violations=$((violations + 1))
+done < <(find "${SVN_DIR}/trunk" -maxdepth 1 -name '.*' -not -name '.svn' -not -name 'trunk' 2>/dev/null)
+
+if [ "${violations}" -gt 0 ]; then
+    echo ""
+    echo "error: ${violations} forbidden path(s) staged in trunk — refusing to continue."
+    echo "       The usual cause is a stale build/ tree from release.sh. Fix with:"
+    echo "         ./build.sh ${VERSION} --org && bin/deploy-wporg.sh ${VERSION}"
+    echo "       Nothing has been committed. Run 'svn revert -R ${SVN_DIR}' to reset."
+    exit 1
+fi
+echo "    ✓ clean"
+
+echo "==> Asserting the staged version is the one requested"
+for f in webdecoy.php readme.txt; do
+    if ! grep -qE "(Version|Stable tag): *${VERSION}\$" "${SVN_DIR}/trunk/${f}"; then
+        echo "error: trunk/${f} does not declare version ${VERSION}."
+        echo "       Bump it on main and rebuild before deploying."
+        exit 1
+    fi
+done
+echo "    ✓ webdecoy.php and readme.txt both say ${VERSION}"
+
 echo "==> Tagging tags/${VERSION}"
 rm -rf "${SVN_DIR}/tags/${VERSION}"
 mkdir -p "${SVN_DIR}/tags"

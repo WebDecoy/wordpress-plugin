@@ -1,5 +1,9 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.3.4 - 2026-07-30 =
+* Added: tripwires can now Challenge or Log instead of only blocking or serving deception. Challenge asks the visitor to solve a small proof-of-work in the browser; Log records the hit and changes nothing about the response, which is the safest way to watch a tripwire you have just armed. The scoring path has always had these two options and the tripwire path — the one backed by proof rather than a guess — had neither, which was backwards. Note that Challenge needs JavaScript and a click, so nothing automated can complete it; on a tripwire that is the intent, since those paths exist nowhere on your site and no honest crawler requests them.
+* Fixed: timestamps are now stored consistently in UTC and converted for display. They were written in your site's local time and compared against UTC, so on any site not set to UTC the Today / 7 days / 30 days filters covered the wrong span, and the WooCommerce checkout window was the wrong width — narrower west of UTC, wider east of it. Rows written by earlier versions are left as they are rather than shifted, because shifting them would be wrong for any site that has ever changed timezone; the discrepancy ages out of the reporting windows on its own.
+
 = 2.3.3 - 2026-07-29 =
 Follow-up to the 2.3.2 safety release. Four WooCommerce and reporting fixes; no behaviour change for anyone not running WooCommerce.
 
