@@ -156,12 +156,28 @@ class WebDecoy_WooCommerce
             return false;
         }
 
+        // Evidence one order cannot manufacture. track_attempt() records one row per
+        // checkout SUBMISSION, not per order — woocommerce_checkout_order_processed
+        // fires on every submission and WC_Checkout::create_order() reuses the order
+        // held in the order_awaiting_payment session. So a customer retrying a declined
+        // card produces several rows against ONE order_id and could trip Patterns 1, 2
+        // and 4 on their own. Those three now require either several distinct orders or
+        // more than one card. Refs #61.
+        //
+        // Deliberately NOT solved by deduping rows per order_id: a real carding bot
+        // cycling cards through one reused cart also produces a single order_id, so a
+        // dedupe would collapse the attack to one row and blind every pattern plus the
+        // velocity counter.
+        $distinct_orders = count(array_unique(array_filter(array_column($attempts, 'order_id'))));
+        $distinct_cards  = count(array_unique(array_filter(array_column($attempts, 'card_last4'))));
+        $multi_source    = ($distinct_orders >= 3 || $distinct_cards >= 2);
+
         // Pattern 1: Multiple small amounts (< $5)
         $small_amounts = array_filter($attempts, function ($a) {
             return isset($a['amount']) && (float) $a['amount'] < 5.00;
         });
 
-        if (count($small_amounts) >= 3) {
+        if ($multi_source && count($small_amounts) >= 3) {
             return true;
         }
 
@@ -170,11 +186,12 @@ class WebDecoy_WooCommerce
             return isset($a['status']) && $a['status'] === 'declined';
         });
 
-        if (count($declined) >= 3) {
+        if ($multi_source && count($declined) >= 3) {
             return true;
         }
 
-        // Pattern 3: Multiple different cards from same IP
+        // Pattern 3: Multiple different cards from same IP. Already keyed on distinct
+        // cards, so it is its own multi-source evidence and needs no extra gate.
         $card_last4s = array_unique(array_filter(array_column($attempts, 'card_last4')));
 
         if (count($card_last4s) >= 3) {
@@ -182,7 +199,7 @@ class WebDecoy_WooCommerce
         }
 
         // Pattern 4: Rapid succession of attempts (< 30 seconds apart)
-        if (count($attempts) >= 3) {
+        if ($multi_source && count($attempts) >= 3) {
             $timestamps = array_column($attempts, 'created_at');
             sort($timestamps);
 

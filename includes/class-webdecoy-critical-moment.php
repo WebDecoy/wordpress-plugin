@@ -143,7 +143,22 @@ class WebDecoy_Critical_Moment
             $org_id = isset($options['organization_id']) ? (string) $options['organization_id'] : '';
             $api_key = isset($options['api_key']) ? (string) $options['api_key'] : '';
 
-            if ($api_key !== '' && class_exists('WebDecoy_Actor_Intel')) {
+            // Prefer the locally synced feed: the hourly actor-feed sync already holds
+            // this data, so consulting it costs an option read instead of a blocking
+            // HTTP round trip on a page render. This is also the consumer the feed was
+            // missing — before this it wrote an option nothing ever read (#62).
+            if ($has_actor_feed && class_exists('WebDecoy_Actor_Feed')) {
+                $local = (new WebDecoy_Actor_Feed())->intel_for($ip);
+                if ($local !== null && $local['last_seen'] > 0) {
+                    $known = true;
+                    $days = self::days_since($local['last_seen'], time());
+                }
+            }
+
+            // Fall back to the live lookup only when the local feed had nothing —
+            // either the org has no feed entitlement or the actor is newer than the
+            // last sync.
+            if (!$known && $api_key !== '' && class_exists('WebDecoy_Actor_Intel')) {
                 $intel = new WebDecoy_Actor_Intel($api_key);
                 $map = $intel->lookup([$ip]);
                 $entry = isset($map[$ip]) && is_array($map[$ip]) ? $map[$ip] : null;
@@ -160,9 +175,13 @@ class WebDecoy_Critical_Moment
                 return [
                     'message'   => sprintf(
                         /* translators: %d: number of days since first seen on the network */
+                        // Must not claim Pro would have BLOCKED this. Since 2.3.2 the
+                        // cross-site feed is advisory and writes nothing to the block
+                        // list, on any plan — see #476. Sell the history, not a block
+                        // that does not happen.
                         _n(
-                            'This attacker was first seen on the WebDecoy network %d day ago — on Pro it would have been blocked before its first request.',
-                            'This attacker was first seen on the WebDecoy network %d days ago — on Pro it would have been blocked before its first request.',
+                            'This attacker was first seen on the WebDecoy network %d day ago — Pro shows you the full cross-site history for this actor.',
+                            'This attacker was first seen on the WebDecoy network %d days ago — Pro shows you the full cross-site history for this actor.',
                             $n,
                             'webdecoy'
                         ),
@@ -176,11 +195,15 @@ class WebDecoy_Critical_Moment
                 ];
 
             case 'connected_covered':
+                // Was "already blocked network-wide" with a success chip pointing at
+                // the blocked-IPs page. Since 2.3.2 the feed blocks nothing and that
+                // page is empty of feed entries, so the claim was false and the link
+                // went nowhere useful. Recognition is real; the block was not. #62.
                 return [
-                    'message'   => __('This attacker is already blocked network-wide — your actor feed already covers threats like this before they reach your site.', 'webdecoy'),
-                    'cta_label' => __('View blocked IPs', 'webdecoy'),
-                    'cta_url'   => admin_url('admin.php?page=webdecoy-blocked'),
-                    'type'      => 'success',
+                    'message'   => __('This attacker is already known across the WebDecoy network — the same actor has been seen attacking other sites.', 'webdecoy'),
+                    'cta_label' => __('View detections', 'webdecoy'),
+                    'cta_url'   => admin_url('admin.php?page=webdecoy-detections'),
+                    'type'      => 'warning',
                 ];
 
             case 'connected_unknown':

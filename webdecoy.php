@@ -1482,7 +1482,7 @@ final class WebDecoy_Plugin
     /**
      * Count what enforcement would have done, so monitor mode produces a number
      * rather than silence. Kept as a bounded option — no new table, no per-request
-     * write beyond a single autoloaded counter.
+     * write beyond a single non-autoloaded counter.
      */
     private function record_suppressed_action(string $suppression, string $reason): void
     {
@@ -1527,17 +1527,19 @@ final class WebDecoy_Plugin
              * @param \WebDecoy\Rules\RuleEngineResult $result
              */
             do_action('webdecoy_enforcement_suppressed', $ip, $suppression, $result);
-            // Deliberately NOT counted for THROTTLE. Rate limiting is high-volume by
-            // nature, it previously performed no database write on this path, and one
-            // option write per throttled request would turn a bot flood into an
-            // options-table flood — on every install, since monitor mode is the
-            // default. The rate limiter's own counters already carry that number.
-            if ($result->action !== \WebDecoy\Rules\RuleResult::THROTTLE) {
-                $this->record_suppressed_action(
-                    $suppression,
-                    $result->reason ?? ('Rule enforced: ' . ($result->rule ?? 'rule'))
-                );
-            }
+            // THROTTLE is counted too: rate limiting is the action most likely to meet
+            // real traffic, so omitting it made the number the owner decides on
+            // meaningless — "no request has met the bar" while everything was being
+            // throttled. Keyed on the RULE NAME, not the reason, because a throttle
+            // reason embeds the request counter and would mint a fresh breakdown key
+            // per request. A throttled request already writes webdecoy_rate_limits and
+            // inserts a detections row, so this adds no new order of cost.
+            $this->record_suppressed_action(
+                $suppression,
+                $result->action === \WebDecoy\Rules\RuleResult::THROTTLE
+                    ? ('Throttled: ' . ($result->rule ?? 'rate-limit'))
+                    : ($result->reason ?? ('Rule enforced: ' . ($result->rule ?? 'rule')))
+            );
             return;
         }
 
