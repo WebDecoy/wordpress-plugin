@@ -1,7 +1,7 @@
 === WebDecoy Bot Detection - Block AI Crawlers, Spam Bots & Card Testing ===
 Contributors: webdecoy1
 Donate link: https://webdecoy.com
-Tags: bot detection, security, anti-spam, spam protection, firewall, woocommerce, honeypot, ai bots, captcha, bot blocker, brute force, fraud prevention
+Tags: bot detection, security, spam protection, woocommerce, ai bots
 Requires at least: 6.1
 Tested up to: 7.0
 Stable tag: 2.4.0
