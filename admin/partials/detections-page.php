@@ -266,7 +266,7 @@ if ($wd_intel_connected && !empty($detections) && class_exists('WebDecoy_Actor_I
                     <strong><?php esc_html_e('Nothing here yet. Trip your canary and watch this page catch it.', 'webdecoy'); ?></strong>
                 </p>
                 <p>
-                    <?php esc_html_e('Your site already has a live canary: a secret path behind an invisible link that nothing legitimate ever requests. Open it and this page records the hit, exactly as it would for a real bot. The alert email lands in your admin inbox too.', 'webdecoy'); ?>
+                    <?php esc_html_e('Your site already has a live canary: a secret path behind an invisible link that nothing legitimate ever requests. Open it and this page records the hit, exactly as it would for a real bot.', 'webdecoy'); ?>
                 </p>
                 <p>
                     <a href="<?php echo esc_url($webdecoy_ed_canary); ?>" target="_blank" rel="noopener" class="button button-primary">
