@@ -75,7 +75,7 @@ if ($blocked_stats === false) {
         <p>
             <strong><?php esc_html_e('Want more intelligence?', 'webdecoy'); ?></strong>
             <?php esc_html_e('Connect to WebDecoy Cloud for IP reputation, VPN detection, and cross-site threat data.', 'webdecoy'); ?>
-            <a href="<?php echo esc_url(admin_url('admin.php?page=webdecoy#tab-cloud')); ?>">
+            <a href="<?php echo esc_url(admin_url('admin.php?page=webdecoy&tab=cloud')); ?>">
                 <?php esc_html_e('Learn more', 'webdecoy'); ?>
             </a>
         </p>
