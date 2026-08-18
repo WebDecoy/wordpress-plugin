@@ -1114,6 +1114,18 @@ final class WebDecoy_Plugin
         $blocker = new WebDecoy_Blocker();
         $ip = $this->get_client_ip();
 
+        // Reserved test trigger (WebDecoy/app#677):
+        //   curl -A "WebDecoy-Test/1.0" https://your-site.example/
+        // always records a detection, so a fresh install can prove itself end
+        // to end. Deliberately checked before the allowlist (a developer
+        // testing from an allowlisted IP still gets their receipt), before the
+        // block check, and before rules (a test must never trip enforcement).
+        // The cloud labels these rows as tests and keeps them out of stats.
+        if ($this->is_test_trigger_request()) {
+            $this->handle_test_trigger($ip);
+            return;
+        }
+
         // Allowlisted IPs bypass all detection entirely.
         if ($blocker->is_allowlisted($ip)) {
             return;
@@ -1909,6 +1921,65 @@ final class WebDecoy_Plugin
         ]);
 
         $client->submitDetection($detection);
+    }
+
+    /**
+     * Whether this request carries the reserved test User-Agent
+     * (prefix "WebDecoy-Test/", case-insensitive). See WebDecoy/app#677.
+     */
+    private function is_test_trigger_request(): bool
+    {
+        if (!isset($_SERVER['HTTP_USER_AGENT'])) {
+            return false;
+        }
+        $ua = ltrim(sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])));
+        return stripos($ua, 'WebDecoy-Test/') === 0;
+    }
+
+    /**
+     * Record the reserved test detection and answer with an unambiguous
+     * receipt (WebDecoy/app#677).
+     *
+     * Logs locally always, submits to the cloud when connected — the same two
+     * paths a real detection takes — then responds 403 so the curl output
+     * itself shows the plugin acted. Never blocks the IP, never trips rules:
+     * a test must have no consequences beyond its own row.
+     *
+     * @param string $ip
+     */
+    private function handle_test_trigger(string $ip): void
+    {
+        global $wpdb;
+
+        $result = new \WebDecoy\DetectionResult(100, ['test_trigger']);
+
+        // Local log, inlined rather than via log_detection(): that path also
+        // queues the critical-moment alert for CRITICAL rows, and a test must
+        // not page anyone.
+        $wpdb->insert($wpdb->prefix . 'webdecoy_detections', [
+            'ip_address' => $ip,
+            'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '',
+            'score' => $result->getScore(),
+            'threat_level' => $result->getThreatLevel(),
+            'source' => 'wordpress_plugin',
+            'flags' => json_encode(['flags' => $result->getFlags(), 'metadata' => ['test' => true]]),
+            'created_at' => gmdate('Y-m-d H:i:s'),
+        ]);
+
+        try {
+            $this->submit_detection($result, $ip);
+        } catch (\Exception $e) {
+            error_log('WebDecoy API error: ' . $e->getMessage());
+        }
+
+        nocache_headers();
+        status_header(403);
+        header('Content-Type: application/json; charset=utf-8');
+        echo wp_json_encode([
+            'webdecoy_test' => true,
+            'message'       => 'Test detection recorded. Check your WebDecoy dashboard.',
+        ]);
+        exit;
     }
 
     /**
