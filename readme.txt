@@ -49,6 +49,14 @@ Most security plugins guess whether a visitor is a bot from signatures and score
 
 A visitor that touches a trap was not browsing your site. That is what makes deception the highest-confidence signal in the plugin: it does not need to guess.
 
+= An invisible reCAPTCHA alternative =
+
+Every form WebDecoy protects works without a visible challenge. Instead of asking humans to prove themselves, it asks the browser: an invisible SHA-256 proof-of-work challenge solves itself in the background in under a second for a real visitor, while bots and automation frameworks stall or fail. If you came here looking for a CAPTCHA alternative or an invisible reCAPTCHA replacement for comments, login, or registration, that is what this is: the same protection with none of the traffic-light puzzles, and nothing about your visitors sent to a third party.
+
+= Block fake registrations and comment spam =
+
+Registration spam and comment spam are the same disease: automation pointed at your forms. WebDecoy puts invisible honeypot fields on comment, login, and registration forms, scores each submission's behavior, and adds login brute force protection with rate limiting on top. Real visitors notice nothing; the fake accounts and spam comments stop arriving.
+
 = Free Features (No API Key Needed) =
 
 **Deception & Traps**
@@ -174,7 +182,7 @@ Yes. Comment, login, and registration forms get invisible honeypot fields and be
 
 = Do I need Cloudflare or a WAF in front of my site? =
 
-No. WebDecoy runs entirely inside WordPress, so it protects sites on any host with no DNS changes, no proxy, and no WAF subscription. It also works fine behind Cloudflare or another proxy if you have one. On paid plans the relationship inverts: WebDecoy can push confirmed attackers to your Cloudflare or AWS WAF so they are blocked at the edge before reaching WordPress at all.
+No. WebDecoy runs entirely inside WordPress, so it protects sites on any host with no DNS changes, no proxy, and no subscription. If you were weighing WAF options, it works as a WAF alternative at the application layer, and it sees things a network WAF cannot: which form was submitted, which coupon was applied, which hidden trap was touched. It also works fine behind Cloudflare or another proxy if you already have one. On paid plans the relationship inverts: WebDecoy can push confirmed attackers to your Cloudflare or AWS WAF so they are blocked at the edge before reaching WordPress at all.
 
 = How is WebDecoy different from a firewall or malware scanner? =
 
