@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: bot detection, security, spam protection, woocommerce, ai bots
 Requires at least: 6.1
 Tested up to: 7.0
-Stable tag: 2.5.0
+Stable tag: 2.6.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -283,6 +283,9 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 7. WooCommerce checkout protection settings
 
 == Changelog ==
+
+= 2.6.0 =
+* Added: a reserved test User-Agent that proves your install end to end. Run curl -A "WebDecoy-Test/1.0" https://your-site.example/ and the plugin records a detection and answers with a 403 JSON receipt, so the curl output itself shows the plugin acted. On sites connected to WebDecoy Cloud the event also appears in your dashboard within seconds, labeled as a test and excluded from stats and billing. The test never blocks your IP, never trips enforcement rules, and never sends alerts.
 
 = 2.5.0 =
 * Added: a wp webdecoy WP-CLI command for agency deploy scripts. wp webdecoy status reports mode, cloud connection, detection counts, active blocks, and retention. wp webdecoy config list/get/set covers every safe setting, including config set mode monitor|block. wp webdecoy allowlist add|remove|list manages the IP allowlist (whitelist your agency VPN across every client site in one loop). wp webdecoy logs flush clears the local detection log.

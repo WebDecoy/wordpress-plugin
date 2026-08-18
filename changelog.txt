@@ -1,5 +1,8 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.6.0 - 2026-08-18 =
+* Added: a reserved test User-Agent that proves your install end to end. Run curl -A "WebDecoy-Test/1.0" https://your-site.example/ and the plugin records a detection and answers with a 403 JSON receipt, so the curl output itself shows the plugin acted. On sites connected to WebDecoy Cloud the event also appears in your dashboard within seconds, labeled as a test and excluded from stats and billing. The test never blocks your IP, never trips enforcement rules, and never sends alerts.
+
 = 2.5.0 - 2026-08-17 =
 * Added: a wp webdecoy WP-CLI command for agency deploy scripts. wp webdecoy status reports mode, cloud connection, detection counts, active blocks, and retention. wp webdecoy config list/get/set covers every safe setting, including config set mode monitor|block. wp webdecoy allowlist add|remove|list manages the IP allowlist (whitelist your agency VPN across every client site in one loop). wp webdecoy logs flush clears the local detection log.
 * Added: wp-config.php constants for code-locked configuration. WEBDECOY_DEFAULT_MODE ('monitor' or 'block') forces the mode, overrides the stored setting, and locks the admin toggle; a settings save while forced can no longer silently drift the stored mode. WEBDECOY_HIDE_ADMIN_UI hides the WebDecoy menu, dashboard widget, and admin notices for white-label installs (the plugin stays visible in the Plugins list on purpose). WEBDECOY_MAX_LOG_RETENTION overrides the 30-day detection retention (1 to 3650 days).
