@@ -500,11 +500,24 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                             <label for="webdecoy_monitor_mode"><?php esc_html_e('Monitor mode', 'webdecoy'); ?></label>
                         </th>
                         <td>
+                            <?php $wd_forced_mode = WebDecoy_Runtime_Config::forced_monitor_mode(); ?>
                             <label>
                                 <input type="checkbox" id="webdecoy_monitor_mode" name="webdecoy_options[monitor_mode]"
-                                       value="1" <?php checked(!array_key_exists('monitor_mode', $options) || !empty($options['monitor_mode'])); ?> />
+                                       value="1" <?php checked($wd_forced_mode !== null ? $wd_forced_mode : (!array_key_exists('monitor_mode', $options) || !empty($options['monitor_mode']))); ?>
+                                       <?php disabled($wd_forced_mode !== null); ?> />
                                 <?php esc_html_e('Watch only — detect and log everything, block nothing', 'webdecoy'); ?>
                             </label>
+                            <?php if ($wd_forced_mode !== null) : ?>
+                            <p class="description">
+                                <?php
+                                printf(
+                                    /* translators: %s: the PHP constant, already formatted as code */
+                                    esc_html__('Locked by %s in wp-config.php. Remove the constant to change the mode here.', 'webdecoy'),
+                                    '<code>WEBDECOY_DEFAULT_MODE</code>'
+                                );
+                                ?>
+                            </p>
+                            <?php endif; ?>
                             <p class="description">
                                 <?php esc_html_e('On by default. Every setting below still decides what WOULD happen, and the Detections page shows it, but no visitor is ever blocked, throttled or shown a 403. Turn this off once you have looked at what enforcement would have done.', 'webdecoy'); ?>
                             </p>

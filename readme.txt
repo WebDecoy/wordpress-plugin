@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: bot detection, security, spam protection, woocommerce, ai bots
 Requires at least: 6.1
 Tested up to: 7.0
-Stable tag: 2.4.1
+Stable tag: 2.5.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -115,16 +115,34 @@ Registration spam and comment spam are the same disease: automation pointed at y
 
 = Private by design: 100% local, GDPR-friendly =
 
-Until you deliberately connect a WebDecoy Cloud account, the plugin makes **zero external connections**: your visitors' browsers never contact a third-party server, and neither does yours. No external CAPTCHA service, no CDN-loaded scripts, no data leaving your site. Detection data lives in your own WordPress database and is cleaned up automatically after 30 days. If you build privacy-conscious or GDPR-focused sites, that is the property to check for: there is no third-party data processor to disclose.
+Until you deliberately connect a WebDecoy Cloud account, the plugin makes **zero external connections**:
 
-= Built for agencies and boilerplate builds =
+* No visitor IP addresses sent to external servers
+* No US data transfers and no third-party data processor to disclose
+* No third-party cookies and no external CAPTCHA service
+* No CDN-loaded scripts (even Chart.js for the admin charts is bundled locally)
 
-A single line adds real protection to every site you ship:
+Detection data lives in your own WordPress database and is cleaned up automatically after 30 days (configurable). If you build privacy-conscious or GDPR-focused sites, this is the architecture you have been filtering for: cloud CAPTCHAs and cloud WAFs make your visitors someone else's data; WebDecoy keeps them yours.
 
-* `wp plugin install webdecoy --activate` and it is running, in monitor mode, with sensible defaults
-* **Monitor mode by default**: WebDecoy detects, logs, and reports everything but blocks nothing until you switch blocking on, so it cannot break a client site on day one
-* Emergency off switch: `define('WEBDECOY_DISABLE', true);` in wp-config.php
-* No account, license key, or per-site signup for the free tier, so it drops straight into a build template or deployment script
+= Built for agencies: configure everything in code =
+
+Agencies do not click through wp-admin on 80 client sites. WebDecoy is fully controllable from a deploy script:
+
+`wp plugin install webdecoy --activate`
+`wp webdecoy config set mode monitor`
+`wp webdecoy allowlist add 203.0.113.7`
+`wp webdecoy status`
+
+The `wp webdecoy` command covers status, every safe setting (`config list`), the IP allowlist (whitelist your agency VPN across every client site in one loop), and log flushing.
+
+Settings you never want a client to change live in wp-config.php:
+
+* `WEBDECOY_DEFAULT_MODE` ('monitor' or 'block'): forces the mode and locks the admin toggle
+* `WEBDECOY_HIDE_ADMIN_UI` (true): hides the WebDecoy menu, dashboard widget, and notices from the client's view
+* `WEBDECOY_MAX_LOG_RETENTION` (days): keep client databases light
+* `WEBDECOY_DISABLE` (true): emergency kill switch
+
+And because **monitor mode is the default**, baking WebDecoy into your boilerplate cannot break a client site on day one: it detects, logs, and reports everything but blocks nothing until you decide otherwise.
 
 = Premium Features (Optional WebDecoy Cloud) =
 
@@ -265,6 +283,11 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 7. WooCommerce checkout protection settings
 
 == Changelog ==
+
+= 2.5.0 =
+* Added: a wp webdecoy WP-CLI command for agency deploy scripts. wp webdecoy status reports mode, cloud connection, detection counts, active blocks, and retention. wp webdecoy config list/get/set covers every safe setting, including config set mode monitor|block. wp webdecoy allowlist add|remove|list manages the IP allowlist (whitelist your agency VPN across every client site in one loop). wp webdecoy logs flush clears the local detection log.
+* Added: wp-config.php constants for code-locked configuration. WEBDECOY_DEFAULT_MODE ('monitor' or 'block') forces the mode, overrides the stored setting, and locks the admin toggle; a settings save while forced can no longer silently drift the stored mode. WEBDECOY_HIDE_ADMIN_UI hides the WebDecoy menu, dashboard widget, and admin notices for white-label installs (the plugin stays visible in the Plugins list on purpose). WEBDECOY_MAX_LOG_RETENTION overrides the 30-day detection retention (1 to 3650 days).
+* Changed: an unrecognized WEBDECOY_DEFAULT_MODE value is ignored rather than guessed. Forcing 'block' on a typo would enforce on a site that asked to watch; forcing 'monitor' would disarm one that asked to enforce.
 
 = 2.4.1 =
 * Fixed: cloud features switch on immediately after one-click connect. The connection itself succeeded, but the premium status stayed off until a later background revalidation, so the JS verification token and cloud reporting were silently inactive at the exact moment you had just connected.

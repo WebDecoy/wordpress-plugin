@@ -3,7 +3,7 @@
  * Plugin Name: WebDecoy Bot Detection
  * Plugin URI: https://webdecoy.com/wordpress
  * Description: Protect your WordPress site from bots, spam, and carding attacks with WebDecoy's advanced threat detection.
- * Version: 2.4.1
+ * Version: 2.5.0
  * Requires at least: 6.1
  * Requires PHP: 7.4
  * Author: WebDecoy
@@ -41,11 +41,15 @@ if (!function_exists('str_starts_with')) {
 }
 
 // Plugin constants
-define('WEBDECOY_VERSION', '2.4.1');
+define('WEBDECOY_VERSION', '2.5.0');
 define('WEBDECOY_PLUGIN_FILE', __FILE__);
 define('WEBDECOY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WEBDECOY_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('WEBDECOY_PLUGIN_BASENAME', plugin_basename(__FILE__));
+
+// Code-level configuration (wp-config.php constants). Loaded before anything
+// reads options, because WEBDECOY_DEFAULT_MODE participates in load_options().
+require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-runtime-config.php';
 
 // Load the SDK (bundled)
 $sdk_paths = [
@@ -313,6 +317,14 @@ final class WebDecoy_Plugin
 
         $saved = get_option('webdecoy_options', []);
         $this->options = array_merge($defaults, $saved);
+
+        // WEBDECOY_DEFAULT_MODE forces the mode from wp-config.php, overriding
+        // whatever is stored: agencies pin 'monitor' (or 'block') in a config
+        // that clients cannot edit, and a database reset cannot undo.
+        $forced = WebDecoy_Runtime_Config::forced_monitor_mode();
+        if ($forced !== null) {
+            $this->options['monitor_mode'] = $forced;
+        }
 
         // Decrypt API key if it's encrypted
         if (!empty($this->options['api_key']) && $this->is_encrypted($this->options['api_key'])) {
@@ -855,14 +867,19 @@ final class WebDecoy_Plugin
 
         // Admin hooks
         if (is_admin()) {
-            add_action('admin_menu', [$this, 'admin_menu']);
+            // WEBDECOY_HIDE_ADMIN_UI removes the visible surfaces (menu, widget,
+            // notices) for white-label agency installs. Upgrade routines, settings
+            // registration and proxy sampling still run: hidden is not disabled.
+            if (!WebDecoy_Runtime_Config::hide_admin_ui()) {
+                add_action('admin_menu', [$this, 'admin_menu']);
+                add_action('admin_notices', [$this, 'render_state_notices']);
+                add_action('wp_dashboard_setup', [$this, 'dashboard_widget']);
+            }
             add_action('admin_init', [$this, 'register_settings']);
             add_action('admin_init', [$this, 'maybe_upgrade']);
             // Sample "are we behind a proxy" from a trusted (admin) request, so the
             // front end never has to consult a client-controlled header.
             add_action('admin_init', [$this, 'maybe_flag_proxy']);
-            add_action('admin_notices', [$this, 'render_state_notices']);
-            add_action('wp_dashboard_setup', [$this, 'dashboard_widget']);
             add_action('admin_enqueue_scripts', [$this, 'admin_scripts']);
         }
 
@@ -1023,6 +1040,13 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-wp-traps.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-cloud-connect.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-actor-intel.php';
+
+        // WP-CLI surface for agency deploy scripts: wp webdecoy status|config|
+        // allowlist|logs. Only loaded when WP-CLI is actually running.
+        if (defined('WP_CLI') && WP_CLI) {
+            require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-cli.php';
+            \WP_CLI::add_command('webdecoy', 'WebDecoy_CLI_Command');
+        }
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-actor-feed.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-critical-moment.php';
 
@@ -2261,7 +2285,17 @@ final class WebDecoy_Plugin
         // stored as an array of valid entries.
         $allowlist = $this->sanitize_trusted_proxies($input['ip_allowlist'] ?? '');
         $sanitized['ip_allowlist'] = $allowlist === '' ? [] : explode("\n", $allowlist);
-        $sanitized['monitor_mode'] = !empty($input['monitor_mode']);
+        if (WebDecoy_Runtime_Config::forced_monitor_mode() !== null) {
+            // The mode is forced by WEBDECOY_DEFAULT_MODE and its checkbox is
+            // disabled, so the form never posts it. Carry the STORED value
+            // forward rather than reading the absent field as false: otherwise
+            // every settings save silently drifts the stored mode to
+            // 'blocking', which detonates the day the constant is removed.
+            $stored = get_option('webdecoy_options', []);
+            $sanitized['monitor_mode'] = !empty(is_array($stored) ? ($stored['monitor_mode'] ?? true) : true);
+        } else {
+            $sanitized['monitor_mode'] = !empty($input['monitor_mode']);
+        }
         $sanitized['block_action'] = in_array($input['block_action'] ?? 'block', ['block', 'challenge', 'log']) ? $input['block_action'] : 'block';
         $sanitized['block_duration'] = max(0, intval($input['block_duration'] ?? 1));
         $sanitized['show_block_page'] = !empty($input['show_block_page']);
