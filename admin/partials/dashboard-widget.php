@@ -27,6 +27,23 @@ if ($blocked_stats === false) {
 ?>
 
 <div class="webdecoy-widget">
+    <?php
+    // Trip-it-yourself prompt (app#679): shown only while the widget has
+    // nothing to report — once real detections exist, the numbers speak.
+    $webdecoy_dw_options = get_option('webdecoy_options', []);
+    if (
+        empty($stats['total'])
+        && (!isset($webdecoy_dw_options['honeytoken_enabled']) || !empty($webdecoy_dw_options['honeytoken_enabled']))
+    ) :
+        $webdecoy_dw_canary = home_url((new WebDecoy_Honeytoken(!empty($webdecoy_dw_options['honeytoken_rotate'])))->primary_path());
+    ?>
+    <p>
+        <?php esc_html_e('Your canary is live. Trip it yourself and watch the detection arrive:', 'webdecoy'); ?>
+        <a href="<?php echo esc_url($webdecoy_dw_canary); ?>" target="_blank" rel="noopener">
+            <?php esc_html_e('open your canary', 'webdecoy'); ?>
+        </a>
+    </p>
+    <?php endif; ?>
     <div class="webdecoy-widget-stats">
         <div class="webdecoy-stat">
             <span class="webdecoy-stat-value"><?php echo esc_html(number_format($stats['total'])); ?></span>

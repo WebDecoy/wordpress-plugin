@@ -310,6 +310,32 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                             </label>
                         </td>
                     </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Email on Trip', 'webdecoy'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="webdecoy_options[canary_email_enabled]" value="1"
+                                       <?php checked($options['canary_email_enabled'] ?? true); ?> />
+                                <?php esc_html_e('Email the site admin when the canary trips (at most one email per hour)', 'webdecoy'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <?php if (!empty($options['honeytoken_enabled'])) :
+                        $webdecoy_canary_url = home_url((new WebDecoy_Honeytoken(!empty($options['honeytoken_rotate'])))->primary_path());
+                    ?>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Your Canary', 'webdecoy'); ?></th>
+                        <td>
+                            <code><?php echo esc_html($webdecoy_canary_url); ?></code>
+                            <p class="description">
+                                <?php esc_html_e('This is the secret path behind the hidden link. Open it yourself in a new tab: the detection appears on the Detections page, and the alert email arrives. Tripping your own canary is the fastest proof the whole pipeline works. (If your IP is on the allowlist, the trip is ignored.)', 'webdecoy'); ?>
+                                <a href="<?php echo esc_url($webdecoy_canary_url); ?>" target="_blank" rel="noopener">
+                                    <?php esc_html_e('Trip it now', 'webdecoy'); ?>
+                                </a>
+                            </p>
+                        </td>
+                    </tr>
+                    <?php endif; ?>
                 </table>
 
                 <h3><?php esc_html_e('WordPress Traps', 'webdecoy'); ?></h3>
