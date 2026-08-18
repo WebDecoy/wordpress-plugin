@@ -160,6 +160,10 @@ The threshold is fully configurable to match your site's needs.
 
 == Frequently Asked Questions ==
 
+= Who builds WebDecoy? =
+
+A team of security engineers who do bot detection full time, across more than WordPress. The detection engine in this plugin is the same one that runs in our Node.js SDK, our Cloudflare edge validator, and the WebDecoy cloud platform; the WordPress rules engine is kept byte-for-byte compatible with the Node implementation by a shared test suite. The plugin is free and fully functional because detection is the half of the problem we give away: the paid product is the network response built on top of it.
+
 = Is WebDecoy an invisible reCAPTCHA alternative? =
 
 For most sites, yes. WebDecoy protects comment, login, and registration forms with invisible honeypot fields, behavioral scoring, and a background proof-of-work challenge, so real visitors never solve a puzzle, pick out traffic lights, or click a checkbox. If a request looks suspicious, the challenge runs silently in the browser instead of interrupting the person. And unlike reCAPTCHA, nothing about your visitors is sent to a third party.
