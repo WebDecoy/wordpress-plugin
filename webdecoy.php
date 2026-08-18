@@ -3,7 +3,7 @@
  * Plugin Name: WebDecoy Bot Detection
  * Plugin URI: https://webdecoy.com/wordpress
  * Description: Protect your WordPress site from bots, spam, and carding attacks with WebDecoy's advanced threat detection.
- * Version: 2.4.0
+ * Version: 2.4.1
  * Requires at least: 6.1
  * Requires PHP: 7.4
  * Author: WebDecoy
@@ -41,7 +41,7 @@ if (!function_exists('str_starts_with')) {
 }
 
 // Plugin constants
-define('WEBDECOY_VERSION', '2.4.0');
+define('WEBDECOY_VERSION', '2.4.1');
 define('WEBDECOY_PLUGIN_FILE', __FILE__);
 define('WEBDECOY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WEBDECOY_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -3300,8 +3300,16 @@ final class WebDecoy_Plugin
             $this->options['api_key'] = $this->is_encrypted($api_key) ? $this->decrypt_value($api_key) : $api_key;
         }
 
-        // Force a fresh API status check on next use now that creds changed.
-        $this->clear_api_status_cache();
+        // The only caller is the connect flow, which reaches here immediately
+        // after a successful token exchange against the API — the key is
+        // known-good right now. Mark the status active instead of merely
+        // clearing the cache: with only a clear, is_premium() stays false
+        // until something happens to trigger a revalidation, which keeps the
+        // JS verification token and violation reporting off at the exact
+        // moment the user just connected and is watching. (update_options_raw
+        // above already fired the option hook that clears the cache, so this
+        // set is what survives.)
+        $this->set_api_status_cache('active');
     }
 
     /**

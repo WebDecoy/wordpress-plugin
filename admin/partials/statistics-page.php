@@ -246,8 +246,8 @@ $options = get_option('webdecoy_options', []);
     <div class="webdecoy-cloud-upsell">
         <h3><?php esc_html_e('Want deeper insights?', 'webdecoy'); ?></h3>
         <p><?php esc_html_e('WebDecoy Cloud provides IP reputation scoring, VPN/proxy detection, geographic analysis, and indefinite data retention. Local data is automatically cleaned up after 30 days.', 'webdecoy'); ?></p>
-        <a href="https://webdecoy.com/pricing" class="button button-primary" target="_blank" rel="noopener">
-            <?php esc_html_e('Explore WebDecoy Cloud', 'webdecoy'); ?>
+        <a href="<?php echo esc_url(admin_url('admin.php?page=webdecoy&tab=cloud')); ?>" class="button button-primary">
+            <?php esc_html_e('Connect to WebDecoy Cloud', 'webdecoy'); ?>
         </a>
     </div>
     <?php endif; ?>

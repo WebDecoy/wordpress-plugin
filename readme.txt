@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: bot detection, security, spam protection, woocommerce, ai bots
 Requires at least: 6.1
 Tested up to: 7.0
-Stable tag: 2.4.0
+Stable tag: 2.4.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -221,6 +221,11 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 7. WooCommerce checkout protection settings
 
 == Changelog ==
+
+= 2.4.1 =
+* Fixed: cloud features switch on immediately after one-click connect. The connection itself succeeded, but the premium status stayed off until a later background revalidation, so the JS verification token and cloud reporting were silently inactive at the exact moment you had just connected.
+* Fixed: the dashboard widget's "Learn more" link landed on the Protection tab instead of the WebDecoy Cloud tab.
+* Changed: the Statistics page upsell now opens the in-admin Cloud connect tab instead of leaving your site for the pricing page.
 
 = 2.4.0 =
 * Added: filter rules can read what the WebDecoy edge validator concluded about a request, using new edge.* fields: edge.class, edge.clearance, edge.present, and the shorthands edge.verified / edge.crawler / edge.script / edge.browser. edge.class is one of: verified (an identity Cloudflare attested, such as Googlebot, never degrade these), crawler (says it is a crawler, unproven), script (an HTTP client library, not a browser), or browser (nothing non-human fired). This was always matchable as req.header("x-wd-class"), but nothing said so; the Rules screen now documents the fields and what each value means. If the validator is not in front of a request, edge.present is false and every edge.* condition is false. That means "no information", not "human". Safe for blocking, throttling, logging and metering; the Rules screen also explains why you should not use it to serve different page content on a cacheable URL.
