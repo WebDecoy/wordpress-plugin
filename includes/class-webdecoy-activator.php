@@ -293,10 +293,14 @@ add_action('webdecoy_cleanup_expired', function () {
         gmdate('Y-m-d H:i:s', strtotime('-1 hour'))
     ));
 
-    // Clean up old detections (keep 30 days)
+    // Clean up old detections. 30 days by default; WEBDECOY_MAX_LOG_RETENTION
+    // in wp-config.php overrides it (agencies keep client databases light).
+    $retention_days = class_exists('WebDecoy_Runtime_Config')
+        ? WebDecoy_Runtime_Config::log_retention_days()
+        : 30;
     $wpdb->query($wpdb->prepare(
         "DELETE FROM {$wpdb->prefix}webdecoy_detections WHERE created_at < %s",
-        gmdate('Y-m-d H:i:s', strtotime('-30 days'))
+        gmdate('Y-m-d H:i:s', strtotime("-{$retention_days} days"))
     ));
 
     // Clean up old checkout attempts (keep 7 days)

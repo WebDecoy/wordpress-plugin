@@ -1,5 +1,10 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.5.0 - 2026-08-17 =
+* Added: a wp webdecoy WP-CLI command for agency deploy scripts. wp webdecoy status reports mode, cloud connection, detection counts, active blocks, and retention. wp webdecoy config list/get/set covers every safe setting, including config set mode monitor|block. wp webdecoy allowlist add|remove|list manages the IP allowlist (whitelist your agency VPN across every client site in one loop). wp webdecoy logs flush clears the local detection log.
+* Added: wp-config.php constants for code-locked configuration. WEBDECOY_DEFAULT_MODE ('monitor' or 'block') forces the mode, overrides the stored setting, and locks the admin toggle; a settings save while forced can no longer silently drift the stored mode. WEBDECOY_HIDE_ADMIN_UI hides the WebDecoy menu, dashboard widget, and admin notices for white-label installs (the plugin stays visible in the Plugins list on purpose). WEBDECOY_MAX_LOG_RETENTION overrides the 30-day detection retention (1 to 3650 days).
+* Changed: an unrecognized WEBDECOY_DEFAULT_MODE value is ignored rather than guessed. Forcing 'block' on a typo would enforce on a site that asked to watch; forcing 'monitor' would disarm one that asked to enforce.
+
 = 2.4.1 - 2026-08-17 =
 * Fixed: cloud features switch on immediately after one-click connect. The connection itself succeeded, but the premium status stayed off until a later background revalidation, so the JS verification token and cloud reporting were silently inactive at the exact moment you had just connected.
 * Fixed: the dashboard widget's "Learn more" link landed on the Protection tab instead of the WebDecoy Cloud tab.

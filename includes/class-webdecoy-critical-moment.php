@@ -51,7 +51,7 @@ class WebDecoy_Critical_Moment
      */
     public function register(): void
     {
-        if (is_admin()) {
+        if (is_admin() && !WebDecoy_Runtime_Config::hide_admin_ui()) {
             add_action('admin_notices', [$this, 'render']);
         }
     }

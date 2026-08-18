@@ -92,7 +92,9 @@ class WebDecoy_Cloud_Connect
         add_action('admin_post_webdecoy_cloud_connect', [$this, 'handle_connect']);
         add_action('admin_post_webdecoy_cloud_disconnect', [$this, 'handle_disconnect']);
         add_action('admin_init', [$this, 'maybe_handle_return']);
-        add_action('admin_notices', [$this, 'render_notices']);
+        if (!WebDecoy_Runtime_Config::hide_admin_ui()) {
+            add_action('admin_notices', [$this, 'render_notices']);
+        }
     }
 
     /**
