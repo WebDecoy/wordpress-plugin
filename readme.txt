@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: bot detection, security, spam protection, woocommerce, ai bots
 Requires at least: 6.1
 Tested up to: 7.0
-Stable tag: 2.6.0
+Stable tag: 2.7.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -283,6 +283,10 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 7. WooCommerce checkout protection settings
 
 == Changelog ==
+
+= 2.7.0 =
+* Added: your canary is now visible and testable. The honeytoken's secret path is shown in Settings (Tripwires tab) with a 'Trip it now' link, on the Detections page when it is empty, and in the dashboard widget. Open it yourself and watch the detection arrive: the fastest proof the whole pipeline works.
+* Added: an email to the site admin when the canary trips, whether it was a bot that found the hidden link or you testing the pipeline. At most one email per hour; on by default, toggle under Settings, Tripwires tab. Bait-path and fake-plugin tripwires stay email-silent (public scanners hit those constantly; nothing legitimate ever touches the canary).
 
 = 2.6.0 =
 * Added: a reserved test User-Agent that proves your install end to end. Run curl -A "WebDecoy-Test/1.0" https://your-site.example/ and the plugin records a detection and answers with a 403 JSON receipt, so the curl output itself shows the plugin acted. On sites connected to WebDecoy Cloud the event also appears in your dashboard within seconds, labeled as a test and excluded from stats and billing. The test never blocks your IP, never trips enforcement rules, and never sends alerts.
