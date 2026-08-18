@@ -12,5 +12,6 @@ parameters:
     bootstrapFiles:
         - vendor/php-stubs/wordpress-stubs/wordpress-stubs.php
         - vendor/php-stubs/woocommerce-stubs/woocommerce-stubs.php
+        - tests/stubs/wp-cli-stubs.php
     ignoreErrors:
         - '#Constant [A-Z_]+ not found#'
