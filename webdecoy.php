@@ -274,6 +274,9 @@ final class WebDecoy_Plugin
             // ever hit it — deterministic, zero false positives. On by default.
             'honeytoken_enabled' => true,
             'honeytoken_rotate' => false, // rotate the token daily (with grace)
+            // Email the admin when the honeytoken canary trips (app#679).
+            // Throttled to one per hour; the trip itself is the product working.
+            'canary_email_enabled' => true,
 
             // WordPress-native traps.
             'traps_fake_plugins' => true,  // arm fake vulnerable-plugin paths (absent plugins only)
@@ -1038,6 +1041,7 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-decoy-response.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-rate-limit-rule.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-wp-traps.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-canary-alert.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-cloud-connect.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-actor-intel.php';
 
@@ -1705,6 +1709,23 @@ final class WebDecoy_Plugin
     private function log_rule_violations(array $violations): void
     {
         global $wpdb;
+
+        // Canary email (WebDecoy/app#679): a hit on the honeytoken path is the
+        // one trap nothing legitimate ever touches, so it emails the admin
+        // immediately, whether it was a bot that found the hidden link or the
+        // owner tripping it on purpose. Other tripwires (bait paths, fake
+        // plugins) stay email-silent: public scanners hit those all day.
+        $canary_paths = (new WebDecoy_Honeytoken(!empty($this->options['honeytoken_rotate'])))->active_paths();
+        foreach ($violations as $violation) {
+            if (in_array($violation->path, $canary_paths, true)) {
+                WebDecoy_Canary_Alert::maybe_send(
+                    (string) $violation->ip,
+                    (string) $violation->path,
+                    (string) ($violation->userAgent ?? '')
+                );
+                break;
+            }
+        }
 
         foreach ($violations as $violation) {
             $confidence = 100;
@@ -2394,6 +2415,7 @@ final class WebDecoy_Plugin
         $sanitized['tripwire_response'] = in_array($input['tripwire_response'] ?? 'block', ['block', 'challenge', 'log', 'notfound', 'decoy', 'tarpit'], true) ? $input['tripwire_response'] : 'block';
         $sanitized['honeytoken_enabled'] = !empty($input['honeytoken_enabled']);
         $sanitized['honeytoken_rotate'] = !empty($input['honeytoken_rotate']);
+        $sanitized['canary_email_enabled'] = !empty($input['canary_email_enabled']);
         $sanitized['traps_fake_plugins'] = !empty($input['traps_fake_plugins']);
         $sanitized['traps_xmlrpc'] = !empty($input['traps_xmlrpc']);
         $sanitized['traps_author_enum'] = !empty($input['traps_author_enum']);

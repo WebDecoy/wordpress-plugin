@@ -251,7 +251,33 @@ if ($wd_intel_connected && !empty($detections) && class_exists('WebDecoy_Actor_I
     </div>
 
     <?php if (empty($detections)) : ?>
-        <p><?php esc_html_e('No detections found.', 'webdecoy'); ?></p>
+        <?php
+        // Trip-it-yourself empty state (app#679): a fresh install already has a
+        // live canary; the fastest proof it works is tripping it on purpose.
+        $webdecoy_ed_options = get_option('webdecoy_options', []);
+        $webdecoy_ed_canary  = '';
+        if (!isset($webdecoy_ed_options['honeytoken_enabled']) || !empty($webdecoy_ed_options['honeytoken_enabled'])) {
+            $webdecoy_ed_canary = home_url((new WebDecoy_Honeytoken(!empty($webdecoy_ed_options['honeytoken_rotate'])))->primary_path());
+        }
+        ?>
+        <?php if ($webdecoy_ed_canary !== '') : ?>
+            <div class="notice notice-info inline">
+                <p>
+                    <strong><?php esc_html_e('Nothing here yet. Trip your canary and watch this page catch it.', 'webdecoy'); ?></strong>
+                </p>
+                <p>
+                    <?php esc_html_e('Your site already has a live canary: a secret path behind an invisible link that nothing legitimate ever requests. Open it and this page records the hit, exactly as it would for a real bot. The alert email lands in your admin inbox too.', 'webdecoy'); ?>
+                </p>
+                <p>
+                    <a href="<?php echo esc_url($webdecoy_ed_canary); ?>" target="_blank" rel="noopener" class="button button-primary">
+                        <?php esc_html_e('Trip your canary', 'webdecoy'); ?>
+                    </a>
+                    <code><?php echo esc_html($webdecoy_ed_canary); ?></code>
+                </p>
+            </div>
+        <?php else : ?>
+            <p><?php esc_html_e('No detections found.', 'webdecoy'); ?></p>
+        <?php endif; ?>
     <?php else : ?>
         <table class="wp-list-table widefat fixed striped">
             <thead>
