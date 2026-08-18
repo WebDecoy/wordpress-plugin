@@ -9,11 +9,11 @@ Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Invisible bot detection. Block AI crawlers, spam bots, and card testing with no CAPTCHA, no account, no API key. Works instantly on activation.
+Stop card testing, fake orders, comment spam, and AI crawlers with no CAPTCHA. 100% local, no account or API key, works instantly on activation.
 
 == Description ==
 
-WebDecoy is a **free, fully-functional** bot detection and protection plugin that works 100% locally. It blocks bad bots, AI crawlers, comment spam, login brute force, and WooCommerce card-testing attacks. Unlike CAPTCHA solutions that frustrate visitors, WebDecoy uses invisible multi-layer detection: legitimate users never see challenges or interruptions.
+WebDecoy is a **free, fully-functional** bot detection and protection plugin that works 100% locally. It stops the symptoms you actually see: card-testing hits on your WooCommerce checkout, waves of fake registrations, comment spam, login brute force, and content scraped by AI crawlers. Unlike CAPTCHA solutions that frustrate visitors, WebDecoy uses invisible multi-layer detection: legitimate users never see challenges or interruptions.
 
 **Works immediately on activation.** No account needed. No API key required. No external connections at all until you optionally connect a WebDecoy Cloud account.
 
@@ -25,6 +25,17 @@ WebDecoy is a **free, fully-functional** bot detection and protection plugin tha
 * **Deception, not just filtering**: hidden tripwires and honeytokens that only bots can touch, so a catch is a certainty, not a guess
 * **Multi-layer detection**: server-side + client-side + proof-of-work challenges
 * **Free forever**: full protection at no cost. Premium cloud features are optional.
+
+= Stop WooCommerce card testing and fake orders =
+
+Card-testing bots run stolen card numbers through your checkout. You pay a gateway fee for every attempt, your decline rate climbs until the processor takes notice, and real orders drown in the noise. WebDecoy watches checkout the way a fraud analyst would:
+
+* Velocity limits per address (configurable attempts per time window)
+* Card-testing pattern detection: small amounts, rapid succession, repeated declines across more than one card
+* A hidden decoy coupon code that only bots ever find and apply
+* Works with both the classic checkout and WooCommerce Blocks
+
+Suspicious checkouts are refused and recorded, not silently allowed. And by default the whole plugin runs in monitor mode, so you can watch exactly what it would have done before you let it act.
 
 = Deception: the zero-false-positive layer =
 
@@ -46,6 +57,12 @@ A visitor that touches a trap was not browsing your site. That is what makes dec
 * Deceptive fake-file responses with canary credentials
 * WordPress-native traps and author-enumeration canary
 * WooCommerce decoy coupon
+
+**WooCommerce Protection**
+* Checkout carding attack prevention
+* Velocity limiting (configurable attempts per time window)
+* Card testing pattern detection
+* WooCommerce Blocks compatible
 
 **Server-Side Detection**
 * User-Agent analysis and HTTP header inspection
@@ -74,12 +91,6 @@ A visitor that touches a trap was not browsing your site. That is what makes dec
 * Registration spam prevention
 * Invisible honeypot fields on comment, login, and registration forms
 
-**WooCommerce Protection**
-* Checkout carding attack prevention
-* Velocity limiting (configurable attempts per time window)
-* Card testing pattern detection
-* WooCommerce Blocks compatible
-
 **Local Dashboard & Analytics**
 * Detection log with threat scores and MITRE tactic mapping
 * Statistics page with 30-day trend charts
@@ -93,6 +104,19 @@ A visitor that touches a trap was not browsing your site. That is what makes dec
 * Search engines, social media, monitoring services, SEO tools
 * Optional AI crawler blocking
 * Custom allowlist support
+
+= Private by design: 100% local, GDPR-friendly =
+
+Until you deliberately connect a WebDecoy Cloud account, the plugin makes **zero external connections**: your visitors' browsers never contact a third-party server, and neither does yours. No external CAPTCHA service, no CDN-loaded scripts, no data leaving your site. Detection data lives in your own WordPress database and is cleaned up automatically after 30 days. If you build privacy-conscious or GDPR-focused sites, that is the property to check for: there is no third-party data processor to disclose.
+
+= Built for agencies and boilerplate builds =
+
+A single line adds real protection to every site you ship:
+
+* `wp plugin install webdecoy --activate` and it is running, in monitor mode, with sensible defaults
+* **Monitor mode by default**: WebDecoy detects, logs, and reports everything but blocks nothing until you switch blocking on, so it cannot break a client site on day one
+* Emergency off switch: `define('WEBDECOY_DISABLE', true);` in wp-config.php
+* No account, license key, or per-site signup for the free tier, so it drops straight into a build template or deployment script
 
 = Premium Features (Optional WebDecoy Cloud) =
 
@@ -136,9 +160,17 @@ The threshold is fully configurable to match your site's needs.
 
 == Frequently Asked Questions ==
 
-= Can WebDecoy replace my CAPTCHA plugin? =
+= Is WebDecoy an invisible reCAPTCHA alternative? =
 
-For most sites, yes. WebDecoy protects comment, login, and registration forms with invisible honeypot fields, behavioral scoring, and a background proof-of-work challenge, so real visitors never solve a puzzle or click a checkbox. If a request looks suspicious, the challenge runs silently in the browser instead of interrupting the person.
+For most sites, yes. WebDecoy protects comment, login, and registration forms with invisible honeypot fields, behavioral scoring, and a background proof-of-work challenge, so real visitors never solve a puzzle, pick out traffic lights, or click a checkbox. If a request looks suspicious, the challenge runs silently in the browser instead of interrupting the person. And unlike reCAPTCHA, nothing about your visitors is sent to a third party.
+
+= Does it stop comment spam and fake user registrations? =
+
+Yes. Comment, login, and registration forms get invisible honeypot fields and behavioral scoring out of the box, all on by default. The plugin starts in monitor mode, recording what it would have done; switch blocking on and spam that scores above your threshold is challenged or blocked before it reaches your moderation queue.
+
+= Do I need Cloudflare or a WAF in front of my site? =
+
+No. WebDecoy runs entirely inside WordPress, so it protects sites on any host with no DNS changes, no proxy, and no WAF subscription. It also works fine behind Cloudflare or another proxy if you have one. On paid plans the relationship inverts: WebDecoy can push confirmed attackers to your Cloudflare or AWS WAF so they are blocked at the edge before reaching WordPress at all.
 
 = How is WebDecoy different from a firewall or malware scanner? =
 
