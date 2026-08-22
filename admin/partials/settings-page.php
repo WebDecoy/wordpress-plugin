@@ -856,7 +856,11 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                             <li><?php esc_html_e('VPN, proxy, and Tor exit node detection', 'webdecoy'); ?></li>
                             <li><?php esc_html_e('Cross-site threat intelligence from all WebDecoy users', 'webdecoy'); ?></li>
                             <li><?php esc_html_e('Advanced cloud analytics with indefinite data retention', 'webdecoy'); ?></li>
-                            <li><?php esc_html_e('Webhook and email alert automation', 'webdecoy'); ?></li>
+                            <?php // Not "email alerts": per-detection email is refused by the API
+                                  // (#702) because decoys are public bait and a busy site records
+                                  // thousands of hits a day. Email is the digest; webhooks are the
+                                  // real-time channel, configured in the dashboard. ?>
+                            <li><?php esc_html_e('Webhook automation and a monthly email report', 'webdecoy'); ?></li>
                         </ul>
                         <p>
                             <a href="https://webdecoy.com/pricing" class="webdecoy-text-link" target="_blank" rel="noopener">
