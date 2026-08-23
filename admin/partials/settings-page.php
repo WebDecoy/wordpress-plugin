@@ -835,7 +835,7 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                         // it would get, without either having to guess.
                         ?>
                         <p class="webdecoy-alerts-status">
-                            <span class="dashicons <?php echo $wd_alerts_on ? 'dashicons-bell' : 'dashicons-lock'; ?>"></span>
+                            <span class="dashicons <?php echo esc_attr($wd_alerts_on ? 'dashicons-bell' : 'dashicons-lock'); ?>"></span>
                             <?php if ($wd_alerts_on) : ?>
                                 <?php esc_html_e('Slack and webhook alerts: On.', 'webdecoy'); ?>
                                 <a href="https://app.webdecoy.com/enforcement/actions" target="_blank" rel="noopener">
