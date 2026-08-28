@@ -25,6 +25,16 @@
     <!-- Escaping, sanitization, nonces, validated input -->
     <rule ref="WordPress.Security"/>
 
+    <!--
+        The test harness under tests/ is CLI-only: its echo output goes to a
+        terminal, never to a browser, so the output-escaping sniff is a false
+        positive there (escaping would corrupt the terminal output). Every
+        other security rule still applies to test code.
+    -->
+    <rule ref="WordPress.Security.EscapeOutput">
+        <exclude-pattern>tests/</exclude-pattern>
+    </rule>
+
     <!-- Proper use of $wpdb->prepare() -->
     <rule ref="WordPress.DB"/>
 

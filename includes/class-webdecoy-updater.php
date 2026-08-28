@@ -37,6 +37,14 @@ class WebDecoy_Updater
      */
     public function check_for_updates($transient)
     {
+        // WordPress passes the update transient (a stdClass) here, but on the
+        // first run of a request it can be a non-object (false). Narrowing to
+        // stdClass makes the dynamic ->response write below well-typed and
+        // guards the non-object case in one step.
+        if (!$transient instanceof \stdClass) {
+            return $transient;
+        }
+
         if (empty($transient->checked)) {
             return $transient;
         }
@@ -71,6 +79,10 @@ class WebDecoy_Updater
             $download_url = $update_info['download_url'] ?? '';
             if (!$this->is_trusted_package_url($download_url)) {
                 return $transient;
+            }
+
+            if (!isset($transient->response) || !is_array($transient->response)) {
+                $transient->response = [];
             }
 
             $transient->response[WEBDECOY_PLUGIN_BASENAME] = (object) [
