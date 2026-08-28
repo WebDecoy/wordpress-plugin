@@ -3,7 +3,7 @@
  * Plugin Name: WebDecoy Bot Detection
  * Plugin URI: https://webdecoy.com/wordpress
  * Description: Protect your WordPress site from bots, spam, and carding attacks with WebDecoy's advanced threat detection.
- * Version: 2.7.1
+ * Version: 2.8.0
  * Requires at least: 6.1
  * Requires PHP: 7.4
  * Author: WebDecoy
@@ -41,7 +41,7 @@ if (!function_exists('str_starts_with')) {
 }
 
 // Plugin constants
-define('WEBDECOY_VERSION', '2.7.1');
+define('WEBDECOY_VERSION', '2.8.0');
 define('WEBDECOY_PLUGIN_FILE', __FILE__);
 define('WEBDECOY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WEBDECOY_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -2662,7 +2662,7 @@ final class WebDecoy_Plugin
             'user_agent' => $user_agent,
         ];
 
-        wp_remote_post('https://ingest.webdecoy.com/api/v1/page-serve', [
+        wp_remote_post('https://in.webdecoy.com/api/v1/page-serve', [
             'timeout'  => 1,
             'blocking' => false,
             'headers'  => [
@@ -2811,7 +2811,7 @@ final class WebDecoy_Plugin
      */
     private function forward_to_ingest(array $detection, string $ip): void
     {
-        $ingest_url = 'https://ingest.webdecoy.com/api/v1/detect';
+        $ingest_url = 'https://in.webdecoy.com/api/v1/detect';
 
         // Get API key (decrypt if needed)
         $api_key = $this->options['api_key'];

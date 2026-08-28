@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: bot detection, security, spam protection, woocommerce, ai bots
 Requires at least: 6.1
 Tested up to: 7.0
-Stable tag: 2.7.1
+Stable tag: 2.8.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -283,6 +283,9 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 7. WooCommerce checkout protection settings
 
 == Changelog ==
+
+= 2.8.0 =
+* Changed: the plugin's cloud calls now go to in.webdecoy.com, WebDecoy's DDoS-protected ingest address. Same service, sturdier front door. If your firewall allows outbound requests by hostname, allow in.webdecoy.com. Sites that set a custom API URL are unaffected.
 
 = 2.7.1 =
 * Removed: the canary trip email introduced in 2.7.0. The canary link sits on every public page, so busy sites would receive an email every hour, forever. Detections belong on the Detections page, not in your inbox. Everything else from 2.7.0 stays: the canary URL in settings, the trip-it-yourself prompt, and the Detections page recording every hit.

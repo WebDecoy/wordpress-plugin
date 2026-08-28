@@ -57,7 +57,7 @@ class WebDecoy_Actor_Feed
     public const CRON_HOOK = 'webdecoy_sync_actor_feed';
 
     /** Shared actor feed endpoint (Bearer API key; same auth as entitlements). */
-    private const FEED_ENDPOINT = 'https://ingest.webdecoy.com/api/v1/sdk/actor-feed';
+    private const FEED_ENDPOINT = 'https://in.webdecoy.com/api/v1/sdk/actor-feed';
 
     /** Option persisting the delta cursor (`since`) between syncs. */
     private const CURSOR_OPTION = 'webdecoy_actor_feed_cursor';

@@ -45,7 +45,7 @@ class WebDecoy_Cloud_Connect
      * {@see WebDecoy_Violation_Reporter} authenticates the violations batch:
      * an `Authorization: Bearer <api_key>` header against the ingest service.
      */
-    private const ENTITLEMENTS_ENDPOINT = 'https://ingest.webdecoy.com/api/v1/sdk/entitlements';
+    private const ENTITLEMENTS_ENDPOINT = 'https://in.webdecoy.com/api/v1/sdk/entitlements';
 
     /** Where the generic "Upgrade" link points once connected. */
     private const BILLING_URL = 'https://app.webdecoy.com/billing';

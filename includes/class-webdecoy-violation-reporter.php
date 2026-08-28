@@ -31,7 +31,7 @@ if (!defined('ABSPATH')) {
 class WebDecoy_Violation_Reporter
 {
     /** Ingest batch endpoint. */
-    private const ENDPOINT = 'https://ingest.webdecoy.com/api/v1/sdk/violations/batch';
+    private const ENDPOINT = 'https://in.webdecoy.com/api/v1/sdk/violations/batch';
 
     /** Max events per POST body, matching node's batch size. */
     private const BATCH_SIZE = 100;

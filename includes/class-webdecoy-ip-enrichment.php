@@ -24,7 +24,7 @@ if (!defined('ABSPATH')) {
  */
 class WebDecoy_IP_Enrichment
 {
-    private const ENDPOINT_BASE = 'https://ingest.webdecoy.com/api/v1/sdk/ip/';
+    private const ENDPOINT_BASE = 'https://in.webdecoy.com/api/v1/sdk/ip/';
 
     /** Cache TTL — 1 hour, matching node's ttlMs default. */
     private const TTL = HOUR_IN_SECONDS;

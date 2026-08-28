@@ -459,7 +459,7 @@ class WebDecoy_WooCommerce
         }
 
         $ingest_url = rtrim($this->options['api_url'] ?? 'https://api.webdecoy.com', '/');
-        $ingest_url = str_replace('api.webdecoy.com', 'ingest.webdecoy.com', $ingest_url);
+        $ingest_url = str_replace('api.webdecoy.com', 'in.webdecoy.com', $ingest_url);
         $ingest_url .= '/api/v1/detect';
 
         $collector = new \WebDecoy\SignalCollector();

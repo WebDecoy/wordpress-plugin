@@ -32,7 +32,7 @@ if (!defined('ABSPATH')) {
 class WebDecoy_Actor_Intel
 {
     /** Batched intel endpoint (Bearer API key). */
-    private const ENDPOINT = 'https://ingest.webdecoy.com/api/v1/sdk/detections/intel';
+    private const ENDPOINT = 'https://in.webdecoy.com/api/v1/sdk/detections/intel';
 
     /** Per-IP transient cache prefix. */
     private const CACHE_PREFIX = 'webdecoy_intel_';
