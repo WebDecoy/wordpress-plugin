@@ -10,15 +10,19 @@ function webdecoy()
     return $GLOBALS['wd_woo_proxy_plugin'];
 }
 
+class WooProxyTestPlugin
+{
+    public array $proxies = ['10.0.0.0/8'];
+
+    public function get_client_ip(): string
+    {
+        return (new \WebDecoy\SignalCollector($this->proxies))->getIP();
+    }
+}
+
 TestRunner::test('WooCommerce shares the configured client IP resolver', function () {
     $saved = $_SERVER;
-    $GLOBALS['wd_woo_proxy_plugin'] = new class {
-        public array $proxies = ['10.0.0.0/8'];
-        public function get_client_ip(): string
-        {
-            return (new \WebDecoy\SignalCollector($this->proxies))->getIP();
-        }
-    };
+    $GLOBALS['wd_woo_proxy_plugin'] = new WooProxyTestPlugin();
     $woo = (new ReflectionClass(WebDecoy_WooCommerce::class))->newInstanceWithoutConstructor();
     try {
         foreach (['203.0.113.11', '203.0.113.12'] as $shopper) {
