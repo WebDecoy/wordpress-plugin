@@ -500,8 +500,7 @@ class WebDecoy_WooCommerce
      */
     private function get_client_ip(): string
     {
-        $collector = new \WebDecoy\SignalCollector();
-        return $collector->getIP();
+        return webdecoy()->get_client_ip();
     }
 
     /**
