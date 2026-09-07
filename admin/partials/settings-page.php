@@ -804,6 +804,7 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                     $wd_plan_slug = isset($options['plan']) ? (string) $options['plan'] : '';
                     $wd_plan_label = WebDecoy_Cloud_Connect::plan_label($wd_plan_slug);
                     $wd_digest_on = !empty($wd_entitlements['digest']['enabled']);
+                    $wd_alerts_on = !empty($wd_entitlements['features']['alerts']);
                     ?>
                     <div class="webdecoy-connected-card">
                         <div class="webdecoy-connected-head">
@@ -824,6 +825,25 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                                 ? esc_html__('Monthly security report: On', 'webdecoy')
                                 : esc_html__('Monthly security report: Off', 'webdecoy');
                             ?>
+                        </p>
+
+                        <?php
+                        // Real-time alerts are configured in the dashboard, not here: the
+                        // plugin sends nothing itself, which keeps the entitlement gating a
+                        // cloud response rather than local behaviour. This row exists so a
+                        // paying site can find the feature, and an unpaid one can see what
+                        // it would get, without either having to guess.
+                        ?>
+                        <p class="webdecoy-alerts-status">
+                            <span class="dashicons <?php echo esc_attr($wd_alerts_on ? 'dashicons-bell' : 'dashicons-lock'); ?>"></span>
+                            <?php if ($wd_alerts_on) : ?>
+                                <?php esc_html_e('Slack and webhook alerts: On.', 'webdecoy'); ?>
+                                <a href="https://app.webdecoy.com/enforcement/actions" target="_blank" rel="noopener">
+                                    <?php esc_html_e('Configure them in your dashboard', 'webdecoy'); ?>
+                                </a>
+                            <?php else : ?>
+                                <?php esc_html_e('Slack and webhook alerts: available on Pro. Detection, blocking and the monthly report stay free.', 'webdecoy'); ?>
+                            <?php endif; ?>
                         </p>
 
                         <p class="webdecoy-connected-actions">
@@ -856,7 +876,11 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                             <li><?php esc_html_e('VPN, proxy, and Tor exit node detection', 'webdecoy'); ?></li>
                             <li><?php esc_html_e('Cross-site threat intelligence from all WebDecoy users', 'webdecoy'); ?></li>
                             <li><?php esc_html_e('Advanced cloud analytics with indefinite data retention', 'webdecoy'); ?></li>
-                            <li><?php esc_html_e('Webhook and email alert automation', 'webdecoy'); ?></li>
+                            <?php // Not "email alerts": per-detection email is refused by the API
+                                  // (#702) because decoys are public bait and a busy site records
+                                  // thousands of hits a day. Email is the digest; webhooks are the
+                                  // real-time channel, configured in the dashboard. ?>
+                            <li><?php esc_html_e('Webhook automation and a monthly email report', 'webdecoy'); ?></li>
                         </ul>
                         <p>
                             <a href="https://webdecoy.com/pricing" class="webdecoy-text-link" target="_blank" rel="noopener">

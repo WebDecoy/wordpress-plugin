@@ -148,16 +148,16 @@ And because **monitor mode is the default**, baking WebDecoy into your boilerpla
 
 Connect an API key to unlock cloud-powered intelligence:
 
-* **WAF Integrations**: arm your existing edge. Push confirmed attackers to Cloudflare or AWS WAF so they're blocked before a request ever reaches WordPress, plus webhooks for any other firewall
+* **WAF Integrations**: arm your existing edge. From your WebDecoy dashboard, push confirmed attackers to Cloudflare or AWS WAF so they're blocked before a request ever reaches WordPress, plus webhooks for any other firewall
 * **IP Reputation**: AbuseIPDB integration, threat scoring
 * **VPN/Proxy Detection**: identify visitors hiding behind VPNs, proxies, and Tor
 * **GeoIP Enrichment**: geographic data from MaxMind
 * **Cloud Sync**: forward detections to a centralized dashboard
 * **Cross-Site Intelligence**: aggregate threat data from all WebDecoy customers
 * **Advanced Analytics**: cloud dashboard at app.webdecoy.com with indefinite history
-* **Webhooks & Alerts**: automated response chains, email notifications
+* **Webhooks & Alerts**: automated response chains, plus a monthly email report of what was caught
 
-[Explore Plans](https://webdecoy.com/pricing) | [Start Free Trial](https://app.webdecoy.com/register)
+[Explore Plans](https://webdecoy.com/pricing) | [Create a free account](https://app.webdecoy.com/register)
 
 = Threat Scoring =
 
@@ -212,7 +212,7 @@ Firewalls match requests against known-bad signatures, and scanners look for inf
 
 = What does WebDecoy Cloud add? =
 
-WebDecoy Cloud adds threat intelligence feeds (AbuseIPDB, VPNAPI, MaxMind), centralized monitoring across multiple sites, indefinite detection history, automated response features like webhooks and email alerts, and WAF integrations: confirmed attackers can be pushed to Cloudflare or AWS WAF so they're blocked at the edge, before ever reaching your server. [Compare plans](https://webdecoy.com/pricing).
+WebDecoy Cloud adds threat intelligence feeds (AbuseIPDB, VPNAPI, MaxMind), centralized monitoring across multiple sites, indefinite detection history, a monthly email report, webhook automation, and WAF integrations: from your dashboard, confirmed attackers can be pushed to Cloudflare or AWS WAF so they're blocked at the edge, before ever reaching your server. [Compare plans](https://webdecoy.com/pricing).
 
 = Does WebDecoy slow down my site? =
 
