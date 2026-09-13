@@ -48,6 +48,9 @@ class WebDecoy_Cloud_Connect
     private const ENTITLEMENTS_ENDPOINT = 'https://in.webdecoy.com/api/v1/sdk/entitlements';
 
     /** Where the generic "Upgrade" link points once connected. */
+    /** Where the app shows whether this site's sensor has actually reported. */
+    private const SETUP_URL = 'https://app.webdecoy.com/onboarding/setup';
+
     private const BILLING_URL = 'https://app.webdecoy.com/billing';
 
     /** WordPress-channel checkout entry point (contract §4). */
@@ -205,13 +208,18 @@ class WebDecoy_Cloud_Connect
         $this->sync_entitlements();
         $this->schedule_sync();
 
+        // What just happened is that credentials were stored. Whether this site
+        // is covered is a separate fact, and it is not known yet: nothing has
+        // reported. Saying "cloud features are now active" here asserted
+        // coverage at the moment the keys landed, which is the same mistake as
+        // treating an OAuth redirect as proof of an install (#994). The link
+        // goes to the screen that watches for the first report.
         $org = (string) ($result['organization_name'] ?? '');
         $this->set_notice(
             'success',
-            $org !== ''
-                /* translators: %s: organization name */
-                ? sprintf(__('Connected to WebDecoy Cloud (%s). Cloud features are now active.', 'webdecoy'), $org)
-                : __('Connected to WebDecoy Cloud. Cloud features are now active.', 'webdecoy')
+            self::connected_notice_message($org),
+            self::SETUP_URL,
+            __('Watch for the first report', 'webdecoy')
         );
         $this->redirect_clean();
     }
@@ -488,9 +496,36 @@ class WebDecoy_Cloud_Connect
     /**
      * Store a one-shot admin notice.
      */
-    private function set_notice(string $type, string $message): void
+    /**
+     * What to say when the credentials have landed.
+     *
+     * Public and static so it can be asserted on without a WordPress runtime:
+     * the thing worth pinning is that it does not claim coverage. It said
+     * "Cloud features are now active" at the moment the keys were stored,
+     * which is a claim about this site being covered, made before anything
+     * from this site had been received (#994).
+     *
+     * @param string $org Organization name, empty when the server did not name one.
+     */
+    public static function connected_notice_message(string $org): string
     {
-        set_transient(self::NOTICE_TRANSIENT, ['type' => $type, 'message' => $message], MINUTE_IN_SECONDS);
+        $tail = __('Your next page view sends the first report; until one arrives the cloud has nothing from this site.', 'webdecoy');
+
+        if ($org === '') {
+            return __('Connected to WebDecoy Cloud.', 'webdecoy') . ' ' . $tail;
+        }
+
+        /* translators: %s: organization name */
+        return sprintf(__('Connected to WebDecoy Cloud (%s).', 'webdecoy'), $org) . ' ' . $tail;
+    }
+
+    private function set_notice(string $type, string $message, string $url = '', string $label = ''): void
+    {
+        set_transient(
+            self::NOTICE_TRANSIENT,
+            ['type' => $type, 'message' => $message, 'url' => $url, 'label' => $label],
+            MINUTE_IN_SECONDS
+        );
     }
 
     /**
@@ -505,11 +540,27 @@ class WebDecoy_Cloud_Connect
         delete_transient(self::NOTICE_TRANSIENT);
 
         $class = ($notice['type'] ?? 'success') === 'error' ? 'notice-error' : 'notice-success';
+        $url   = (string) ($notice['url'] ?? '');
+        $label = (string) ($notice['label'] ?? '');
+
+        // The link is built here rather than carried as markup: the message is
+        // escaped as text, and a notice that accepted HTML would be a place for
+        // one to arrive.
+        $link = '';
+        if ($url !== '' && $label !== '') {
+            $link = sprintf(
+                ' <a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
+                esc_url($url),
+                esc_html($label)
+            );
+        }
+
         printf(
-            '<div class="notice %s is-dismissible"><p><strong>%s</strong> %s</p></div>',
+            '<div class="notice %s is-dismissible"><p><strong>%s</strong> %s%s</p></div>',
             esc_attr($class),
             esc_html__('WebDecoy Cloud:', 'webdecoy'),
-            esc_html((string) $notice['message'])
+            esc_html((string) $notice['message']),
+            $link // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built above from esc_url + esc_html
         );
     }
 

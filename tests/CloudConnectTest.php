@@ -111,3 +111,36 @@ $t('plan_label humanizes slugs', function () use ($same) {
     $same('Team Annual', WebDecoy_Cloud_Connect::plan_label('team_annual'));
     $same('Connected', WebDecoy_Cloud_Connect::plan_label(''), 'empty slug -> generic label');
 });
+
+echo "\nCloud Connect: what the success notice claims\n";
+
+// Storing credentials is not evidence that this site is covered. The notice
+// said "Cloud features are now active" the instant the keys landed, which
+// asserts coverage before anything from the site has been received (#994).
+$t('the connected notice does not claim the site is covered', function () use ($same, $true) {
+    foreach (['', 'Acme Ltd'] as $org) {
+        $msg = WebDecoy_Cloud_Connect::connected_notice_message($org);
+
+        $true(
+            stripos($msg, 'first report') !== false,
+            'says a report is still to come'
+        );
+        foreach (['now active', 'are active', 'is protected', 'is now protected'] as $claim) {
+            $true(
+                stripos($msg, $claim) === false,
+                "does not claim coverage with \"{$claim}\""
+            );
+        }
+    }
+});
+
+$t('the connected notice names the organization when the server named one', function () use ($same, $true) {
+    $true(
+        strpos(WebDecoy_Cloud_Connect::connected_notice_message('Acme Ltd'), 'Acme Ltd') !== false,
+        'the organization is named'
+    );
+    $true(
+        strpos(WebDecoy_Cloud_Connect::connected_notice_message(''), '()') === false,
+        'no empty parentheses when the server named none'
+    );
+});
