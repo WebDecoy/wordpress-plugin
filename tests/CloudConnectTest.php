@@ -144,3 +144,32 @@ $t('the connected notice names the organization when the server named one', func
         'no empty parentheses when the server named none'
     );
 });
+
+echo "\nCloud Connect: where the first-report link goes\n";
+
+// The exchange scopes the setup page to the property the site became
+// (app#994). The unscoped page shows whichever site the app last had
+// selected, which on an account with several sites is the wrong one.
+$t('the first-report link is the server\'s property-scoped setup page', function () use ($same) {
+    $scoped = 'https://app.webdecoy.com/onboarding/setup?property=6aa166fa-763a-4b1c-b037-076befb7b53c';
+    $same($scoped, WebDecoy_Cloud_Connect::setup_url_from(['setup_url' => $scoped]));
+});
+
+$t('without a server URL the link is the unscoped setup page', function () use ($same) {
+    $same('https://app.webdecoy.com/onboarding/setup', WebDecoy_Cloud_Connect::setup_url_from([]));
+    $same('https://app.webdecoy.com/onboarding/setup', WebDecoy_Cloud_Connect::setup_url_from(['setup_url' => '   ']));
+    $same('https://app.webdecoy.com/onboarding/setup', WebDecoy_Cloud_Connect::setup_url_from(['setup_url' => 42]));
+});
+
+$t('a server URL anywhere but the app\'s own setup page is not followed', function () use ($same) {
+    foreach ([
+        'https://evil.example.com/onboarding/setup?property=x',
+        'http://app.webdecoy.com/onboarding/setup?property=x',
+        'https://app.webdecoy.com/billing?property=x',
+        'https://app.webdecoy.com:8443/onboarding/setup',
+        'https://user:pw@app.webdecoy.com/onboarding/setup',
+        'javascript:alert(1)',
+    ] as $bad) {
+        $same('https://app.webdecoy.com/onboarding/setup', WebDecoy_Cloud_Connect::setup_url_from(['setup_url' => $bad]), $bad);
+    }
+});

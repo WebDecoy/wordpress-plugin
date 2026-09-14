@@ -218,10 +218,43 @@ class WebDecoy_Cloud_Connect
         $this->set_notice(
             'success',
             self::connected_notice_message($org),
-            self::SETUP_URL,
+            self::setup_url_from($result),
             __('Watch for the first report', 'webdecoy')
         );
         $this->redirect_clean();
+    }
+
+    /**
+     * The app page that watches THIS site for its first report.
+     *
+     * The exchange names the property the site became and hands back a
+     * setup URL scoped to it (app#994). Without the scope the page shows
+     * whichever site the app last had selected, and on an account with
+     * several sites the owner watched the wrong one. The server's URL is
+     * used only when it is where we would have sent them anyway: the app's
+     * own origin, the setup page. Anything else falls back to the unscoped
+     * page rather than sending an admin to an address a response chose.
+     *
+     * @param array<string,mixed> $result Decoded exchange response.
+     */
+    public static function setup_url_from(array $result): string
+    {
+        $candidate = isset($result['setup_url']) && is_string($result['setup_url']) ? trim($result['setup_url']) : '';
+        if ($candidate === '') {
+            return self::SETUP_URL;
+        }
+        $parts = parse_url($candidate);
+        $base  = parse_url(self::SETUP_URL);
+        if (
+            !is_array($parts) || !is_array($base)
+            || ($parts['scheme'] ?? '') !== 'https'
+            || ($parts['host'] ?? '') !== ($base['host'] ?? '')
+            || ($parts['path'] ?? '') !== ($base['path'] ?? '')
+            || isset($parts['user']) || isset($parts['pass']) || isset($parts['port'])
+        ) {
+            return self::SETUP_URL;
+        }
+        return $candidate;
     }
 
     /**
