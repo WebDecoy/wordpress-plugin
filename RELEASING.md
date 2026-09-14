@@ -15,6 +15,14 @@ Update the version string in **all** of these:
 The SDK `User-Agent` derives from `WEBDECOY_VERSION` automatically — nothing to
 bump there.
 
+## Verifying a new WordPress version
+
+Before raising `Tested up to:` in `readme.txt` (or `WC tested up to:` in
+`webdecoy.php`), run the Docker smoke tests in `tests/wp-compat/` against that
+WordPress or WooCommerce release (see its README). `release.sh`
+copies `Tested up to:` into the CDN `update-info.json`, so the readme is the
+single source of truth for both channels.
+
 ## Two distribution channels / two builds
 
 There are two builds from one codebase:

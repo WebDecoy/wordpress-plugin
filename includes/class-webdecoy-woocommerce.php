@@ -726,23 +726,28 @@ class WebDecoy_WooCommerce
     }
 }
 
+// These hooks read webdecoy()->get_options(), the stored row merged over the
+// plugin defaults, on purpose. A fresh install stores no value for
+// woo_honeytoken_coupons (or any post-2.2 setting) until the settings page is
+// saved, so reading get_option() raw here left the coupon bait silently off on
+// every site that had never clicked Save.
 // Honeytoken coupons: plant a hidden fake code and catch anyone who applies it.
 add_action('woocommerce_before_cart', function () {
-    $options = get_option('webdecoy_options', []);
+    $options = webdecoy()->get_options();
     if (empty($options['protect_checkout']) || empty($options['woo_honeytoken_coupons'])) {
         return;
     }
     (new WebDecoy_WooCommerce($options))->render_coupon_bait();
 });
 add_action('woocommerce_before_checkout_form', function () {
-    $options = get_option('webdecoy_options', []);
+    $options = webdecoy()->get_options();
     if (empty($options['protect_checkout']) || empty($options['woo_honeytoken_coupons'])) {
         return;
     }
     (new WebDecoy_WooCommerce($options))->render_coupon_bait();
 });
 add_filter('woocommerce_get_shop_coupon_data', function ($data, $code) {
-    $options = get_option('webdecoy_options', []);
+    $options = webdecoy()->get_options();
     if (empty($options['protect_checkout']) || empty($options['woo_honeytoken_coupons'])) {
         return $data;
     }
@@ -751,7 +756,7 @@ add_filter('woocommerce_get_shop_coupon_data', function ($data, $code) {
 
 // Hook into WooCommerce payment completion - track success
 add_action('woocommerce_payment_complete', function ($order_id) {
-    $options = get_option('webdecoy_options', []);
+    $options = webdecoy()->get_options();
     if (empty($options['protect_checkout'])) {
         return;
     }
@@ -762,7 +767,7 @@ add_action('woocommerce_payment_complete', function ($order_id) {
 
 // Hook into payment failure notifications
 add_action('woocommerce_order_status_failed', function ($order_id) {
-    $options = get_option('webdecoy_options', []);
+    $options = webdecoy()->get_options();
     if (empty($options['protect_checkout'])) {
         return;
     }
@@ -776,7 +781,7 @@ add_action('woocommerce_order_status_failed', function ($order_id) {
 // and Cheque never fire it, so on those stores no attempt was ever closed and every
 // real order kept counting toward card-testing and velocity. Refs #60.
 add_action('woocommerce_order_status_changed', function ($order_id, $from, $to) {
-    $options = get_option('webdecoy_options', []);
+    $options = webdecoy()->get_options();
     if (empty($options['protect_checkout'])) {
         return;
     }
@@ -799,7 +804,7 @@ add_action('woocommerce_blocks_loaded', function () {
     add_action(
         'woocommerce_store_api_checkout_update_order_from_request',
         function ($order, $request) {
-            $options = get_option('webdecoy_options', []);
+            $options = webdecoy()->get_options();
             if (empty($options['protect_checkout'])) {
                 return;
             }
@@ -861,7 +866,7 @@ add_action('woocommerce_blocks_loaded', function () {
     add_action(
         'woocommerce_store_api_checkout_order_processed',
         function ($order) {
-            $options = get_option('webdecoy_options', []);
+            $options = webdecoy()->get_options();
             if (empty($options['protect_checkout'])) {
                 return;
             }

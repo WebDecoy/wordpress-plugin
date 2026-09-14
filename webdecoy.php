@@ -3,7 +3,7 @@
  * Plugin Name: WebDecoy Bot Detection
  * Plugin URI: https://webdecoy.com/wordpress
  * Description: Protect your WordPress site from bots, spam, and carding attacks with WebDecoy's advanced threat detection.
- * Version: 2.8.0
+ * Version: 2.8.1
  * Requires at least: 6.1
  * Requires PHP: 7.4
  * Author: WebDecoy
@@ -13,7 +13,7 @@
  * Text Domain: webdecoy
  * Domain Path: /languages
  * WC requires at least: 5.0
- * WC tested up to: 9.4
+ * WC tested up to: 11.0
  *
  * @package WebDecoy
  */
@@ -41,7 +41,7 @@ if (!function_exists('str_starts_with')) {
 }
 
 // Plugin constants
-define('WEBDECOY_VERSION', '2.8.0');
+define('WEBDECOY_VERSION', '2.8.1');
 define('WEBDECOY_PLUGIN_FILE', __FILE__);
 define('WEBDECOY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WEBDECOY_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -982,12 +982,17 @@ final class WebDecoy_Plugin
     }
 
     /**
-     * Declare High-Performance Order Storage (HPOS) compatibility for WooCommerce
+     * Declare WooCommerce feature compatibility: High-Performance Order Storage
+     * and the block-based Cart & Checkout. The Store API hooks in
+     * class-webdecoy-woocommerce.php are the blocks integration; without this
+     * declaration WooCommerce lists the plugin as "uncertain" and the Checkout
+     * block editor shows a compatibility warning naming it.
      */
     public function declare_hpos_compatibility(): void
     {
         if (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class)) {
             \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('custom_order_tables', WEBDECOY_PLUGIN_FILE, true);
+            \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('cart_checkout_blocks', WEBDECOY_PLUGIN_FILE, true);
         }
     }
 
@@ -2345,9 +2350,13 @@ final class WebDecoy_Plugin
 
         // Detection Settings
         $sanitized['enabled'] = !empty($input['enabled']);
-        $sanitized['sensitivity'] = in_array($input['sensitivity'] ?? 'medium', ['low', 'medium', 'high']) ? $input['sensitivity'] : 'medium';
+        // Read each enum field once: the form omits some of these keys, and re-reading
+        // a missing key after defaulting it logged a PHP warning on every save.
+        $sensitivity = $input['sensitivity'] ?? 'medium';
+        $sanitized['sensitivity'] = in_array($sensitivity, ['low', 'medium', 'high'], true) ? $sensitivity : 'medium';
         $sanitized['min_score_to_block'] = max(0, min(100, intval($input['min_score_to_block'] ?? 75)));
-        $sanitized['min_threat_level'] = in_array($input['min_threat_level'] ?? 'HIGH', ['MINIMAL', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL']) ? $input['min_threat_level'] : 'HIGH';
+        $min_threat_level = $input['min_threat_level'] ?? 'HIGH';
+        $sanitized['min_threat_level'] = in_array($min_threat_level, ['MINIMAL', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'], true) ? $min_threat_level : 'HIGH';
 
         // Good Bot Handling
         $sanitized['allow_search_engines'] = !empty($input['allow_search_engines']);
@@ -2371,7 +2380,8 @@ final class WebDecoy_Plugin
         } else {
             $sanitized['monitor_mode'] = !empty($input['monitor_mode']);
         }
-        $sanitized['block_action'] = in_array($input['block_action'] ?? 'block', ['block', 'challenge', 'log']) ? $input['block_action'] : 'block';
+        $block_action = $input['block_action'] ?? 'block';
+        $sanitized['block_action'] = in_array($block_action, ['block', 'challenge', 'log'], true) ? $block_action : 'block';
         $sanitized['block_duration'] = max(0, intval($input['block_duration'] ?? 1));
         $sanitized['show_block_page'] = !empty($input['show_block_page']);
         $sanitized['block_page_message'] = sanitize_textarea_field($input['block_page_message'] ?? '');
@@ -2416,10 +2426,30 @@ final class WebDecoy_Plugin
         $sanitized['scanner_exclude_logged_in'] = !empty($input['scanner_exclude_logged_in']);
 
         // WooCommerce
-        $sanitized['protect_checkout'] = !empty($input['protect_checkout']);
-        $sanitized['checkout_velocity_limit'] = max(1, intval($input['checkout_velocity_limit'] ?? 5));
-        $sanitized['checkout_velocity_window'] = max(60, intval($input['checkout_velocity_window'] ?? 3600));
-        $sanitized['woo_honeytoken_coupons'] = !empty($input['woo_honeytoken_coupons']);
+        // These fields render only when WooCommerce is active — the settings
+        // section is gated behind class_exists('WooCommerce'). When it is not
+        // active, the submitted form cannot contain them, so reading them as
+        // empty here would silently switch checkout protection and the
+        // honeytoken coupon OFF on the next settings save. The admin never sees
+        // it (the section is hidden) and it contradicts the on-by-default
+        // promise the moment WooCommerce is later activated. So when WooCommerce
+        // is inactive, carry the stored values forward — the same guard
+        // monitor_mode uses above for its disabled, unposted checkbox.
+        if (class_exists('WooCommerce')) {
+            $sanitized['protect_checkout'] = !empty($input['protect_checkout']);
+            $sanitized['checkout_velocity_limit'] = max(1, intval($input['checkout_velocity_limit'] ?? 5));
+            $sanitized['checkout_velocity_window'] = max(60, intval($input['checkout_velocity_window'] ?? 3600));
+            $sanitized['woo_honeytoken_coupons'] = !empty($input['woo_honeytoken_coupons']);
+        } else {
+            $woo_stored = get_option('webdecoy_options', []);
+            $woo_stored = is_array($woo_stored) ? $woo_stored : [];
+            // ?? preserves an explicit stored false; a never-configured install
+            // has no key, so it falls through to the on-by-default value.
+            $sanitized['protect_checkout'] = !empty($woo_stored['protect_checkout'] ?? true);
+            $sanitized['checkout_velocity_limit'] = max(1, intval($woo_stored['checkout_velocity_limit'] ?? 5));
+            $sanitized['checkout_velocity_window'] = max(60, intval($woo_stored['checkout_velocity_window'] ?? 3600));
+            $sanitized['woo_honeytoken_coupons'] = !empty($woo_stored['woo_honeytoken_coupons'] ?? true);
+        }
 
         // Proof-of-Work
         $sanitized['pow_enabled'] = !empty($input['pow_enabled']);

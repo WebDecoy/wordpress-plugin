@@ -3,8 +3,8 @@ Contributors: webdecoy1
 Donate link: https://webdecoy.com
 Tags: bot detection, security, spam protection, woocommerce, ai bots
 Requires at least: 6.1
-Tested up to: 7.0
-Stable tag: 2.8.0
+Tested up to: 7.1
+Stable tag: 2.8.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -283,6 +283,15 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 7. WooCommerce checkout protection settings
 
 == Changelog ==
+
+= 2.8.1 =
+* Changed: the notice after Connect to Cloud no longer claims cloud features are active before this site has reported. Its link opens the WebDecoy page that watches this site for its first report.
+* Changed: tested up to WordPress 7.1. The 7.1 changes that broke other plugins (the always-iframed post editor, the post list table row-header move, jQuery UI 1.14.2) touch nothing this plugin does.
+* Fixed: a PHP warning logged on every save of the settings page ("Undefined array key min_threat_level"). Harmless, but noisy in debug.log.
+* Changed: tested up to WooCommerce 11.0, and the plugin now declares Cart & Checkout Blocks compatibility, so WooCommerce stops listing it as "uncertain".
+* Fixed: the WooCommerce honeytoken coupon was silently off on sites that had never saved the WebDecoy settings page, even though the setting showed as on.
+* Fixed: a PHP deprecation notice logged by the Detections and Statistics pages on PHP 8.1+ for detection rows with no flags.
+* Fixed: saving the settings page before WooCommerce was installed no longer silently turns checkout protection and the honeytoken coupon off.
 
 = 2.8.0 =
 * Changed: the plugin's cloud calls now go to in.webdecoy.com, WebDecoy's DDoS-protected ingest address. Same service, sturdier front door. If your firewall allows outbound requests by hostname, allow in.webdecoy.com. Sites that set a custom API URL are unaffected.

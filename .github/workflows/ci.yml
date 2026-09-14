@@ -48,7 +48,7 @@ jobs:
         run: composer install --no-progress --prefer-dist
 
       - name: Run PHPStan
-        run: vendor/bin/phpstan analyse --no-progress || true
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=4G || true
 
   php-compat:
     name: PHP 7.4 Compatibility

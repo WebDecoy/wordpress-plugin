@@ -467,7 +467,10 @@ if ($wd_intel_connected && !empty($detections) && class_exists('WebDecoy_Actor_I
                             <br>
                             <strong><?php esc_html_e('Flags:', 'webdecoy'); ?></strong>
                             <?php
-                            $flags_parsed = json_decode($detection['flags'], true);
+                            // flags is TEXT DEFAULT NULL; cast so a null row never reaches
+                            // json_decode() (a deprecation on PHP 8.1+). '' decodes to null,
+                            // which the is_array() guard below already handles.
+                            $flags_parsed = json_decode((string) ($detection['flags'] ?? ''), true);
                             if (is_array($flags_parsed)) {
                                 // Structured format with 'flags' key
                                 if (isset($flags_parsed['flags']) && is_array($flags_parsed['flags'])) {
