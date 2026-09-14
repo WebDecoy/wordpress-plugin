@@ -26,6 +26,23 @@ require_once $src . 'Filter/Parser.php';
 require_once $src . 'Filter/Evaluator.php';
 require_once $src . 'FilterRule.php';
 
+/**
+ * WordPress's translation function, for helpers that are otherwise
+ * WordPress-free.
+ *
+ * A pass-through, which is what makes the assertions meaningful: the tests pin
+ * the English source strings, and every translation is derived from those. The
+ * guard keeps this inert inside a real WordPress runtime, where the real
+ * function is already defined and is the one that must be used.
+ */
+if (!function_exists('__')) {
+    function __(string $text, string $domain = 'default'): string // phpcs:ignore
+    {
+        unset($domain);
+        return $text;
+    }
+}
+
 final class TestRunner
 {
     /** @var int */

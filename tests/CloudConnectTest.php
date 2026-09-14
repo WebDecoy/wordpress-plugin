@@ -111,3 +111,65 @@ $t('plan_label humanizes slugs', function () use ($same) {
     $same('Team Annual', WebDecoy_Cloud_Connect::plan_label('team_annual'));
     $same('Connected', WebDecoy_Cloud_Connect::plan_label(''), 'empty slug -> generic label');
 });
+
+echo "\nCloud Connect: what the success notice claims\n";
+
+// Storing credentials is not evidence that this site is covered. The notice
+// said "Cloud features are now active" the instant the keys landed, which
+// asserts coverage before anything from the site has been received (#994).
+$t('the connected notice does not claim the site is covered', function () use ($same, $true) {
+    foreach (['', 'Acme Ltd'] as $org) {
+        $msg = WebDecoy_Cloud_Connect::connected_notice_message($org);
+
+        $true(
+            stripos($msg, 'first report') !== false,
+            'says a report is still to come'
+        );
+        foreach (['now active', 'are active', 'is protected', 'is now protected'] as $claim) {
+            $true(
+                stripos($msg, $claim) === false,
+                "does not claim coverage with \"{$claim}\""
+            );
+        }
+    }
+});
+
+$t('the connected notice names the organization when the server named one', function () use ($same, $true) {
+    $true(
+        strpos(WebDecoy_Cloud_Connect::connected_notice_message('Acme Ltd'), 'Acme Ltd') !== false,
+        'the organization is named'
+    );
+    $true(
+        strpos(WebDecoy_Cloud_Connect::connected_notice_message(''), '()') === false,
+        'no empty parentheses when the server named none'
+    );
+});
+
+echo "\nCloud Connect: where the first-report link goes\n";
+
+// The exchange scopes the setup page to the property the site became
+// (app#994). The unscoped page shows whichever site the app last had
+// selected, which on an account with several sites is the wrong one.
+$t('the first-report link is the server\'s property-scoped setup page', function () use ($same) {
+    $scoped = 'https://app.webdecoy.com/onboarding/setup?property=6aa166fa-763a-4b1c-b037-076befb7b53c';
+    $same($scoped, WebDecoy_Cloud_Connect::setup_url_from(['setup_url' => $scoped]));
+});
+
+$t('without a server URL the link is the unscoped setup page', function () use ($same) {
+    $same('https://app.webdecoy.com/onboarding/setup', WebDecoy_Cloud_Connect::setup_url_from([]));
+    $same('https://app.webdecoy.com/onboarding/setup', WebDecoy_Cloud_Connect::setup_url_from(['setup_url' => '   ']));
+    $same('https://app.webdecoy.com/onboarding/setup', WebDecoy_Cloud_Connect::setup_url_from(['setup_url' => 42]));
+});
+
+$t('a server URL anywhere but the app\'s own setup page is not followed', function () use ($same) {
+    foreach ([
+        'https://evil.example.com/onboarding/setup?property=x',
+        'http://app.webdecoy.com/onboarding/setup?property=x',
+        'https://app.webdecoy.com/billing?property=x',
+        'https://app.webdecoy.com:8443/onboarding/setup',
+        'https://user:pw@app.webdecoy.com/onboarding/setup',
+        'javascript:alert(1)',
+    ] as $bad) {
+        $same('https://app.webdecoy.com/onboarding/setup', WebDecoy_Cloud_Connect::setup_url_from(['setup_url' => $bad]), $bad);
+    }
+});
