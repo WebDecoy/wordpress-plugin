@@ -198,7 +198,7 @@ class WebDecoy_Updater
             'name' => $info['name'] ?? 'WebDecoy Bot Detection',
             'slug' => 'webdecoy',
             'version' => $info['version'] ?? WEBDECOY_VERSION,
-            'author' => $info['author'] ?? '<a href="https://webdecoy.com">WebDecoy</a>',
+            'author' => $info['author'] ?? '<a href="https://webdecoy.com">WebDecoy LLC</a>',
             'author_profile' => $info['author_profile'] ?? 'https://webdecoy.com',
             'requires' => $info['requires'] ?? '5.6',
             'tested' => $info['tested'] ?? '',

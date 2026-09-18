@@ -1,5 +1,5 @@
 # WebDecoy Bot Detection.
-# Copyright (C) 2026 WebDecoy
+# Copyright (C) 2026 WebDecoy LLC
 # This file is distributed under the same license as the WebDecoy Bot Detection package.
 # WebDecoy <support@webdecoy.com>, 2026.
 #
