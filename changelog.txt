@@ -1,5 +1,9 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.8.2 - 2026-09-18 =
+* Internal: the release build now produces the same tree on every machine, so a zip built here and a zip built in CI carry the same files.
+* Internal: ownership metadata now names WebDecoy LLC as the copyright holder in composer.json and the translation template. Nothing customer facing changed: the plugin is still by WebDecoy.
+
 = 2.8.1 - 2026-09-14 =
 * Changed: the notice after Connect to Cloud no longer says cloud features are active the moment the keys land. It says the first report is still to come, and its link opens the WebDecoy page that watches this site for it, scoped to this site rather than to whichever site the app last had selected.
 * Changed: tested up to WordPress 7.1. Verified on a WordPress 7.1 / PHP 8.3 install: activation, tripwires and deception responses in monitor and block modes, the block page, settings saves, every admin page, the dashboard widget, cron, WP-CLI, and deactivation, with WP_DEBUG logging nothing. The 7.1 changes that broke other plugins (the always-iframed post editor, the post list table row-header move, jQuery UI 1.14.2, integer hook-callback keys) touch nothing this plugin does: it registers no blocks, adds no list-table columns, uses no jQuery UI, and never walks $wp_filter.
