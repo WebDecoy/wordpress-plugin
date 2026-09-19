@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: bot detection, security, spam protection, woocommerce, ai bots
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.8.1
+Stable tag: 2.8.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -283,6 +283,9 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 7. WooCommerce checkout protection settings
 
 == Changelog ==
+
+= 2.8.2 =
+* Internal: release builds are now identical from any machine, and the copyright holder is named as WebDecoy LLC. No functional changes.
 
 = 2.8.1 =
 * Changed: the notice after Connect to Cloud no longer claims cloud features are active before this site has reported. Its link opens the WebDecoy page that watches this site for its first report.

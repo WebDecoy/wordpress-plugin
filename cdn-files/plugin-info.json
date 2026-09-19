@@ -2,7 +2,7 @@
     "name": "WebDecoy Bot Detection",
     "slug": "webdecoy",
     "version": "2.8.1",
-    "author": "<a href=\"https://webdecoy.com\">WebDecoy LLC</a>",
+    "author": "<a href=\"https://webdecoy.com\">WebDecoy</a>",
     "author_profile": "https://webdecoy.com",
     "requires": "6.1",
     "tested": "7.1",
