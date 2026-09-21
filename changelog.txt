@@ -1,5 +1,9 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.8.3 - 2026-09-21 =
+* Fixed: Block AI crawlers is now an explicit decision rather than a scoring hint. The setting worked by withdrawing a recognised AI crawler's good-bot pass and leaving the rest to heuristic scoring. Scoring adds no points for a recognised bot, so a well-behaved AI crawler sending ordinary headers could stay under the block threshold. With the setting on, a recognised AI crawler is now refused whatever it scores, and the Detections page records the reason as ai_crawler_blocked. The custom allowlist still wins, search engines and social bots are unaffected, and in monitor mode the block is counted rather than applied, like every other action. If you rely on this setting, please update.
+* Internal: added behaviour tests for the AI crawler setting.
+
 = 2.8.2 - 2026-09-18 =
 * Internal: the release build now produces the same tree on every machine, so a zip built here and a zip built in CI carry the same files.
 * Internal: ownership metadata now names WebDecoy LLC as the copyright holder in composer.json and the translation template. Nothing customer facing changed: the plugin is still by WebDecoy.

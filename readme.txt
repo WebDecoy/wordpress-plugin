@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: bot detection, security, spam protection, woocommerce, ai bots
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.8.2
+Stable tag: 2.8.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -283,6 +283,9 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 7. WooCommerce checkout protection settings
 
 == Changelog ==
+
+= 2.8.3 =
+* Fixed: Block AI crawlers now refuses a recognised AI crawler outright instead of leaving the outcome to heuristic scoring. Before this, a well-behaved AI crawler sending ordinary headers could stay under the block threshold. If you use this setting, please update. The custom allowlist still wins, and monitor mode still only counts what it would have blocked.
 
 = 2.8.2 =
 * Internal: release builds are now identical from any machine, and the copyright holder is named as WebDecoy LLC. No functional changes.
