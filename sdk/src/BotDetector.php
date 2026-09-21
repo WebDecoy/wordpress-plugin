@@ -28,6 +28,9 @@ class BotDetector
     private const SCORE_RATE_EXCEEDED = 25;
     private const SCORE_HONEYPOT = 60;
     private const SCORE_FAKE_BOT = 80; // Claiming to be a bot but IP doesn't verify
+    // The owner's own instruction to block. The top of the scale, so it clears
+    // min_score_to_block whatever the site has set it to.
+    private const SCORE_POLICY_DENIED = 100;
 
     // Path-based scoring (MITRE ATT&CK aligned)
     private const SCORE_PATH_CONFIG_FILE = 30;      // TA0006 Credential Access - config files
@@ -193,6 +196,29 @@ class BotDetector
         if ($botInfo !== null) {
             $result->setBotName($botInfo['name']);
             $result->setBotCategory($botInfo['category']);
+
+            // A crawler the owner has chosen to block is refused here, as an
+            // explicit decision, before any heuristic scoring.
+            //
+            // The setting used to work by withdrawing the crawler's good-bot
+            // pass and letting scoring decide. Scoring does not add points for a
+            // recognised bot, so a well-behaved AI crawler could finish below
+            // the block threshold. An owner's instruction should not depend on
+            // how the request happens to score.
+            //
+            // The User-Agent claim is enough to act on: refusing a request
+            // because it says it is GPTBot affects nobody who is not claiming
+            // to be GPTBot.
+            if ($this->deniedByPolicy($botInfo)) {
+                $result->setIsGoodBot(false);
+                $result->setScore(self::SCORE_POLICY_DENIED);
+                $result->setScoreBreakdown(['ai_crawler_blocked' => self::SCORE_POLICY_DENIED]);
+                $result->setConfidence(1.0);
+                $result->addFlag('ai_crawler_blocked');
+                $result->addMetadata('bot_info', $botInfo);
+                $result->addMetadata('denied_by', 'block_ai_crawlers');
+                return $result;
+            }
 
             // Check if this bot should be allowed
             if ($this->shouldAllowBot($botInfo)) {
@@ -514,6 +540,26 @@ class BotDetector
     public function identifyBot(string $userAgent): ?array
     {
         return $this->goodBotList->identify($userAgent);
+    }
+
+    /**
+     * Whether the owner's settings say to block this recognised bot outright.
+     *
+     * Only the AI crawler category has a "block" setting. Turning OFF "allow
+     * search engines" or "allow social bots" withdraws a free pass and lets the
+     * heuristics judge the request; it is not an instruction to block. The
+     * custom allowlist wins, as it does in shouldAllowBot().
+     *
+     * @param array $botInfo Bot information
+     * @return bool
+     */
+    private function deniedByPolicy(array $botInfo): bool
+    {
+        if (in_array($botInfo['name'] ?? '', $this->options['custom_allowlist'], true)) {
+            return false;
+        }
+        return ($botInfo['category'] ?? '') === GoodBotList::CATEGORY_AI_CRAWLER
+            && !empty($this->options['block_ai_crawlers']);
     }
 
     /**
