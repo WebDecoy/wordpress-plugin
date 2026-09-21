@@ -199,7 +199,12 @@ final class WebDecoy_Plugin
             // is safe to expose in page markup. Enables silent wd_clearance
             // cookie minting so tripwire/decoy hits bind to a device fingerprint.
             'site_key' => '',
-            // Optional scope passed to the clearance client (advanced).
+            // Passed through to the clearance client as data-scope, and it
+            // limits nothing: a clearance token is bound to the organization,
+            // and no validator reads a token's scope (WebDecoy/app #1122).
+            // Kept so a site that set it years ago keeps working unchanged.
+            // To require more on a sensitive path, set that path's
+            // Verification required level in WebDecoy.
             'clearance_scope' => '',
 
             // Cloud connection metadata, populated by the one-click connect flow
@@ -1015,6 +1020,9 @@ final class WebDecoy_Plugin
         // script-tag attributes on older versions). Also load it async.
         if ($handle === 'webdecoy-clearance') {
             $attrs = ' async data-site-key="' . esc_attr((string) $this->options['site_key']) . '"';
+            // data-scope is inert: the client sends it, the mint signs it, and
+            // no validator reads it. Emitted only so a site that set the
+            // option behaves exactly as it did before (WebDecoy/app #1122).
             $scope = (string) ($this->options['clearance_scope'] ?? '');
             if ($scope !== '') {
                 $attrs .= ' data-scope="' . esc_attr($scope) . '"';
@@ -2331,7 +2339,8 @@ final class WebDecoy_Plugin
             $sanitized['api_key'] = $api_key;
         }
 
-        // Publishable site key + clearance scope (not secret; stored as-is).
+        // Publishable site key, and the inert clearance scope (neither is
+        // secret; stored as-is).
         $sanitized['site_key'] = sanitize_text_field($input['site_key'] ?? '');
         $sanitized['clearance_scope'] = sanitize_text_field($input['clearance_scope'] ?? '');
 
