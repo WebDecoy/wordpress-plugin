@@ -23,7 +23,7 @@ if (!function_exists('get_transient')) {
 if (!function_exists('set_transient')) {
     function set_transient($key, $value, $ttl = 0) { return true; }
 }
-foreach (['DetectionResult', 'GoodBotList', 'SignalCollector', 'MitreMapping', 'BotDetector'] as $class) {
+foreach (['DetectionResult', 'AgentRegistry', 'GoodBotList', 'SignalCollector', 'MitreMapping', 'BotDetector'] as $class) {
     $file = dirname(__DIR__) . '/sdk/src/' . $class . '.php';
     if (is_file($file)) {
         require_once $file;

@@ -69,6 +69,7 @@ foreach ($sdk_paths as $sdk_path) {
         require_once $sdk_path . 'src/Exception/WebDecoyException.php';
         require_once $sdk_path . 'src/Detection.php';
         require_once $sdk_path . 'src/DetectionResult.php';
+        require_once $sdk_path . 'src/AgentRegistry.php';
         require_once $sdk_path . 'src/GoodBotList.php';
         require_once $sdk_path . 'src/SignalCollector.php';
         require_once $sdk_path . 'src/BotDetector.php';
