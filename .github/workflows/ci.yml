@@ -73,3 +73,21 @@ jobs:
           --extensions=php
           --ignore=vendor/,sdk/vendor/,build/,dist/
           .
+
+  sdk-tests:
+    name: SDK behaviour and registry parity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+
+      # Dependency-free: the pure SDK classes, the AI crawler policy, and the
+      # generated crawler registry replayed against the shared parity vectors.
+      # A hand edit to the generated table, or a regeneration whose vectors
+      # were not committed with it, fails here.
+      - name: Run tests
+        run: php tests/run.php
