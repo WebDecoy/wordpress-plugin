@@ -1,0 +1,1499 @@
+{
+  "about": "What protected paths say about one request path (#1125, #1118, #1119). The rule is written on ResolveRoute in pkg/models/enforcement_route_scope.go. Go, the Cloudflare Worker and the AWS Lambda each replay every case; change a case here and all three must agree, or CI fails. A rule's mode is \"monitor\" for a watched path and absent for one that refuses when its site enforces; a case's site_mode is absent for an enforcing site. A rule's exceptions are patterns beneath it that it does not cover; excepted_by names the one path credited when exceptions leave nothing covering the request. A rule's refuse_behaviors are the crawler behaviors that path refuses (#995); refused_behaviors is the sorted union over the deciding paths, and in monitor mode it is what would have been refused.",
+  "cases": [
+    {
+      "name": "an exact pattern covers that path",
+      "path": "/login",
+      "rules": [
+        {
+          "pattern": "/login"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/login"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/login",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "an exact pattern does not cover a trailing slash",
+      "path": "/login/",
+      "rules": [
+        {
+          "pattern": "/login"
+        }
+      ],
+      "want": {
+        "covering": [],
+        "deciding_mode": "",
+        "attributed": "",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "an exact pattern does not cover a child path",
+      "path": "/login/reset",
+      "rules": [
+        {
+          "pattern": "/login"
+        }
+      ],
+      "want": {
+        "covering": [],
+        "deciding_mode": "",
+        "attributed": "",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a prefix covers its base",
+      "path": "/checkout",
+      "rules": [
+        {
+          "pattern": "/checkout/*"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/checkout/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/checkout/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a prefix covers its base with a trailing slash",
+      "path": "/checkout/",
+      "rules": [
+        {
+          "pattern": "/checkout/*"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/checkout/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/checkout/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a prefix covers paths beneath it",
+      "path": "/checkout/pay/confirm",
+      "rules": [
+        {
+          "pattern": "/checkout/*"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/checkout/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/checkout/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a prefix does not cover a sibling that only shares its letters",
+      "path": "/checkoutx",
+      "rules": [
+        {
+          "pattern": "/checkout/*"
+        }
+      ],
+      "want": {
+        "covering": [],
+        "deciding_mode": "",
+        "attributed": "",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "matching is case-sensitive",
+      "path": "/Checkout/pay",
+      "rules": [
+        {
+          "pattern": "/checkout/*"
+        }
+      ],
+      "want": {
+        "covering": [],
+        "deciding_mode": "",
+        "attributed": "",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "the whole-site pattern covers the root",
+      "path": "/",
+      "rules": [
+        {
+          "pattern": "/*"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "the whole-site pattern covers every path, not only the root",
+      "path": "/a/b/c",
+      "rules": [
+        {
+          "pattern": "/*"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "the root is not covered by a narrower prefix",
+      "path": "/",
+      "rules": [
+        {
+          "pattern": "/checkout/*"
+        }
+      ],
+      "want": {
+        "covering": [],
+        "deciding_mode": "",
+        "attributed": "",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "no protected paths cover nothing",
+      "path": "/anything",
+      "rules": [],
+      "want": {
+        "covering": [],
+        "deciding_mode": "",
+        "attributed": "",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "only matching paths are covering",
+      "path": "/api/v1/orders",
+      "rules": [
+        {
+          "pattern": "/checkout/*"
+        },
+        {
+          "pattern": "/api/*"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/api/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/api/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a longer prefix is more specific than a shorter one",
+      "path": "/api/reports/export",
+      "rules": [
+        {
+          "pattern": "/api/*"
+        },
+        {
+          "pattern": "/api/reports/*"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/api/reports/*",
+          "/api/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/api/reports/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "specificity does not depend on configuration order",
+      "path": "/api/reports/export",
+      "rules": [
+        {
+          "pattern": "/api/reports/*"
+        },
+        {
+          "pattern": "/api/*"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/api/reports/*",
+          "/api/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/api/reports/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "an exact pattern is more specific than a prefix",
+      "path": "/api/orders",
+      "rules": [
+        {
+          "pattern": "/api/*"
+        },
+        {
+          "pattern": "/api/orders"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/api/orders",
+          "/api/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/api/orders",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "the whole-site pattern is the least specific",
+      "path": "/checkout/pay",
+      "rules": [
+        {
+          "pattern": "/*"
+        },
+        {
+          "pattern": "/checkout/*"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/checkout/*",
+          "/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/checkout/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "an identical pattern at site and organization scope is one path",
+      "path": "/checkout/pay",
+      "rules": [
+        {
+          "pattern": "/checkout/*"
+        },
+        {
+          "pattern": "/checkout/*",
+          "min_trust": "human-likely"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/checkout/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/checkout/*",
+        "required_trust": "human-likely",
+        "requirement_source": "/checkout/*",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a path's own requirement applies",
+      "path": "/checkout/pay",
+      "rules": [
+        {
+          "pattern": "/checkout/*",
+          "min_trust": "attested-human"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/checkout/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/checkout/*",
+        "required_trust": "attested-human",
+        "requirement_source": "/checkout/*",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a narrower path inherits a broader path's requirement, and says where it came from",
+      "path": "/api/public",
+      "rules": [
+        {
+          "pattern": "/api/*",
+          "min_trust": "human-likely"
+        },
+        {
+          "pattern": "/api/public"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/api/public",
+          "/api/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/api/public",
+        "required_trust": "human-likely",
+        "requirement_source": "/api/*",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "the strictest covering requirement wins over a more specific, weaker one",
+      "path": "/checkout/pay",
+      "rules": [
+        {
+          "pattern": "/*",
+          "min_trust": "attested-human"
+        },
+        {
+          "pattern": "/checkout/*",
+          "min_trust": "human-likely"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/checkout/*",
+          "/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/checkout/*",
+        "required_trust": "attested-human",
+        "requirement_source": "/*",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "when requirements tie, the most specific path is their source",
+      "path": "/checkout/pay",
+      "rules": [
+        {
+          "pattern": "/*",
+          "min_trust": "human-likely"
+        },
+        {
+          "pattern": "/checkout/*",
+          "min_trust": "human-likely"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/checkout/*",
+          "/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/checkout/*",
+        "required_trust": "human-likely",
+        "requirement_source": "/checkout/*",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a requirement on a path that does not cover the request does not apply",
+      "path": "/checkout/pay",
+      "rules": [
+        {
+          "pattern": "/admin/*",
+          "min_trust": "attested-human"
+        },
+        {
+          "pattern": "/checkout/*"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/checkout/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/checkout/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "an explicit clean minimum is no requirement",
+      "path": "/login",
+      "rules": [
+        {
+          "pattern": "/login",
+          "min_trust": "clean"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/login"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/login",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "an unknown grade is no requirement",
+      "path": "/login",
+      "rules": [
+        {
+          "pattern": "/login",
+          "min_trust": "superhuman"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/login"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/login",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "existing enforcing coverage wins over a Monitor path inside it",
+      "path": "/api/reports/export",
+      "rules": [
+        {
+          "pattern": "/api/*"
+        },
+        {
+          "pattern": "/api/reports/*",
+          "min_trust": "attested-human",
+          "mode": "monitor"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/api/reports/*",
+          "/api/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/api/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [
+          {
+            "pattern": "/api/reports/*",
+            "required_trust": "attested-human"
+          }
+        ],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "an enforcing path inside a Monitor path is enforced",
+      "path": "/api/orders",
+      "rules": [
+        {
+          "pattern": "/api/*",
+          "mode": "monitor"
+        },
+        {
+          "pattern": "/api/orders"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/api/orders",
+          "/api/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/api/orders",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [
+          {
+            "pattern": "/api/*",
+            "required_trust": ""
+          }
+        ],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "the rest of a Monitor path is watched",
+      "path": "/api/other",
+      "rules": [
+        {
+          "pattern": "/api/*",
+          "mode": "monitor"
+        },
+        {
+          "pattern": "/api/orders"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/api/*"
+        ],
+        "deciding_mode": "monitor",
+        "attributed": "/api/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [
+          {
+            "pattern": "/api/*",
+            "required_trust": ""
+          }
+        ],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "nested Monitor paths inside an enforcing path are previewed independently",
+      "path": "/api/reports/export",
+      "rules": [
+        {
+          "pattern": "/api/*"
+        },
+        {
+          "pattern": "/api/reports/*",
+          "min_trust": "attested-human",
+          "mode": "monitor"
+        },
+        {
+          "pattern": "/api/reports/export",
+          "mode": "monitor"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/api/reports/export",
+          "/api/reports/*",
+          "/api/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/api/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [
+          {
+            "pattern": "/api/reports/export",
+            "required_trust": ""
+          },
+          {
+            "pattern": "/api/reports/*",
+            "required_trust": "attested-human"
+          }
+        ],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "nested Monitor paths with no enforcing path decide together and preview alone",
+      "path": "/api/reports/x",
+      "rules": [
+        {
+          "pattern": "/api/*",
+          "min_trust": "human-likely",
+          "mode": "monitor"
+        },
+        {
+          "pattern": "/api/reports/*",
+          "mode": "monitor"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/api/reports/*",
+          "/api/*"
+        ],
+        "deciding_mode": "monitor",
+        "attributed": "/api/reports/*",
+        "required_trust": "human-likely",
+        "requirement_source": "/api/*",
+        "previews": [
+          {
+            "pattern": "/api/reports/*",
+            "required_trust": ""
+          },
+          {
+            "pattern": "/api/*",
+            "required_trust": "human-likely"
+          }
+        ],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a preview requires at least what is already enforced",
+      "path": "/checkout/pay",
+      "rules": [
+        {
+          "pattern": "/checkout/*",
+          "min_trust": "human-likely"
+        },
+        {
+          "pattern": "/checkout/pay",
+          "mode": "monitor"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/checkout/pay",
+          "/checkout/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/checkout/*",
+        "required_trust": "human-likely",
+        "requirement_source": "/checkout/*",
+        "previews": [
+          {
+            "pattern": "/checkout/pay",
+            "required_trust": "human-likely"
+          }
+        ],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a monitoring site decides by the same paths as enforcing would, and previews nothing",
+      "path": "/api/reports/x",
+      "rules": [
+        {
+          "pattern": "/api/*"
+        },
+        {
+          "pattern": "/api/reports/*",
+          "min_trust": "attested-human",
+          "mode": "monitor"
+        }
+      ],
+      "site_mode": "monitor",
+      "want": {
+        "covering": [
+          "/api/reports/*",
+          "/api/*"
+        ],
+        "deciding_mode": "monitor",
+        "attributed": "/api/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a monitoring site decides a request only Monitor paths cover by those paths",
+      "path": "/api/reports/x",
+      "rules": [
+        {
+          "pattern": "/api/*",
+          "mode": "monitor"
+        },
+        {
+          "pattern": "/api/reports/*",
+          "min_trust": "human-likely",
+          "mode": "monitor"
+        }
+      ],
+      "site_mode": "monitor",
+      "want": {
+        "covering": [
+          "/api/reports/*",
+          "/api/*"
+        ],
+        "deciding_mode": "monitor",
+        "attributed": "/api/reports/*",
+        "required_trust": "human-likely",
+        "requirement_source": "/api/reports/*",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a pattern that refuses in one definition refuses, whatever the other says",
+      "path": "/checkout",
+      "rules": [
+        {
+          "pattern": "/checkout/*"
+        },
+        {
+          "pattern": "/checkout/*",
+          "mode": "monitor"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/checkout/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/checkout/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a Monitor path that does not cover the request plays no part",
+      "path": "/blog",
+      "rules": [
+        {
+          "pattern": "/api/*",
+          "mode": "monitor"
+        }
+      ],
+      "want": {
+        "covering": [],
+        "deciding_mode": "",
+        "attributed": "",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "an exception removes its path's coverage, and nothing else covers the request",
+      "path": "/api/webhooks/payments",
+      "rules": [
+        {
+          "pattern": "/api/*",
+          "exceptions": [
+            "/api/webhooks/payments"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [],
+        "deciding_mode": "",
+        "attributed": "",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "/api/*",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a path beside the exception is still covered",
+      "path": "/api/orders",
+      "rules": [
+        {
+          "pattern": "/api/*",
+          "exceptions": [
+            "/api/webhooks/payments"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [
+          "/api/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/api/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "an exact exception does not except the paths beneath it",
+      "path": "/api/webhooks/payments/retry",
+      "rules": [
+        {
+          "pattern": "/api/*",
+          "exceptions": [
+            "/api/webhooks/payments"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [
+          "/api/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/api/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a prefix exception on the whole site excepts its base and beneath",
+      "path": "/.well-known/acme-challenge/token",
+      "rules": [
+        {
+          "pattern": "/*",
+          "exceptions": [
+            "/.well-known/*"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [],
+        "deciding_mode": "",
+        "attributed": "",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "/*",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "an exception on one path while another path still covers the request: no exception applies",
+      "path": "/api/webhooks/payments",
+      "rules": [
+        {
+          "pattern": "/api/*",
+          "exceptions": [
+            "/api/webhooks/*"
+          ]
+        },
+        {
+          "pattern": "/api/webhooks/*",
+          "min_trust": "human-likely"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/api/webhooks/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/api/webhooks/*",
+        "required_trust": "human-likely",
+        "requirement_source": "/api/webhooks/*",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "the same sub-path excepted by two paths: the most specific is credited",
+      "path": "/api/webhooks/payments",
+      "rules": [
+        {
+          "pattern": "/*",
+          "exceptions": [
+            "/api/webhooks/payments"
+          ]
+        },
+        {
+          "pattern": "/api/*",
+          "exceptions": [
+            "/api/webhooks/*"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [],
+        "deciding_mode": "",
+        "attributed": "",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "/api/*",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a pattern defined twice covers the request if either definition does not except it",
+      "path": "/api/webhooks/payments",
+      "rules": [
+        {
+          "pattern": "/api/*",
+          "exceptions": [
+            "/api/webhooks/payments"
+          ]
+        },
+        {
+          "pattern": "/api/*"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/api/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/api/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "an excepted enforcing path leaves a Monitor path deciding the request",
+      "path": "/api/hooks/stripe",
+      "rules": [
+        {
+          "pattern": "/api/*",
+          "exceptions": [
+            "/api/hooks/*"
+          ]
+        },
+        {
+          "pattern": "/api/hooks/*",
+          "mode": "monitor"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/api/hooks/*"
+        ],
+        "deciding_mode": "monitor",
+        "attributed": "/api/hooks/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [
+          {
+            "pattern": "/api/hooks/*",
+            "required_trust": ""
+          }
+        ],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a watched path's exception is credited like any other",
+      "path": "/beta/health",
+      "rules": [
+        {
+          "pattern": "/beta/*",
+          "mode": "monitor",
+          "exceptions": [
+            "/beta/health"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [],
+        "deciding_mode": "",
+        "attributed": "",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "/beta/*",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "an exception on a path that does not cover the request plays no part",
+      "path": "/about",
+      "rules": [
+        {
+          "pattern": "/api/*",
+          "exceptions": [
+            "/api/health"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [],
+        "deciding_mode": "",
+        "attributed": "",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a path refuses the crawler behaviors it names",
+      "path": "/premium/a",
+      "rules": [
+        {
+          "pattern": "/premium/*",
+          "refuse_behaviors": [
+            "training"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [
+          "/premium/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/premium/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": [
+          "training"
+        ]
+      }
+    },
+    {
+      "name": "a path that names no behaviors refuses none",
+      "path": "/premium/a",
+      "rules": [
+        {
+          "pattern": "/premium/*"
+        }
+      ],
+      "want": {
+        "covering": [
+          "/premium/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/premium/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "overlapping enforcing paths add their refused behaviors together, sorted",
+      "path": "/premium/reports/q3",
+      "rules": [
+        {
+          "pattern": "/premium/*",
+          "refuse_behaviors": [
+            "training"
+          ]
+        },
+        {
+          "pattern": "/premium/reports/*",
+          "refuse_behaviors": [
+            "agent",
+            "seo"
+          ]
+        },
+        {
+          "pattern": "/*",
+          "refuse_behaviors": [
+            "training"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [
+          "/premium/reports/*",
+          "/premium/*",
+          "/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/premium/reports/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": [
+          "agent",
+          "seo",
+          "training"
+        ]
+      }
+    },
+    {
+      "name": "a path whose exception matches contributes no refused behaviors",
+      "path": "/premium/free-sample",
+      "rules": [
+        {
+          "pattern": "/premium/*",
+          "refuse_behaviors": [
+            "training"
+          ],
+          "exceptions": [
+            "/premium/free-sample"
+          ]
+        },
+        {
+          "pattern": "/*",
+          "refuse_behaviors": [
+            "seo"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [
+          "/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": [
+          "seo"
+        ]
+      }
+    },
+    {
+      "name": "when exceptions leave nothing covering the request, nothing is refused",
+      "path": "/premium/free-sample",
+      "rules": [
+        {
+          "pattern": "/premium/*",
+          "refuse_behaviors": [
+            "training"
+          ],
+          "exceptions": [
+            "/premium/free-sample"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [],
+        "deciding_mode": "",
+        "attributed": "",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "/premium/*",
+        "refused_behaviors": []
+      }
+    },
+    {
+      "name": "a Monitor path beside an enforcing one does not refuse; its preview carries both sets",
+      "path": "/premium/a",
+      "rules": [
+        {
+          "pattern": "/*",
+          "refuse_behaviors": [
+            "seo"
+          ]
+        },
+        {
+          "pattern": "/premium/*",
+          "mode": "monitor",
+          "refuse_behaviors": [
+            "training"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [
+          "/premium/*",
+          "/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [
+          {
+            "pattern": "/premium/*",
+            "required_trust": "",
+            "refused_behaviors": [
+              "seo",
+              "training"
+            ]
+          }
+        ],
+        "excepted_by": "",
+        "refused_behaviors": [
+          "seo"
+        ]
+      }
+    },
+    {
+      "name": "only a Monitor path covers: what it would refuse is reported in monitor mode, and previewed",
+      "path": "/premium/a",
+      "rules": [
+        {
+          "pattern": "/premium/*",
+          "mode": "monitor",
+          "refuse_behaviors": [
+            "training"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [
+          "/premium/*"
+        ],
+        "deciding_mode": "monitor",
+        "attributed": "/premium/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [
+          {
+            "pattern": "/premium/*",
+            "required_trust": "",
+            "refused_behaviors": [
+              "training"
+            ]
+          }
+        ],
+        "excepted_by": "",
+        "refused_behaviors": [
+          "training"
+        ]
+      }
+    },
+    {
+      "name": "a monitoring site reports what enforcing would refuse, without previews",
+      "path": "/premium/a",
+      "site_mode": "monitor",
+      "rules": [
+        {
+          "pattern": "/premium/*",
+          "refuse_behaviors": [
+            "training"
+          ]
+        },
+        {
+          "pattern": "/*",
+          "mode": "monitor",
+          "refuse_behaviors": [
+            "seo"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [
+          "/premium/*",
+          "/*"
+        ],
+        "deciding_mode": "monitor",
+        "attributed": "/premium/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": [
+          "training"
+        ]
+      }
+    },
+    {
+      "name": "a pattern defined for the site and the organization refuses what either definition refuses",
+      "path": "/docs",
+      "rules": [
+        {
+          "pattern": "/docs",
+          "refuse_behaviors": [
+            "training"
+          ]
+        },
+        {
+          "pattern": "/docs",
+          "refuse_behaviors": [
+            "agent"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [
+          "/docs"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/docs",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": [
+          "agent",
+          "training"
+        ]
+      }
+    },
+    {
+      "name": "a pattern defined twice, one definition excepting the request, refuses only what the covering definition refuses",
+      "path": "/docs/open",
+      "rules": [
+        {
+          "pattern": "/docs/*",
+          "refuse_behaviors": [
+            "training"
+          ],
+          "exceptions": [
+            "/docs/open"
+          ]
+        },
+        {
+          "pattern": "/docs/*",
+          "refuse_behaviors": [
+            "agent"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [
+          "/docs/*"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/docs/*",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": [
+          "agent"
+        ]
+      }
+    },
+    {
+      "name": "refused behaviors and a verification requirement are independent",
+      "path": "/account",
+      "rules": [
+        {
+          "pattern": "/account",
+          "min_trust": "human-likely",
+          "refuse_behaviors": [
+            "training"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [
+          "/account"
+        ],
+        "deciding_mode": "enforce",
+        "attributed": "/account",
+        "required_trust": "human-likely",
+        "requirement_source": "/account",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": [
+          "training"
+        ]
+      }
+    },
+    {
+      "name": "an uncovered path refuses nothing",
+      "path": "/about",
+      "rules": [
+        {
+          "pattern": "/premium/*",
+          "refuse_behaviors": [
+            "training"
+          ]
+        }
+      ],
+      "want": {
+        "covering": [],
+        "deciding_mode": "",
+        "attributed": "",
+        "required_trust": "",
+        "requirement_source": "",
+        "previews": [],
+        "excepted_by": "",
+        "refused_behaviors": []
+      }
+    }
+  ]
+}
