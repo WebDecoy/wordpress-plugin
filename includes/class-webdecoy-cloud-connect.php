@@ -204,8 +204,10 @@ class WebDecoy_Cloud_Connect
         // Single-use: burn the nonce so the token can't be replayed.
         delete_transient(self::NONCE_TRANSIENT);
 
-        // Pull entitlements immediately, then keep them fresh twice daily.
+        // Pull entitlements and the site's cloud policy immediately, then keep
+        // both fresh twice daily.
         $this->sync_entitlements();
+        (new WebDecoy_Cloud_Policy())->sync();
         $this->schedule_sync();
 
         // What just happened is that credentials were stored. Whether this site
@@ -271,6 +273,7 @@ class WebDecoy_Cloud_Connect
 
         webdecoy()->clear_cloud_credentials();
         delete_option(self::ENTITLEMENTS_OPTION);
+        WebDecoy_Cloud_Policy::clear();
         delete_transient(self::NONCE_TRANSIENT);
         wp_clear_scheduled_hook(self::CRON_HOOK);
 

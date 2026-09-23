@@ -47,6 +47,7 @@ if (file_exists($activator_file)) {
     delete_option('webdecoy_api_last_error');
     delete_option('webdecoy_encryption_key');
     delete_option('webdecoy_entitlements');
+    delete_option('webdecoy_cloud_policy');
     delete_option('webdecoy_actor_feed_cursor');
     delete_option('webdecoy_critical_moment_last');
 

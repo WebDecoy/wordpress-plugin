@@ -491,6 +491,22 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                                 <?php esc_html_e('Block AI crawlers (GPTBot, ClaudeBot, PerplexityBot, etc.)', 'webdecoy'); ?>
                             </label>
                             <p class="description"><?php esc_html_e('AI crawlers are allowed by default. Enable this to block them.', 'webdecoy'); ?></p>
+                            <?php $cloud_policy = WebDecoy_Cloud_Policy::describe(); ?>
+                            <?php if ($cloud_policy['state'] === 'applied') : ?>
+                                <p class="description">
+                                    <?php
+                                    printf(
+                                        /* translators: 1: number of protected paths that refuse crawlers, 2: number that only watch, 3: how long ago the policy was read */
+                                        esc_html__('Per-path crawler rules from WebDecoy Cloud are applied here too: %1$d refusing, %2$d watching, read %3$s ago. They can only refuse; the custom allowlist does not override them. Change them in the WebDecoy dashboard under Enforcement.', 'webdecoy'),
+                                        (int) $cloud_policy['refusing'],
+                                        (int) $cloud_policy['watching'],
+                                        esc_html(human_time_diff($cloud_policy['fetched_at']))
+                                    );
+                                    ?>
+                                </p>
+                            <?php elseif ($cloud_policy['state'] === 'stale') : ?>
+                                <p class="description"><?php esc_html_e('The per-path crawler rules from WebDecoy Cloud have not been refreshed for over two days and are not being applied. They resume on the next successful refresh.', 'webdecoy'); ?></p>
+                            <?php endif; ?>
                         </td>
                     </tr>
                     <tr>

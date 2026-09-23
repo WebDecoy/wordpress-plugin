@@ -51,6 +51,9 @@ class WebDecoy_Detector
             'allow_social_bots' => $this->options['allow_social_bots'] ?? true,
             'block_ai_crawlers' => $this->options['block_ai_crawlers'] ?? false,
             'custom_allowlist' => $this->options['custom_allowlist'] ?? [],
+            // Per-path crawler refusals set in WebDecoy Cloud (#995); null
+            // when not connected or the cached copy is too old to trust.
+            'cloud_policy' => class_exists('WebDecoy_Cloud_Policy') ? WebDecoy_Cloud_Policy::get_policy() : null,
         ]);
     }
 

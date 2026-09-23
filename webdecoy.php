@@ -71,6 +71,7 @@ foreach ($sdk_paths as $sdk_path) {
         require_once $sdk_path . 'src/DetectionResult.php';
         require_once $sdk_path . 'src/AgentRegistry.php';
         require_once $sdk_path . 'src/GoodBotList.php';
+        require_once $sdk_path . 'src/RouteResolution.php';
         require_once $sdk_path . 'src/SignalCollector.php';
         require_once $sdk_path . 'src/BotDetector.php';
         require_once $sdk_path . 'src/Client.php';
@@ -1045,6 +1046,7 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-rate-limit-rule.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-wp-traps.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-cloud-connect.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-cloud-policy.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-actor-intel.php';
 
         // WP-CLI surface for agency deploy scripts: wp webdecoy status|config|
@@ -1060,6 +1062,11 @@ final class WebDecoy_Plugin
         // until the admin explicitly clicks "Connect".
         $this->cloud_connect = new WebDecoy_Cloud_Connect();
         $this->cloud_connect->register();
+
+        // The site's cloud enforcement policy (per-path crawler refusals),
+        // refreshed on the entitlements cron. Read-only, public config; makes
+        // no request unless the site is connected.
+        (new WebDecoy_Cloud_Policy())->register();
 
         // Actor feed: hourly network-block sync. Self-guards to make no external
         // request unless connected AND entitled to the actor feed (Pro+).
