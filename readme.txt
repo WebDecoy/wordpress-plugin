@@ -257,6 +257,7 @@ What is sent, and when:
 * When you click "Connect to WebDecoy Cloud": your browser is redirected to app.webdecoy.com to approve the connection (carrying your site URL, site name, a one-time nonce, and your monthly-report preference). After you approve, the plugin exchanges a one-time token with api.webdecoy.com (sending the token, your site URL and the nonce) to receive the site's API keys. Cancelling sends nothing further.
 * After connecting: the plugin fetches your plan entitlements from ingest.webdecoy.com (authenticated with your API key) twice daily.
 * When a detection or rule violation occurs: the visitor's IP address, user agent, request path, threat score and detection flags are sent to ingest.webdecoy.com so the event appears in your cloud dashboard.
+* When a visitor arrives from an AI product such as ChatGPT, Claude, Perplexity or Gemini: the plugin adds one to a count for that AI product and the landing page's path, and sends those counts to ingest.webdecoy.com every fifteen minutes so they appear on your AI Traffic page. Only the AI product's name, the path and the count are sent; nothing about the visitor. Turn it off with the `webdecoy_count_ai_referrals` filter.
 * When you use an IP-reputation filter rule (e.g. ip.abuse_score, ip.tor): the visitor's IP address is sent to ingest.webdecoy.com to look up reputation/geo data.
 * When validating your key or forwarding a WooCommerce checkout detection: your API key, organization ID and the detection data above are sent to api.webdecoy.com / ingest.webdecoy.com.
 

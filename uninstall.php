@@ -32,6 +32,7 @@ if (file_exists($activator_file)) {
         $wpdb->prefix . 'webdecoy_detections',
         $wpdb->prefix . 'webdecoy_rate_limits',
         $wpdb->prefix . 'webdecoy_checkout_attempts',
+        $wpdb->prefix . 'webdecoy_ai_referrals',
     ];
 
     foreach ($tables as $table) {
@@ -56,6 +57,7 @@ if (file_exists($activator_file)) {
     wp_clear_scheduled_hook('webdecoy_sync_blocked_ips');
     wp_clear_scheduled_hook('webdecoy_sync_entitlements');
     wp_clear_scheduled_hook('webdecoy_sync_actor_feed');
+    wp_clear_scheduled_hook('webdecoy_flush_ai_referrals');
 }
 
 // Delete all transients with webdecoy_ prefix
@@ -83,6 +85,7 @@ if (is_multisite()) {
             $wpdb->prefix . 'webdecoy_detections',
             $wpdb->prefix . 'webdecoy_rate_limits',
             $wpdb->prefix . 'webdecoy_checkout_attempts',
+            $wpdb->prefix . 'webdecoy_ai_referrals',
         ];
 
         foreach ($tables as $table) {
@@ -106,6 +109,7 @@ if (is_multisite()) {
         wp_clear_scheduled_hook('webdecoy_sync_blocked_ips');
         wp_clear_scheduled_hook('webdecoy_sync_entitlements');
         wp_clear_scheduled_hook('webdecoy_sync_actor_feed');
+    wp_clear_scheduled_hook('webdecoy_flush_ai_referrals');
 
         // Delete transients for this site
         $wpdb->query(

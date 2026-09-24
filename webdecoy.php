@@ -70,6 +70,7 @@ foreach ($sdk_paths as $sdk_path) {
         require_once $sdk_path . 'src/Detection.php';
         require_once $sdk_path . 'src/DetectionResult.php';
         require_once $sdk_path . 'src/AgentRegistry.php';
+        require_once $sdk_path . 'src/LlmReferral.php';
         require_once $sdk_path . 'src/GoodBotList.php';
         require_once $sdk_path . 'src/RouteResolution.php';
         require_once $sdk_path . 'src/SignalCollector.php';
@@ -974,6 +975,10 @@ final class WebDecoy_Plugin
         // Safety-net cron drain of the violation-report spool.
         add_action('webdecoy_flush_violations', [$this, 'cron_flush_violations']);
 
+        // AI referral counting, when connected to WebDecoy Cloud: visits AI
+        // products send, as aggregate counts for the AI Traffic page.
+        WebDecoy_AI_Referrals::register((string) ($this->options['api_key'] ?? ''));
+
         // Load text domain
 
         // Declare HPOS compatibility for WooCommerce
@@ -1040,6 +1045,7 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-pow.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-behavioral-scorer.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-violation-reporter.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ai-referrals.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-honeytoken.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ip-enrichment.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-decoy-response.php';
