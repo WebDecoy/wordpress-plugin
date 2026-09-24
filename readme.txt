@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: bot detection, security, spam protection, woocommerce, ai bots
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.9.0
+Stable tag: 2.9.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -283,6 +283,11 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 7. WooCommerce checkout protection settings
 
 == Changelog ==
+
+= 2.9.1 =
+* Fixed: AI search crawlers and assistants that fetch a page for a person are no longer identified as AI training crawlers. Claude-User, Claude-SearchBot and MistralAI-User were matched as training crawlers, and PerplexityBot is now classified as the search crawler Perplexity documents it as. A cloud path rule that refuses AI training crawlers no longer refuses them.
+* Changed: with Block AI crawlers on, PerplexityBot and Claude-SearchBot are now let through like other AI search crawlers (OAI-SearchBot already was). Assistants and agents fetching for a person, such as Claude-User and ChatGPT-User, are still refused.
+* Added: Perplexity-User, MistralAI-User, Meta-ExternalFetcher and Claude-SearchBot are recognised (186 crawlers).
 
 = 2.9.0 =
 * Added: per-path crawler rules set in WebDecoy Cloud now apply in WordPress too. Connect your site, protect a path in the WebDecoy dashboard and refuse, say, AI training crawlers on it, and this plugin refuses them there as well, by the same rule the WebDecoy edge sensor uses. Watched paths and sites in Monitor count what would have been refused. Cloud rules can only refuse, never allow; Block AI crawlers and the custom allowlist keep working as before.
