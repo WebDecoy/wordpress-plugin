@@ -21,7 +21,7 @@ class WebDecoy_Activator
     /**
      * Database version for migrations
      */
-    private const DB_VERSION = '2.2.0';
+    private const DB_VERSION = '2.3.0';
 
     /**
      * Plugin activation
@@ -129,6 +129,21 @@ class WebDecoy_Activator
             KEY created_at (created_at)
         ) $charset_collate;";
 
+        // AI referral counts (2.10.0): visits AI products sent, by platform and
+        // landing path, waiting to be sent to WebDecoy Cloud. Counts only;
+        // nothing about a visitor. ref_key is sha1(platform + path), so the
+        // key stays within index limits on older MySQL; batch_id is '' for
+        // open counts and the claim id of a batch being sent.
+        $sql_ai_referrals = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}webdecoy_ai_referrals (
+            ref_key CHAR(40) NOT NULL,
+            batch_id VARCHAR(36) NOT NULL DEFAULT '',
+            platform VARCHAR(50) NOT NULL,
+            landing_path VARCHAR(500) NOT NULL,
+            referrals BIGINT UNSIGNED NOT NULL DEFAULT 0,
+            PRIMARY KEY  (ref_key, batch_id),
+            KEY batch_id (batch_id)
+        ) $charset_collate;";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
         dbDelta($sql_blocked);
@@ -136,6 +151,7 @@ class WebDecoy_Activator
         dbDelta($sql_rate_limits);
         dbDelta($sql_checkout);
         dbDelta($sql_violation_queue);
+        dbDelta($sql_ai_referrals);
     }
 
     /**
@@ -272,6 +288,7 @@ class WebDecoy_Activator
         wp_clear_scheduled_hook('webdecoy_cleanup_expired');
         wp_clear_scheduled_hook('webdecoy_sync_blocked_ips');
         wp_clear_scheduled_hook('webdecoy_flush_violations');
+        wp_clear_scheduled_hook('webdecoy_flush_ai_referrals');
         wp_clear_scheduled_hook('webdecoy_sync_entitlements');
         wp_clear_scheduled_hook('webdecoy_sync_actor_feed');
     }
