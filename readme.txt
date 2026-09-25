@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: bot detection, security, spam protection, woocommerce, ai bots
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.9.1
+Stable tag: 2.10.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -284,6 +284,9 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 7. WooCommerce checkout protection settings
 
 == Changelog ==
+
+= 2.10.0 =
+* Added: when connected to WebDecoy Cloud, the plugin counts visits that AI products such as ChatGPT, Claude, Perplexity and Gemini send to your site, so they appear on your AI Traffic page. Only the AI product's name, the landing page's path and a count are sent, every fifteen minutes; nothing about the visitor. Pages served from a full-page cache are not counted. Turn it off with the webdecoy_count_ai_referrals filter.
 
 = 2.9.1 =
 * Fixed: AI search crawlers and assistants that fetch a page for a person are no longer identified as AI training crawlers. Claude-User, Claude-SearchBot and MistralAI-User were matched as training crawlers, and PerplexityBot is now classified as the search crawler Perplexity documents it as. A cloud path rule that refuses AI training crawlers no longer refuses them.

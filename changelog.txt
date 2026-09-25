@@ -1,5 +1,9 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.10.0 - 2026-09-24 =
+* Added: AI referral counting. When the site is connected to WebDecoy Cloud, a page visit whose referrer (or, without one, whose campaign tags) names an AI product such as ChatGPT, Claude, Perplexity or Gemini adds one to a count for that product and the landing page's path. The counts are sent to WebDecoy every fifteen minutes and appear on the AI Traffic page. Only the product name, the path and the count are sent; nothing about the visitor is stored or sent. Only a browser loading a page counts, and pages served from a full-page cache never reach the plugin, so the figure is a floor. Turn it off with the webdecoy_count_ai_referrals filter.
+* Internal: the AI platform table and the vectors the classifier is tested against are generated from WebDecoy's own classifier, like the crawler registry.
+
 = 2.9.1 - 2026-09-24 =
 * Fixed: AI search crawlers and assistants that fetch a page for a person are no longer identified as AI training crawlers. Matching is by name with training crawlers checked first, and two over-broad names caught other crawlers: every Anthropic crawler identifies itself with an anthropic.com address, so Claude-User and Claude-SearchBot matched a legacy Anthropic training crawler, and MistralAI-User matched a Mistral training crawler the same way. PerplexityBot is now classified as a search crawler, as Perplexity documents it (not used for training). A cloud path rule that refuses AI training crawlers no longer refuses them.
 * Changed: with Block AI crawlers on, PerplexityBot and Claude-SearchBot are now let through like other AI search crawlers; OAI-SearchBot already was. Assistants and agents fetching a page for a person, such as Claude-User, ChatGPT-User and the newly recognised Perplexity-User, are still refused under this setting.
