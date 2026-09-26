@@ -1,5 +1,8 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.10.1 - 2026-09-26 =
+* Fixed: 2.10.0 failed with a fatal error, "Class WebDecoy_AI_Referrals not found", on every request. AI referral counting was registered while the plugin file was being included, before the file declaring its class was loaded. It is now registered on plugins_loaded. A test now fails if the plugin's constructor calls a class that is loaded later.
+
 = 2.10.0 - 2026-09-24 =
 * Added: AI referral counting. When the site is connected to WebDecoy Cloud, a page visit whose referrer (or, without one, whose campaign tags) names an AI product such as ChatGPT, Claude, Perplexity or Gemini adds one to a count for that product and the landing page's path. The counts are sent to WebDecoy every fifteen minutes and appear on the AI Traffic page. Only the product name, the path and the count are sent; nothing about the visitor is stored or sent. Only a browser loading a page counts, and pages served from a full-page cache never reach the plugin, so the figure is a floor. Turn it off with the webdecoy_count_ai_referrals filter.
 * Internal: the AI platform table and the vectors the classifier is tested against are generated from WebDecoy's own classifier, like the crawler registry.
