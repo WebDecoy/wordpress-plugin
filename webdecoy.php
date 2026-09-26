@@ -976,8 +976,9 @@ final class WebDecoy_Plugin
         add_action('webdecoy_flush_violations', [$this, 'cron_flush_violations']);
 
         // AI referral counting, when connected to WebDecoy Cloud: visits AI
-        // products send, as aggregate counts for the AI Traffic page.
-        WebDecoy_AI_Referrals::register((string) ($this->options['api_key'] ?? ''));
+        // products send, as aggregate counts for the AI Traffic page. Wired on
+        // plugins_loaded because its class is loaded there by load_includes().
+        add_action('plugins_loaded', [$this, 'register_ai_referrals'], 20);
 
         // Load text domain
 
@@ -1327,6 +1328,14 @@ final class WebDecoy_Plugin
         }
 
         return new \WebDecoy\Rules\RuleEngine($rules);
+    }
+
+    /**
+     * Register AI referral counting (a no-op unless connected to WebDecoy Cloud).
+     */
+    public function register_ai_referrals(): void
+    {
+        WebDecoy_AI_Referrals::register((string) ($this->options['api_key'] ?? ''));
     }
 
     /**
