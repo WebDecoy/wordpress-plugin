@@ -135,6 +135,11 @@ class WebDecoy_AI_Referrals
         if ($apiKey === '' || !function_exists('wp_remote_post')) {
             return;
         }
+        // While WebDecoy is refusing work, leave the counts where they are
+        // (WebDecoy/app#1245); they are sent under the same id afterwards.
+        if (class_exists('WebDecoy_Detection_Sender') && WebDecoy_Detection_Sender::backing_off()) {
+            return;
+        }
         global $wpdb;
         $table = self::table();
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -165,7 +170,9 @@ class WebDecoy_AI_Referrals
 
     /**
      * True when the batch needs no retry: accepted, or refused for a reason a
-     * retry cannot fix (a 4xx, such as a key not scoped to one site).
+     * retry cannot fix (a 4xx, such as a key not scoped to one site). A 429 is
+     * "not now", not "never": the batch is kept and resent under its id, which
+     * ingest deduplicates (WebDecoy/app#1245).
      *
      * @param array<int, array{platform: string, path: string, count: int}> $referrals
      */
@@ -180,9 +187,22 @@ class WebDecoy_AI_Referrals
             'body' => wp_json_encode(['report_id' => $batch, 'source' => 'wordpress', 'referrals' => $referrals]),
         ]);
         if (is_wp_error($response)) {
+            self::note_refusal();
             return false;
         }
         $code = (int) wp_remote_retrieve_response_code($response);
+        if ($code === 429 || $code >= 500) {
+            self::note_refusal();
+            return false;
+        }
         return $code >= 200 && $code < 500;
+    }
+
+    /** Pause cloud calls after an unavailable answer (WebDecoy/app#1245). */
+    private static function note_refusal(): void
+    {
+        if (class_exists('WebDecoy_Detection_Sender')) {
+            WebDecoy_Detection_Sender::note_refusal();
+        }
     }
 }

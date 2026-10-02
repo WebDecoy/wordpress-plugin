@@ -34,6 +34,10 @@ if (!function_exists('get_option')) {
 if (!function_exists('add_option')) {
     function add_option($k, $v, $a = '', $b = 'yes')
     {
+        // As in WordPress: adding an option that exists fails.
+        if (array_key_exists($k, $GLOBALS['__wd_opts'])) {
+            return false;
+        }
         $GLOBALS['__wd_opts'][$k] = $v;
         return true;
     }
