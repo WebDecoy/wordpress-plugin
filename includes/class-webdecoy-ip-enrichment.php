@@ -79,6 +79,12 @@ class WebDecoy_IP_Enrichment
             return null;
         }
 
+        // While ingest is refusing work, skip the call instead of making this
+        // page wait out the timeout for every new IP (WebDecoy/app#1245).
+        if (class_exists('WebDecoy_Detection_Sender') && WebDecoy_Detection_Sender::backing_off()) {
+            return null;
+        }
+
         $data = $this->fetch($ip);
 
         if ($data === null) {
@@ -110,9 +116,14 @@ class WebDecoy_IP_Enrichment
         ]);
 
         if (is_wp_error($response)) {
+            self::note_refusal();
             return null;
         }
-        if ((int) wp_remote_retrieve_response_code($response) !== 200) {
+        $code = (int) wp_remote_retrieve_response_code($response);
+        if ($code === 429 || $code >= 500) {
+            self::note_refusal();
+        }
+        if ($code !== 200) {
             return null;
         }
 
@@ -124,5 +135,13 @@ class WebDecoy_IP_Enrichment
         }
 
         return $data;
+    }
+
+    /** Pause cloud calls after an unavailable answer (WebDecoy/app#1245). */
+    private static function note_refusal(): void
+    {
+        if (class_exists('WebDecoy_Detection_Sender')) {
+            WebDecoy_Detection_Sender::note_refusal();
+        }
     }
 }
