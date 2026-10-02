@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: bot detection, security, spam protection, woocommerce, ai bots
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.10.1
+Stable tag: 2.10.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -284,6 +284,9 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 7. WooCommerce checkout protection settings
 
 == Changelog ==
+
+= 2.10.2 =
+* Fixed: when WebDecoy Cloud was slow or unreachable, pages a bot scored 40 or higher on could take up to 20 seconds to load while the plugin waited to report the detection. Detections are now sent after the page has been delivered, and the plugin pauses cloud calls for a minute when WebDecoy is unavailable. Blocking and the local log never wait on the cloud.
 
 = 2.10.1 =
 * Fixed: 2.10.0 stopped sites loading with a fatal error, "Class WebDecoy_AI_Referrals not found". Updating to 2.10.1 fixes it.
