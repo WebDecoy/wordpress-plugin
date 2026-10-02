@@ -108,6 +108,16 @@ MANIFEST_VER="$(python3 -c "import json;print(json.load(open('cdn-files/update-i
 [ "${MANIFEST_VER}" = "${VERSION}" ] || die "update-info.json says version ${MANIFEST_VER}, expected ${VERSION}"
 ok "zip and manifest agree on ${ZIP_SHA}"
 
+# plugin-info.json is the "View details" panel self-hosted installs read. It is
+# tracked and edited by hand, so check it names this release before anything is
+# uploaded; it used to be left out of the upload entirely and went stale.
+INFO_VER="$(python3 -c "import json;print(json.load(open('cdn-files/plugin-info.json'))['version'])")"
+INFO_URL="$(python3 -c "import json;print(json.load(open('cdn-files/plugin-info.json'))['download_url'])")"
+[ "${INFO_VER}" = "${VERSION}" ] || die "cdn-files/plugin-info.json says version ${INFO_VER}, expected ${VERSION} — bump it first"
+[ "${INFO_URL}" = "${CDN_BASE}/${SLUG}-${VERSION}.zip" ] \
+    || die "cdn-files/plugin-info.json download_url is ${INFO_URL}, expected ${CDN_BASE}/${SLUG}-${VERSION}.zip"
+ok "plugin-info.json names ${VERSION}"
+
 if [ "${DO_PUBLISH}" = "1" ]; then
     say "Publishing to R2"
     # Zip BEFORE manifest: a manifest naming a zip that is not there yet breaks every
@@ -118,6 +128,10 @@ if [ "${DO_PUBLISH}" = "1" ]; then
     npx wrangler r2 object put "${R2_BUCKET}/wordpress/update-info.json" \
         --file=./cdn-files/update-info.json --remote >/dev/null 2>&1 || die "R2 upload of the manifest failed"
     ok "uploaded update-info.json"
+    npx wrangler r2 object put "${R2_BUCKET}/wordpress/plugin-info.json" \
+        --file=./cdn-files/plugin-info.json --content-type application/json --remote >/dev/null 2>&1 \
+        || die "R2 upload of plugin-info.json failed"
+    ok "uploaded plugin-info.json"
 
     say "Verifying what the CDN actually serves"
     served="$(curl -fsS "${CDN_BASE}/${SLUG}-${VERSION}.zip" | shasum -a 256 | cut -d' ' -f1)" \
@@ -127,6 +141,9 @@ if [ "${DO_PUBLISH}" = "1" ]; then
     served_ver="$(curl -fsS "${CDN_BASE}/update-info.json" | python3 -c "import json,sys;print(json.load(sys.stdin)['version'])")"
     [ "${served_ver}" = "${VERSION}" ] || die "CDN manifest says ${served_ver}"
     ok "CDN manifest says ${VERSION}"
+    served_info="$(curl -fsS "${CDN_BASE}/plugin-info.json?v=${VERSION}" | python3 -c "import json,sys;print(json.load(sys.stdin)['version'])")"
+    [ "${served_info}" = "${VERSION}" ] || die "CDN plugin-info.json says ${served_info}"
+    ok "CDN plugin-info.json says ${VERSION}"
 else
     ok "dry run — nothing uploaded to R2"
 fi
