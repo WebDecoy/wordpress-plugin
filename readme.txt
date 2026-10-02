@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: bot detection, security, spam protection, woocommerce, ai bots
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.10.2
+Stable tag: 2.10.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -284,6 +284,10 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 7. WooCommerce checkout protection settings
 
 == Changelog ==
+
+= 2.10.3 =
+* Fixed: rule violations reported to WebDecoy Cloud could be sent twice when two page views finished at the same moment, and were discarded if WebDecoy was briefly unavailable. They are now sent once and kept until WebDecoy is back.
+* Fixed: AI referral counts refused because WebDecoy was busy are now kept and sent later instead of being dropped.
 
 = 2.10.2 =
 * Fixed: when WebDecoy Cloud was slow or unreachable, pages a bot scored 40 or higher on could take up to 20 seconds to load while the plugin waited to report the detection. Detections are now sent after the page has been delivered, and the plugin pauses cloud calls for a minute when WebDecoy is unavailable. Blocking and the local log never wait on the cloud.

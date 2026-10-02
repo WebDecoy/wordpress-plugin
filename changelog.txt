@@ -1,5 +1,9 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.10.3 - 2026-10-02 =
+* Fixed: violation reporting is no longer duplicated or lost. Every request that records a violation drains the spool at shutdown and the cron drains it too; two drains at once read the same rows and sent them twice. Drains now take an add_option() lock (a lock older than 60 seconds is taken over). A refusal from WebDecoy (no answer, 429, 5xx) keeps the rows and their attempts and pauses cloud calls for 60 seconds; before, two refused drains discarded the spool.
+* Fixed: an AI referral batch refused with 429 is kept and resent under the same id (WebDecoy deduplicates it) instead of being deleted, and flushing waits out the pause.
+
 = 2.10.2 - 2026-10-02 =
 * Fixed: a page view a bot scored 40 or higher on could stall for up to 20 seconds when WebDecoy Cloud was slow or down. The detection was sent inline during init, before the block decision, with a 10 second timeout, and installs without a stored organization id made a 10 second key lookup first. Detections are now queued and sent from a shutdown handler after the response (fastcgi_finish_request where available), with a 3 second timeout and the stored organization id.
 * Fixed: an ingest refusal (429, 5xx, or no answer) now pauses cloud calls for 60 seconds across all requests. IP enrichment, which filter rules use during the page, skips its call while paused instead of waiting up to 2 seconds for each new IP.
