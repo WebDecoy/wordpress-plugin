@@ -1046,6 +1046,7 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-pow.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-behavioral-scorer.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-violation-reporter.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-detection-sender.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ai-referrals.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-honeytoken.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ip-enrichment.php';
@@ -1209,7 +1210,8 @@ final class WebDecoy_Plugin
             // Always log detection locally
             $this->log_detection($result, $ip);
 
-            // Submit to API (fail open)
+            // Queue for WebDecoy Cloud. Sent after the response, never in
+            // front of the block decision below (WebDecoy/app#1245).
             try {
                 $this->submit_detection($result, $ip);
             } catch (\Exception $e) {
@@ -1932,8 +1934,7 @@ final class WebDecoy_Plugin
             return;
         }
 
-        $client = $this->get_client();
-        if (!$client) {
+        if (empty($this->options['api_key']) || WebDecoy_Detection_Sender::backing_off()) {
             return;
         }
 
@@ -1952,7 +1953,44 @@ final class WebDecoy_Plugin
             'metadata' => $result->getMetadata(),
         ]);
 
-        $client->submitDetection($detection);
+        // Built now, while the request is in hand; sent at shutdown, after the
+        // visitor has their response (WebDecoy/app#1245).
+        WebDecoy_Detection_Sender::defer(function () use ($detection): void {
+            $client = $this->get_detection_client();
+            if (!$client) {
+                return;
+            }
+            $client->submitDetection($detection);
+            if (empty($this->options['organization_id'])) {
+                set_transient('webdecoy_detect_org_id', $client->getOrganizationId(), DAY_IN_SECONDS);
+            }
+        });
+    }
+
+    /**
+     * The client detections are sent with (WebDecoy/app#1245): a 3 second
+     * timeout, and the organization id passed in so a send is one request,
+     * not a key lookup followed by the detection.
+     */
+    private function get_detection_client(): ?\WebDecoy\Client
+    {
+        if (empty($this->options['api_key'])) {
+            return null;
+        }
+        $org = (string) ($this->options['organization_id'] ?? '');
+        if ($org === '') {
+            $org = (string) get_transient('webdecoy_detect_org_id');
+        }
+        try {
+            return new \WebDecoy\Client([
+                'api_key' => $this->options['api_key'],
+                'organization_id' => $org !== '' ? $org : null,
+                'timeout' => 3,
+            ]);
+        } catch (\Exception $e) {
+            error_log('WebDecoy client error: ' . $e->getMessage());
+            return null;
+        }
     }
 
     /**
