@@ -555,6 +555,14 @@ class WebDecoy_Cloud_Connect
         return sprintf(__('Connected to WebDecoy Cloud (%s).', 'webdecoy'), $org) . ' ' . $tail;
     }
 
+    /**
+     * Stash an admin notice for display on the next page load.
+     *
+     * @param string $type Notice type (e.g. 'success', 'error')
+     * @param string $message Notice text
+     * @param string $url Optional action link URL
+     * @param string $label Optional action link label
+     */
     private function set_notice(string $type, string $message, string $url = '', string $label = ''): void
     {
         set_transient(

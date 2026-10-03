@@ -174,6 +174,9 @@ class WebDecoy_Cloud_Policy
         delete_option(self::OPTION);
     }
 
+    /**
+     * The connected organization id from the stored plugin options, if any.
+     */
     private static function organization_id(): string
     {
         $options = get_option('webdecoy_options', []);
