@@ -3,7 +3,7 @@ Contributors: webdecoy1
 Donate link: https://webdecoy.com
 Tags: bot detection, security, spam protection, woocommerce, ai bots
 Requires at least: 6.1
-Tested up to: 7.1
+Tested up to: 7.1.2
 Stable tag: 2.10.3
 Requires PHP: 7.4
 License: GPLv2 or later
