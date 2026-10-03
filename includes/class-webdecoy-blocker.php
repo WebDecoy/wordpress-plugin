@@ -78,7 +78,7 @@ class WebDecoy_Blocker
             }
         }
 
-        $table = $wpdb->prefix . 'webdecoy_blocked_ips';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
 
         $expires_at = null;
         if ($duration_hours !== null && $duration_hours > 0) {
@@ -261,7 +261,7 @@ class WebDecoy_Blocker
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_blocked_ips';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
 
         $result = $wpdb->delete($table, ['ip_address' => $ip]);
 
@@ -292,7 +292,7 @@ class WebDecoy_Blocker
 
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_blocked_ips';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
 
         // First check for exact IP match (fastest)
         $exact_blocked = $wpdb->get_var($wpdb->prepare(
@@ -344,7 +344,7 @@ class WebDecoy_Blocker
         ];
 
         $args = wp_parse_args($args, $defaults);
-        $table = $wpdb->prefix . 'webdecoy_blocked_ips';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
 
         $where = '1=1';
         if (!$args['include_expired']) {
@@ -375,7 +375,7 @@ class WebDecoy_Blocker
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_blocked_ips';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
 
         $where = '1=1';
         if (!$include_expired) {
@@ -395,7 +395,7 @@ class WebDecoy_Blocker
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_blocked_ips';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
 
         $result = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$table} WHERE ip_address = %s AND (expires_at IS NULL OR expires_at > %s)",
@@ -417,7 +417,7 @@ class WebDecoy_Blocker
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_blocked_ips';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
 
         $info = $this->get_block_info($ip);
         if (!$info) {
@@ -449,7 +449,7 @@ class WebDecoy_Blocker
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_blocked_ips';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
 
         $count = $wpdb->query("DELETE FROM {$table}");
 
@@ -470,7 +470,7 @@ class WebDecoy_Blocker
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_blocked_ips';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
 
         return $wpdb->query($wpdb->prepare(
             "DELETE FROM {$table} WHERE expires_at IS NOT NULL AND expires_at < %s",
@@ -740,7 +740,7 @@ class WebDecoy_Blocker
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_blocked_ips';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
 
         $total = $wpdb->get_var("SELECT COUNT(*) FROM {$table}");
         $active = $wpdb->get_var($wpdb->prepare(

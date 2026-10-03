@@ -16,9 +16,9 @@ if (!current_user_can('manage_options')) {
 
 global $wpdb;
 
-$detections_table = $wpdb->prefix . 'webdecoy_detections';
-$blocked_table = $wpdb->prefix . 'webdecoy_blocked_ips';
-$checkout_table = $wpdb->prefix . 'webdecoy_checkout_attempts';
+$detections_table = esc_sql($wpdb->prefix . 'webdecoy_detections');
+$blocked_table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
+$checkout_table = esc_sql($wpdb->prefix . 'webdecoy_checkout_attempts');
 
 // 30-day detection trend
 $thirty_days_ago = gmdate('Y-m-d H:i:s', strtotime('-30 days'));

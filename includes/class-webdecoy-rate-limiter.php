@@ -84,7 +84,7 @@ class WebDecoy_Rate_Limiter
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_rate_limits';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_rate_limits');
         $now = current_time('mysql', true);
         $window_start_threshold = gmdate('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
 
@@ -126,7 +126,7 @@ class WebDecoy_Rate_Limiter
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_rate_limits';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_rate_limits');
         $now = current_time('mysql', true);
         $window_start = gmdate('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
 
@@ -168,7 +168,7 @@ class WebDecoy_Rate_Limiter
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_rate_limits';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_rate_limits');
         $window_start = gmdate('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
 
         $count = $wpdb->get_var($wpdb->prepare(
@@ -202,7 +202,7 @@ class WebDecoy_Rate_Limiter
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_rate_limits';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_rate_limits');
         $window_start_threshold = gmdate('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
 
         $window_start = $wpdb->get_var($wpdb->prepare(
@@ -231,7 +231,7 @@ class WebDecoy_Rate_Limiter
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_rate_limits';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_rate_limits');
 
         return $wpdb->delete($table, ['ip_address' => $ip]) !== false;
     }
@@ -245,7 +245,7 @@ class WebDecoy_Rate_Limiter
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_rate_limits';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_rate_limits');
         $threshold = gmdate('Y-m-d H:i:s', strtotime('-1 hour'));
 
         return $wpdb->query($wpdb->prepare(
@@ -338,7 +338,7 @@ class WebDecoy_Rate_Limiter
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_rate_limits';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_rate_limits');
         $window_start = gmdate('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
 
         $active_ips = $wpdb->get_var($wpdb->prepare(

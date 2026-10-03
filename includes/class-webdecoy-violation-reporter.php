@@ -62,6 +62,11 @@ class WebDecoy_Violation_Reporter
     /** @var bool Whether the shutdown drain has been registered. */
     private $registered = false;
 
+    /**
+     * Constructor
+     *
+     * @param string $apiKey WebDecoy Cloud API key
+     */
     public function __construct(string $apiKey)
     {
         $this->apiKey = $apiKey;
@@ -176,6 +181,11 @@ class WebDecoy_Violation_Reporter
         return add_option(self::DRAIN_LOCK, (string) time(), '', 'no');
     }
 
+    /**
+     * Send one batch of queued violations, assuming the drain lock is held.
+     *
+     * @param string $apiKey WebDecoy Cloud API key
+     */
     private static function drain_locked(string $apiKey): void
     {
         global $wpdb;

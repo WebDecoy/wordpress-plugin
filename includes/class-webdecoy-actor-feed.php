@@ -312,7 +312,7 @@ class WebDecoy_Actor_Feed
     public static function purge_feed_blocks(): int
     {
         global $wpdb;
-        $table = $wpdb->prefix . 'webdecoy_blocked_ips';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
         $rows = $wpdb->get_col($wpdb->prepare(
             "SELECT ip_address FROM {$table} WHERE created_by = %s",
             self::CREATED_BY

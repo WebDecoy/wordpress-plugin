@@ -17,7 +17,7 @@ if (!current_user_can('manage_options')) {
 
 global $wpdb;
 
-$table = $wpdb->prefix . 'webdecoy_detections';
+$table = esc_sql($wpdb->prefix . 'webdecoy_detections');
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only admin list filtering via GET, no state change
 $page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
 $per_page = 50;

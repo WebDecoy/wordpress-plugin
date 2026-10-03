@@ -233,7 +233,7 @@ class WebDecoy_WooCommerce
 
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_checkout_attempts';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_checkout_attempts');
 
         $wpdb->insert($table, [
             'ip_address' => $this->get_client_ip(),
@@ -284,7 +284,7 @@ class WebDecoy_WooCommerce
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_checkout_attempts';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_checkout_attempts');
 
         // Keyed on order_id ALONE, not on the current request's IP. Payment
         // completion often arrives on an asynchronous gateway callback (IPN, webhook,
@@ -340,7 +340,7 @@ class WebDecoy_WooCommerce
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_checkout_attempts';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_checkout_attempts');
         $ip = $this->get_client_ip();
 
         // Determine status based on reason
@@ -368,7 +368,7 @@ class WebDecoy_WooCommerce
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_checkout_attempts';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_checkout_attempts');
         $since = gmdate('Y-m-d H:i:s', strtotime("-{$window} seconds"));
 
         if ($include_successful) {
@@ -425,7 +425,7 @@ class WebDecoy_WooCommerce
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_detections';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_detections');
         $final_score = $score ?? 100;
         $source = 'woocommerce_' . $reason;
 
@@ -576,7 +576,7 @@ class WebDecoy_WooCommerce
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_checkout_attempts';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_checkout_attempts');
         $since = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
 
         $total = $wpdb->get_var($wpdb->prepare(
@@ -622,7 +622,7 @@ class WebDecoy_WooCommerce
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_checkout_attempts';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_checkout_attempts');
         $since = gmdate('Y-m-d H:i:s', strtotime('-24 hours'));
 
         return $wpdb->get_results($wpdb->prepare(

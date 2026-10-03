@@ -39,6 +39,11 @@ class WebDecoy_Honeytoken
     /** @var bool */
     private $rotate;
 
+    /**
+     * Constructor
+     *
+     * @param bool $rotate Whether to rotate the per-site secret on next use
+     */
     public function __construct(bool $rotate = false)
     {
         $this->rotate = $rotate;

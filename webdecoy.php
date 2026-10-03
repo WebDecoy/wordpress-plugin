@@ -1576,6 +1576,14 @@ final class WebDecoy_Plugin
         unset($suppression);
     }
 
+    /**
+     * Carry out the action the rule engine decided on for this request
+     * (THROTTLE, deceptive response, IP block, or 403), unless enforcement is
+     * currently suppressed.
+     *
+     * @param \WebDecoy\Rules\RuleEngineResult $result Rule engine decision
+     * @param string $ip Request IP address
+     */
     private function handle_rule_decision(\WebDecoy\Rules\RuleEngineResult $result, string $ip): void
     {
         // Monitor mode, the kill switch, or an unconfigured proxy: the violation has

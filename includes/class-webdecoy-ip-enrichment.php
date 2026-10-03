@@ -35,6 +35,11 @@ class WebDecoy_IP_Enrichment
     /** @var int Request timeout in seconds (filterable). */
     private $timeout;
 
+    /**
+     * Constructor
+     *
+     * @param string $apiKey WebDecoy Cloud API key
+     */
     public function __construct(string $apiKey)
     {
         $this->apiKey = $apiKey;

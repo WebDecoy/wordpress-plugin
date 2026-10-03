@@ -31,10 +31,13 @@ class WebDecoy_AI_Referrals
     /** Distinct platform and path pairs kept before new ones are dropped. */
     private const MAX_ROWS = 5000;
 
+    /**
+     * The ai_referrals table name, prefixed and escaped for interpolation.
+     */
     public static function table(): string
     {
         global $wpdb;
-        return $wpdb->prefix . 'webdecoy_ai_referrals';
+        return esc_sql($wpdb->prefix . 'webdecoy_ai_referrals');
     }
 
     /**
@@ -103,6 +106,13 @@ class WebDecoy_AI_Referrals
         return mb_check_encoding($path, 'UTF-8') ? $path : '/';
     }
 
+    /**
+     * Record one referral for a platform/landing-path pair, bounded to
+     * {@see self::MAX_ROWS} distinct pairs.
+     *
+     * @param string $platform Referring AI platform
+     * @param string $path Landing path the referral counted against
+     */
     private static function increment(string $platform, string $path): void
     {
         global $wpdb;
