@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: bot detection, security, spam protection, woocommerce, ai bots
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.10.3
+Stable tag: 2.10.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -285,6 +285,11 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 
 == Changelog ==
 
+= 2.10.4 =
+* Security: good bots such as Googlebot are now verified against the visitor's real address. A visitor could previously choose the address that was checked by sending a forged forwarding header, and on sites behind Cloudflare, WooCommerce checkout checked Cloudflare's address instead of the visitor's.
+* Added: the WebDecoy Cloud tab shows whether Slack and webhook alerts are on for your plan, and where to configure them.
+* Changed: corrected descriptions of what WebDecoy Cloud does. The cross-site actor feed is advisory and does not block anything, and alerts are webhooks plus a monthly email report, not an email for every detection.
+
 = 2.10.3 =
 * Fixed: rule violations reported to WebDecoy Cloud could be sent twice when two page views finished at the same moment, and were discarded if WebDecoy was briefly unavailable. They are now sent once and kept until WebDecoy is back.
 * Fixed: AI referral counts refused because WebDecoy was busy are now kept and sent later instead of being dropped.
@@ -463,6 +468,9 @@ Safety release. Please update. This version deliberately makes the plugin do les
 * Initial release
 
 == Upgrade Notice ==
+
+= 2.10.4 =
+Security fix: good bots are verified against the visitor's real address, not one a forged header supplies. Recommended upgrade.
 
 = 2.0.0 =
 Major update! All protection now works without an API key. Existing API keys continue working. Premium features auto-enable. Settings are preserved.
