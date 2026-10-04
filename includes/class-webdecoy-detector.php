@@ -239,7 +239,7 @@ class WebDecoy_Detector
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_detections';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_detections');
 
         $wpdb->insert($table, [
             'ip_address' => $ip,
@@ -274,7 +274,7 @@ class WebDecoy_Detector
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_detections';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_detections');
 
         return $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$table} ORDER BY created_at DESC LIMIT %d",
@@ -292,7 +292,7 @@ class WebDecoy_Detector
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_detections';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_detections');
         $since = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
 
         $total = $wpdb->get_var($wpdb->prepare(
@@ -334,7 +334,7 @@ class WebDecoy_Detector
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'webdecoy_detections';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_detections');
         $since = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
 
         return (int) $wpdb->get_var($wpdb->prepare(

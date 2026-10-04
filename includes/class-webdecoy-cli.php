@@ -76,8 +76,8 @@ class WebDecoy_CLI_Command
             $mode .= ' [forced by WEBDECOY_DEFAULT_MODE]';
         }
 
-        $detections = $wpdb->prefix . 'webdecoy_detections';
-        $blocked = $wpdb->prefix . 'webdecoy_blocked_ips';
+        $detections = esc_sql($wpdb->prefix . 'webdecoy_detections');
+        $blocked = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
         $now = gmdate('Y-m-d H:i:s');
 
         $total = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$detections}"); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix
@@ -284,7 +284,7 @@ class WebDecoy_CLI_Command
 
         \WP_CLI::confirm('Delete ALL recorded detections on this site?', $assoc_args);
 
-        $detections = $wpdb->prefix . 'webdecoy_detections';
+        $detections = esc_sql($wpdb->prefix . 'webdecoy_detections');
         $deleted = $wpdb->query("DELETE FROM {$detections}"); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix
         \WP_CLI::success(sprintf('Deleted %d detection%s.', (int) $deleted, (int) $deleted === 1 ? '' : 's'));
     }

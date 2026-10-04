@@ -48,6 +48,12 @@ class WebDecoy_Decoy_Response
         return $secret;
     }
 
+    /**
+     * Derive a stable per-label canary value from the site secret.
+     *
+     * @param string $label Canary label
+     * @param int $len Length of the returned hex string
+     */
     private static function derive(string $label, int $len = 16): string
     {
         return substr(hash_hmac('sha256', $label, self::secret()), 0, $len);
@@ -204,6 +210,9 @@ class WebDecoy_Decoy_Response
         return $this->decoy_for($path) === null ? [] : self::canaries();
     }
 
+    /**
+     * Send a plain 404 response and stop execution.
+     */
     private function serve_404(): void
     {
         nocache_headers();
@@ -213,6 +222,13 @@ class WebDecoy_Decoy_Response
         exit;
     }
 
+    /**
+     * Send a 200 response with the given body and content type, and stop
+     * execution.
+     *
+     * @param string $body Response body
+     * @param string $type Content-Type value
+     */
     private function serve_body(string $body, string $type): void
     {
         nocache_headers();

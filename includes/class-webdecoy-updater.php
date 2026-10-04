@@ -21,6 +21,9 @@ if (!defined('ABSPATH')) {
  */
 class WebDecoy_Updater
 {
+    /**
+     * Constructor
+     */
     public function __construct()
     {
         add_filter('pre_set_site_transient_update_plugins', [$this, 'check_for_updates']);

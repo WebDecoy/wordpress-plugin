@@ -49,6 +49,11 @@ class WebDecoy_Actor_Intel
     /** @var string Plaintext API key. */
     private $apiKey;
 
+    /**
+     * Constructor
+     *
+     * @param string $apiKey WebDecoy Cloud API key
+     */
     public function __construct(string $apiKey)
     {
         $this->apiKey = $apiKey;
