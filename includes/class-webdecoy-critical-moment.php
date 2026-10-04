@@ -217,7 +217,12 @@ class WebDecoy_Critical_Moment
             case 'unconnected':
             default:
                 return [
-                    'message'   => __('A CRITICAL deception trap was just tripped. Connect to WebDecoy Cloud to see whether this attacker is already known across the network — and to block threats like it automatically.', 'webdecoy'),
+                    // Was "and to block threats like it automatically". Connecting does
+                    // not block anything: the cross-site feed is advisory on every plan
+                    // and writes nothing to the block list (#476). The unconnected pitch
+                    // was the last place in this file still promising it, three variants
+                    // below a comment forbidding exactly that claim.
+                    'message'   => __('A CRITICAL deception trap was just tripped. Connect to WebDecoy Cloud to see whether this attacker is already known across the network, and what it has been doing to other sites.', 'webdecoy'),
                     'cta_label' => __('Connect to WebDecoy Cloud', 'webdecoy'),
                     'cta_url'   => admin_url('admin.php?page=webdecoy&tab=cloud'),
                     'type'      => 'warning',

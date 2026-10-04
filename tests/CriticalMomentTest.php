@@ -56,3 +56,43 @@ $t('variant reflects connection, intel, and entitlement', function () use ($same
     $same('connected_upgrade', WebDecoy_Critical_Moment::variant(true, true, false), 'known + no feed -> upgrade pitch');
     $same('connected_covered', WebDecoy_Critical_Moment::variant(true, true, true), 'known + feed -> confirmation copy');
 });
+
+echo "\nCritical Moment: the copy must not promise a block\n";
+
+/**
+ * The four message variants are built inside a method that calls WordPress, so
+ * they cannot be invoked here. Their text can still be read.
+ *
+ * That is worth doing because this exact claim has now been removed from this
+ * file twice. #476 measured the cross-site feed and withdrew blocking from it:
+ * 0.04% of addresses were ever seen at a second site, 82% of feed entries were
+ * already a week stale, and none were still active. The connected variants were
+ * corrected then, with a comment above them saying not to claim it. The
+ * unconnected variant kept promising "to block threats like it automatically"
+ * for another three weeks, four lines below that comment.
+ *
+ * A comment asking the next person not to do something is not a guard. This is.
+ */
+$t('no translatable string in the file offers to block anything', function () use ($true) {
+    $src = file_get_contents(dirname(__DIR__) . '/includes/class-webdecoy-critical-moment.php');
+    $true($src !== false, 'source is readable');
+
+    // Only the translated strings: comments in this file discuss blocking at
+    // length, and must be free to keep doing so.
+    preg_match_all("/(?:__|_e|esc_html__|esc_html_e)\(\s*'((?:[^'\\\\]|\\\\.)*)'/", $src, $singles);
+    preg_match_all("/_n\(\s*'((?:[^'\\\\]|\\\\.)*)'\s*,\s*'((?:[^'\\\\]|\\\\.)*)'/", $src, $plurals);
+
+    $strings = array_merge($singles[1], $plurals[1], $plurals[2]);
+    $true(count($strings) >= 4, 'found the message strings (' . count($strings) . ')');
+
+    foreach ($strings as $text) {
+        $lower = strtolower($text);
+        foreach (['block', 'prevent', 'stop them'] as $promise) {
+            $true(
+                strpos($lower, $promise) === false,
+                'copy promises "' . $promise . '" — the feed is advisory on every plan and '
+                    . 'writes nothing to the block list (#476): ' . $text
+            );
+        }
+    }
+});

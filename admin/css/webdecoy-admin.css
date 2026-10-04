@@ -1022,7 +1022,8 @@
     white-space: nowrap;
 }
 
-.webdecoy-digest-status {
+.webdecoy-digest-status,
+.webdecoy-alerts-status {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -1030,10 +1031,12 @@
     margin: 16px 0 0;
 }
 
-.webdecoy-digest-status .dashicons {
+.webdecoy-digest-status .dashicons,
+.webdecoy-alerts-status .dashicons {
     font-size: 18px;
     width: 18px;
     height: 18px;
+    flex-shrink: 0;
 }
 
 .webdecoy-connected-actions {
