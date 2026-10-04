@@ -1,5 +1,13 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.10.4 - 2026-10-04 =
+* Security: BotDetector::analyze(), given signals without ip_address, resolved the client IP from CF-Connecting-IP or the leftmost X-Forwarded-For with no trusted-proxy check, so a client chose the address its claimed good bot was reverse-DNS verified against. It now keeps a valid supplied ip_address and otherwise uses SignalCollector::getIP(), the trusted-proxy-aware resolver; the second resolver is removed (#85).
+* Fixed: WebDecoy_Detector, used by WooCommerce checkout, built its BotDetector without the configured trusted proxies, so behind Cloudflare it verified good bots against the edge address. It now uses webdecoy_plugin_trusted_proxies().
+* Added: the Cloud tab reads the plan's features.alerts entitlement and says whether Slack and webhook alerts are on, with a link to configure them. The plugin itself still sends no alerts.
+* Changed: the unconnected CRITICAL notice no longer offers to block threats automatically (the cross-site feed is advisory on every plan since 2.3.2); a test now fails on any translatable string in that file promising to block, prevent or stop. Readme and settings copy no longer advertise per-detection email or a free trial.
+* Changed: custom table names are passed through esc_sql() before interpolation into raw SQL (Plugin Check UnescapedDBParameter), and missing docblocks are added. Thanks @miyanialkesh7 (#110).
+* Docs: the clearance_scope option is documented as limiting nothing; behaviour is unchanged (#91).
+
 = 2.10.3 - 2026-10-02 =
 * Fixed: violation reporting is no longer duplicated or lost. Every request that records a violation drains the spool at shutdown and the cron drains it too; two drains at once read the same rows and sent them twice. Drains now take an add_option() lock (a lock older than 60 seconds is taken over). A refusal from WebDecoy (no answer, 429, 5xx) keeps the rows and their attempts and pauses cloud calls for 60 seconds; before, two refused drains discarded the spool.
 * Fixed: an AI referral batch refused with 429 is kept and resent under the same id (WebDecoy deduplicates it) instead of being deleted, and flushing waits out the pause.
