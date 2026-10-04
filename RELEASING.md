@@ -15,6 +15,14 @@ Update the version string in **all** of these:
 The SDK `User-Agent` derives from `WEBDECOY_VERSION` automatically — nothing to
 bump there.
 
+## Verifying a new WordPress version
+
+Before raising `Tested up to:` in `readme.txt` (or `WC tested up to:` in
+`webdecoy.php`), run the Docker smoke tests in `tests/wp-compat/` against that
+WordPress or WooCommerce release (see its README). `release.sh`
+copies `Tested up to:` into the CDN `update-info.json`, so the readme is the
+single source of truth for both channels.
+
 ## Two distribution channels / two builds
 
 There are two builds from one codebase:
@@ -33,7 +41,9 @@ This runs `build.sh`, produces `dist/webdecoy-<version>.zip`, and regenerates
 rejects a package whose hash doesn't match). `cdn-files/update-info.json` is
 git-ignored on purpose — it's a per-build artifact, uploaded to the CDN rather
 than committed. `cdn-files/plugin-info.json` (the "View details" metadata) is
-tracked; bump its `version`/`download_url`/changelog when they change.
+tracked; bump its `version`, `download_url` and changelog with every release.
+`bin/release-all.sh` refuses to publish until it names the release, then
+uploads it with the zip and manifest and checks what the CDN serves.
 
 ## 3. Upload to the CDN
 

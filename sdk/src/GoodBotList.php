@@ -39,14 +39,14 @@ class GoodBotList
     public const CATEGORY_DEVELOPER = 'developer';
 
     /**
-     * Bots that require IP verification via reverse DNS
-     * Maps bot pattern to expected hostname suffix(es)
+     * Bots that require IP verification via reverse DNS, keyed by registry
+     * agent id, mapped to the hostname suffixes their operators publish.
      */
     private const VERIFIABLE_BOTS = [
         'googlebot' => ['.googlebot.com', '.google.com'],
         'google-inspectiontool' => ['.googlebot.com', '.google.com'],
         'google-extended' => ['.googlebot.com', '.google.com'],
-        'feedfetcher' => ['.google.com'],
+        'feedfetcher-google' => ['.google.com'],
         'bingbot' => ['.search.msn.com'],
         'msnbot' => ['.search.msn.com'],
         'yandexbot' => ['.yandex.ru', '.yandex.net', '.yandex.com'],
@@ -58,6 +58,30 @@ class GoodBotList
         'linkedinbot' => ['.linkedin.com'],
         'twitterbot' => ['.twitter.com', '.twttr.com'],
         'pinterestbot' => ['.pinterest.com'],
+    ];
+
+    /**
+     * Registry categories that are good bots here, and which plugin category
+     * each one lands in. A registry category absent from this map (security
+     * scanners, scraping frameworks, headless browsers, HTTP clients) is not a
+     * good bot: identify() returns null for it and the request is scored as
+     * it always was.
+     *
+     * AI agents and assistants join AI crawlers deliberately: the "Block AI
+     * crawlers" switch is the owner's one instruction about AI traffic, and an
+     * agent browsing on a person's behalf is still AI traffic.
+     */
+    private const PLUGIN_CATEGORY = [
+        'search_crawler' => self::CATEGORY_SEARCH_ENGINE,
+        'ai_search_crawler' => self::CATEGORY_SEARCH_ENGINE,
+        'training_crawler' => self::CATEGORY_AI_CRAWLER,
+        'ai_agent' => self::CATEGORY_AI_CRAWLER,
+        'ai_assistant' => self::CATEGORY_AI_CRAWLER,
+        'fetcher' => self::CATEGORY_SOCIAL,
+        'monitoring' => self::CATEGORY_MONITORING,
+        'seo_crawler' => self::CATEGORY_SEO,
+        'feed_reader' => self::CATEGORY_FEED,
+        'archiver' => self::CATEGORY_ARCHIVE,
     ];
 
     /**
@@ -122,299 +146,6 @@ class GoodBotList
     }
 
     /**
-     * Known good bots with their patterns and categories
-     *
-     * Format: 'pattern' => ['name' => '...', 'category' => '...', 'url' => '...']
-     */
-    private const BOTS = [
-        // Search Engines
-        'googlebot' => [
-            'name' => 'Googlebot',
-            'category' => self::CATEGORY_SEARCH_ENGINE,
-            'url' => 'https://developers.google.com/search/docs/crawling-indexing/googlebot',
-        ],
-        'google-inspectiontool' => [
-            'name' => 'Google Inspection Tool',
-            'category' => self::CATEGORY_SEARCH_ENGINE,
-            'url' => 'https://support.google.com/webmasters/answer/9012289',
-        ],
-        'bingbot' => [
-            'name' => 'Bingbot',
-            'category' => self::CATEGORY_SEARCH_ENGINE,
-            'url' => 'https://www.bing.com/webmasters/help/which-crawlers-does-bing-use-8c184ec0',
-        ],
-        'msnbot' => [
-            'name' => 'MSNBot',
-            'category' => self::CATEGORY_SEARCH_ENGINE,
-            'url' => 'https://www.bing.com/webmasters',
-        ],
-        'yandexbot' => [
-            'name' => 'YandexBot',
-            'category' => self::CATEGORY_SEARCH_ENGINE,
-            'url' => 'https://yandex.com/support/webmaster/robot-workings/check-yandex-robots.html',
-        ],
-        'baiduspider' => [
-            'name' => 'Baiduspider',
-            'category' => self::CATEGORY_SEARCH_ENGINE,
-            'url' => 'http://www.baidu.com/search/spider.html',
-        ],
-        'duckduckbot' => [
-            'name' => 'DuckDuckBot',
-            'category' => self::CATEGORY_SEARCH_ENGINE,
-            'url' => 'https://duckduckgo.com/duckduckbot',
-        ],
-        'slurp' => [
-            'name' => 'Yahoo Slurp',
-            'category' => self::CATEGORY_SEARCH_ENGINE,
-            'url' => 'https://help.yahoo.com/kb/slurp-crawling-page-sln22600.html',
-        ],
-        'sogou' => [
-            'name' => 'Sogou Spider',
-            'category' => self::CATEGORY_SEARCH_ENGINE,
-            'url' => 'https://www.sogou.com/docs/help/webmasters.htm',
-        ],
-        'exabot' => [
-            'name' => 'Exabot',
-            'category' => self::CATEGORY_SEARCH_ENGINE,
-            'url' => 'https://www.exalead.com/search/webmasterguide',
-        ],
-        'qwantify' => [
-            'name' => 'Qwantify',
-            'category' => self::CATEGORY_SEARCH_ENGINE,
-            'url' => 'https://www.qwant.com/',
-        ],
-        'applebot' => [
-            'name' => 'Applebot',
-            'category' => self::CATEGORY_SEARCH_ENGINE,
-            'url' => 'https://support.apple.com/en-us/HT204683',
-        ],
-
-        // AI Crawlers
-        'gptbot' => [
-            'name' => 'GPTBot',
-            'category' => self::CATEGORY_AI_CRAWLER,
-            'url' => 'https://platform.openai.com/docs/gptbot',
-        ],
-        'chatgpt-user' => [
-            'name' => 'ChatGPT User',
-            'category' => self::CATEGORY_AI_CRAWLER,
-            'url' => 'https://platform.openai.com/docs/plugins/bot',
-        ],
-        'oai-searchbot' => [
-            'name' => 'OAI-SearchBot',
-            'category' => self::CATEGORY_AI_CRAWLER,
-            'url' => 'https://platform.openai.com/',
-        ],
-        'claudebot' => [
-            'name' => 'ClaudeBot',
-            'category' => self::CATEGORY_AI_CRAWLER,
-            'url' => 'https://www.anthropic.com/',
-        ],
-        'claude-web' => [
-            'name' => 'Claude-Web',
-            'category' => self::CATEGORY_AI_CRAWLER,
-            'url' => 'https://www.anthropic.com/',
-        ],
-        'anthropic-ai' => [
-            'name' => 'Anthropic-AI',
-            'category' => self::CATEGORY_AI_CRAWLER,
-            'url' => 'https://www.anthropic.com/',
-        ],
-        'perplexitybot' => [
-            'name' => 'PerplexityBot',
-            'category' => self::CATEGORY_AI_CRAWLER,
-            'url' => 'https://www.perplexity.ai/',
-        ],
-        'ccbot' => [
-            'name' => 'CCBot',
-            'category' => self::CATEGORY_AI_CRAWLER,
-            'url' => 'https://commoncrawl.org/ccbot',
-        ],
-        'cohere-ai' => [
-            'name' => 'Cohere-AI',
-            'category' => self::CATEGORY_AI_CRAWLER,
-            'url' => 'https://cohere.ai/',
-        ],
-        'google-extended' => [
-            'name' => 'Google-Extended',
-            'category' => self::CATEGORY_AI_CRAWLER,
-            'url' => 'https://developers.google.com/search/docs/crawling-indexing/overview-google-crawlers',
-        ],
-        'meta-externalagent' => [
-            'name' => 'Meta-ExternalAgent',
-            'category' => self::CATEGORY_AI_CRAWLER,
-            'url' => 'https://developers.facebook.com/',
-        ],
-        'amazonbot' => [
-            'name' => 'Amazonbot',
-            'category' => self::CATEGORY_AI_CRAWLER,
-            'url' => 'https://developer.amazon.com/amazonbot',
-        ],
-
-        // Social Media
-        'twitterbot' => [
-            'name' => 'Twitterbot',
-            'category' => self::CATEGORY_SOCIAL,
-            'url' => 'https://developer.twitter.com/en/docs/twitter-for-websites/cards/guides/getting-started',
-        ],
-        'facebookexternalhit' => [
-            'name' => 'Facebook External Hit',
-            'category' => self::CATEGORY_SOCIAL,
-            'url' => 'https://developers.facebook.com/docs/sharing/webmasters/crawler',
-        ],
-        'facebot' => [
-            'name' => 'Facebot',
-            'category' => self::CATEGORY_SOCIAL,
-            'url' => 'https://developers.facebook.com/',
-        ],
-        'linkedinbot' => [
-            'name' => 'LinkedInBot',
-            'category' => self::CATEGORY_SOCIAL,
-            'url' => 'https://www.linkedin.com/',
-        ],
-        'pinterestbot' => [
-            'name' => 'Pinterestbot',
-            'category' => self::CATEGORY_SOCIAL,
-            'url' => 'https://www.pinterest.com/',
-        ],
-        'slackbot' => [
-            'name' => 'Slackbot',
-            'category' => self::CATEGORY_SOCIAL,
-            'url' => 'https://api.slack.com/robots',
-        ],
-        'telegrambot' => [
-            'name' => 'TelegramBot',
-            'category' => self::CATEGORY_SOCIAL,
-            'url' => 'https://telegram.org/',
-        ],
-        'whatsapp' => [
-            'name' => 'WhatsApp',
-            'category' => self::CATEGORY_SOCIAL,
-            'url' => 'https://www.whatsapp.com/',
-        ],
-        'discordbot' => [
-            'name' => 'Discordbot',
-            'category' => self::CATEGORY_SOCIAL,
-            'url' => 'https://discord.com/',
-        ],
-        'redditbot' => [
-            'name' => 'Redditbot',
-            'category' => self::CATEGORY_SOCIAL,
-            'url' => 'https://www.reddit.com/',
-        ],
-
-        // Monitoring & Uptime
-        'pingdom' => [
-            'name' => 'Pingdom',
-            'category' => self::CATEGORY_MONITORING,
-            'url' => 'https://www.pingdom.com/',
-        ],
-        'uptimerobot' => [
-            'name' => 'UptimeRobot',
-            'category' => self::CATEGORY_MONITORING,
-            'url' => 'https://uptimerobot.com/',
-        ],
-        'newrelicpinger' => [
-            'name' => 'NewRelicPinger',
-            'category' => self::CATEGORY_MONITORING,
-            'url' => 'https://newrelic.com/',
-        ],
-        'datadogsynthetics' => [
-            'name' => 'DatadogSynthetics',
-            'category' => self::CATEGORY_MONITORING,
-            'url' => 'https://www.datadoghq.com/',
-        ],
-        'statuscake' => [
-            'name' => 'StatusCake',
-            'category' => self::CATEGORY_MONITORING,
-            'url' => 'https://www.statuscake.com/',
-        ],
-        'site24x7' => [
-            'name' => 'Site24x7',
-            'category' => self::CATEGORY_MONITORING,
-            'url' => 'https://www.site24x7.com/',
-        ],
-        'gtmetrix' => [
-            'name' => 'GTmetrix',
-            'category' => self::CATEGORY_MONITORING,
-            'url' => 'https://gtmetrix.com/',
-        ],
-        'pagespeed' => [
-            'name' => 'PageSpeed',
-            'category' => self::CATEGORY_MONITORING,
-            'url' => 'https://pagespeed.web.dev/',
-        ],
-
-        // SEO Tools
-        'semrushbot' => [
-            'name' => 'SemrushBot',
-            'category' => self::CATEGORY_SEO,
-            'url' => 'https://www.semrush.com/bot/',
-        ],
-        'ahrefsbot' => [
-            'name' => 'AhrefsBot',
-            'category' => self::CATEGORY_SEO,
-            'url' => 'https://ahrefs.com/robot',
-        ],
-        'mj12bot' => [
-            'name' => 'MJ12bot (Majestic)',
-            'category' => self::CATEGORY_SEO,
-            'url' => 'https://majestic.com/reports/majestic-bot',
-        ],
-        'dotbot' => [
-            'name' => 'DotBot (Moz)',
-            'category' => self::CATEGORY_SEO,
-            'url' => 'https://moz.com/help/moz-procedures/crawlers/dotbot',
-        ],
-        'screaming frog' => [
-            'name' => 'Screaming Frog',
-            'category' => self::CATEGORY_SEO,
-            'url' => 'https://www.screamingfrog.co.uk/',
-        ],
-
-        // Feed Readers
-        'feedfetcher' => [
-            'name' => 'Feedfetcher-Google',
-            'category' => self::CATEGORY_FEED,
-            'url' => 'https://www.google.com/',
-        ],
-        'feedly' => [
-            'name' => 'Feedly',
-            'category' => self::CATEGORY_FEED,
-            'url' => 'https://feedly.com/',
-        ],
-        'newsblur' => [
-            'name' => 'NewsBlur',
-            'category' => self::CATEGORY_FEED,
-            'url' => 'https://newsblur.com/',
-        ],
-
-        // Archive/Research
-        'archive.org_bot' => [
-            'name' => 'Archive.org Bot',
-            'category' => self::CATEGORY_ARCHIVE,
-            'url' => 'https://archive.org/details/archive.org_bot',
-        ],
-        'ia_archiver' => [
-            'name' => 'Internet Archive',
-            'category' => self::CATEGORY_ARCHIVE,
-            'url' => 'https://archive.org/',
-        ],
-
-        // Developer Tools
-        'w3c_validator' => [
-            'name' => 'W3C Validator',
-            'category' => self::CATEGORY_DEVELOPER,
-            'url' => 'https://validator.w3.org/',
-        ],
-        'validator.nu' => [
-            'name' => 'Validator.nu',
-            'category' => self::CATEGORY_DEVELOPER,
-            'url' => 'https://validator.nu/',
-        ],
-    ];
-
-    /**
      * Identify a bot from User-Agent string
      *
      * @param string $userAgent
@@ -422,24 +153,37 @@ class GoodBotList
      */
     public function identify(string $userAgent): ?array
     {
-        if (empty($userAgent)) {
+        $agent = AgentRegistry::match($userAgent);
+        if ($agent === null) {
             return null;
         }
+        return self::fromAgent($agent);
+    }
 
-        $uaLower = strtolower($userAgent);
-
-        foreach (self::BOTS as $pattern => $info) {
-            if (strpos($uaLower, $pattern) !== false) {
-                return [
-                    'name' => $info['name'],
-                    'category' => $info['category'],
-                    'url' => $info['url'],
-                    'pattern' => $pattern,
-                ];
-            }
+    /**
+     * The plugin's view of a registry agent, or null when the agent is not a
+     * good bot here.
+     *
+     * @param array<string,mixed> $agent
+     * @return array{name:string,category:string,url:string,pattern:string,id:string,behavior:string,registry_category:string}|null
+     */
+    private static function fromAgent(array $agent): ?array
+    {
+        $category = self::PLUGIN_CATEGORY[$agent['category']] ?? null;
+        if ($category === null) {
+            return null;
         }
-
-        return null;
+        return [
+            'name' => (string) $agent['name'],
+            'category' => $category,
+            'url' => (string) $agent['website'],
+            'pattern' => (string) $agent['pattern'],
+            'id' => (string) $agent['id'],
+            // The policy vocabulary (#995): what kind of crawler this is, in
+            // the words the dashboard's per-path refusals use.
+            'behavior' => (string) ($agent['behavior'] ?? ''),
+            'registry_category' => (string) $agent['category'],
+        ];
     }
 
     /**
@@ -485,18 +229,11 @@ class GoodBotList
     public function getByCategory(string $category): array
     {
         $bots = [];
-
-        foreach (self::BOTS as $pattern => $info) {
-            if ($info['category'] === $category) {
-                $bots[] = [
-                    'name' => $info['name'],
-                    'category' => $info['category'],
-                    'url' => $info['url'],
-                    'pattern' => $pattern,
-                ];
+        foreach ($this->getAllBots() as $bot) {
+            if ($bot['category'] === $category) {
+                $bots[] = $bot;
             }
         }
-
         return $bots;
     }
 
@@ -558,16 +295,13 @@ class GoodBotList
     public function getAllBots(): array
     {
         $bots = [];
-
-        foreach (self::BOTS as $pattern => $info) {
-            $bots[] = [
-                'name' => $info['name'],
-                'category' => $info['category'],
-                'url' => $info['url'],
-                'pattern' => $pattern,
-            ];
+        foreach (AgentRegistry::all() as $agent) {
+            $agent['pattern'] = (string) ($agent['patterns'][0] ?? '');
+            $bot = self::fromAgent($agent);
+            if ($bot !== null) {
+                $bots[] = $bot;
+            }
         }
-
         return $bots;
     }
 
@@ -598,15 +332,12 @@ class GoodBotList
     public function getCategoryCounts(): array
     {
         $counts = [];
-
         foreach ($this->getCategories() as $category) {
             $counts[$category] = 0;
         }
-
-        foreach (self::BOTS as $info) {
-            $counts[$info['category']]++;
+        foreach ($this->getAllBots() as $bot) {
+            $counts[$bot['category']]++;
         }
-
         return $counts;
     }
 
@@ -631,7 +362,7 @@ class GoodBotList
             ];
         }
 
-        $pattern = $bot['pattern'];
+        $pattern = $bot['id'];
 
         // Check if this bot requires IP verification
         if (!isset(self::VERIFIABLE_BOTS[$pattern])) {
@@ -782,30 +513,40 @@ class GoodBotList
             'verified' => $verification['verified'],
             'verified_hostname' => $verification['hostname'],
             'verification_reason' => $verification['reason'],
-            'requires_verification' => isset(self::VERIFIABLE_BOTS[$bot['pattern']]),
+            'requires_verification' => isset(self::VERIFIABLE_BOTS[$bot['id']]),
         ]);
     }
 
     /**
-     * Check if a specific bot pattern requires IP verification
+     * Check if a bot requires IP verification.
      *
-     * @param string $pattern The bot pattern
+     * Takes the registry agent id, or a User-Agent pattern for callers that
+     * still hold the matched pattern from identify().
+     *
+     * @param string $key The registry id or the matched pattern
      * @return bool
      */
-    public function requiresVerification(string $pattern): bool
+    public function requiresVerification(string $key): bool
     {
-        return isset(self::VERIFIABLE_BOTS[$pattern]);
+        return $this->getExpectedHostnames($key) !== null;
     }
 
     /**
-     * Get the expected hostname suffixes for a bot pattern
+     * Get the expected hostname suffixes for a bot.
      *
-     * @param string $pattern The bot pattern
+     * @param string $key The registry id or the matched pattern
      * @return array|null List of expected suffixes, or null if verification not required
      */
-    public function getExpectedHostnames(string $pattern): ?array
+    public function getExpectedHostnames(string $key): ?array
     {
-        return self::VERIFIABLE_BOTS[$pattern] ?? null;
+        if (isset(self::VERIFIABLE_BOTS[$key])) {
+            return self::VERIFIABLE_BOTS[$key];
+        }
+        $agent = AgentRegistry::match($key);
+        if ($agent !== null && isset(self::VERIFIABLE_BOTS[$agent['id']])) {
+            return self::VERIFIABLE_BOTS[$agent['id']];
+        }
+        return null;
     }
 
     /**

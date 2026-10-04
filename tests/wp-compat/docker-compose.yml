@@ -1,0 +1,50 @@
+# Throwaway WordPress site for "Tested up to" verification. See README.md.
+#   WP_IMAGE=wordpress:7.1-php8.3-apache docker compose up -d db wp
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_DATABASE: wp
+      MARIADB_USER: wp
+      MARIADB_PASSWORD: wp
+      MARIADB_ROOT_PASSWORD: root
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  wp:
+    image: ${WP_IMAGE:-wordpress:7.1-php8.3-apache}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${WP_PORT:-8071}:80"
+    environment: &wpenv
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wp
+      WORDPRESS_DB_PASSWORD: wp
+      WORDPRESS_DB_NAME: wp
+      WORDPRESS_DEBUG: 1
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_DEBUG_LOG', true);
+        define('WP_DEBUG_DISPLAY', false);
+        define('SCRIPT_DEBUG', true);
+        define('WP_HOME', 'http://localhost:${WP_PORT:-8071}');
+        define('WP_SITEURL', 'http://localhost:${WP_PORT:-8071}');
+    volumes: &wpvol
+      - wp_data:/var/www/html
+      # The working tree is the plugin; edits are live inside the container.
+      - ../..:/var/www/html/wp-content/plugins/webdecoy
+  cli:
+    image: ${WP_CLI_IMAGE:-wordpress:cli-php8.3}
+    depends_on:
+      db:
+        condition: service_healthy
+    environment: *wpenv
+    volumes: *wpvol
+    user: "33:33"
+    entrypoint: ["wp"]
+    command: ["--info"]
+volumes:
+  wp_data:

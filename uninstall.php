@@ -32,6 +32,7 @@ if (file_exists($activator_file)) {
         $wpdb->prefix . 'webdecoy_detections',
         $wpdb->prefix . 'webdecoy_rate_limits',
         $wpdb->prefix . 'webdecoy_checkout_attempts',
+        $wpdb->prefix . 'webdecoy_ai_referrals',
     ];
 
     foreach ($tables as $table) {
@@ -47,6 +48,7 @@ if (file_exists($activator_file)) {
     delete_option('webdecoy_api_last_error');
     delete_option('webdecoy_encryption_key');
     delete_option('webdecoy_entitlements');
+    delete_option('webdecoy_cloud_policy');
     delete_option('webdecoy_actor_feed_cursor');
     delete_option('webdecoy_critical_moment_last');
 
@@ -55,6 +57,7 @@ if (file_exists($activator_file)) {
     wp_clear_scheduled_hook('webdecoy_sync_blocked_ips');
     wp_clear_scheduled_hook('webdecoy_sync_entitlements');
     wp_clear_scheduled_hook('webdecoy_sync_actor_feed');
+    wp_clear_scheduled_hook('webdecoy_flush_ai_referrals');
 }
 
 // Delete all transients with webdecoy_ prefix
@@ -82,6 +85,7 @@ if (is_multisite()) {
             $wpdb->prefix . 'webdecoy_detections',
             $wpdb->prefix . 'webdecoy_rate_limits',
             $wpdb->prefix . 'webdecoy_checkout_attempts',
+            $wpdb->prefix . 'webdecoy_ai_referrals',
         ];
 
         foreach ($tables as $table) {
@@ -105,6 +109,7 @@ if (is_multisite()) {
         wp_clear_scheduled_hook('webdecoy_sync_blocked_ips');
         wp_clear_scheduled_hook('webdecoy_sync_entitlements');
         wp_clear_scheduled_hook('webdecoy_sync_actor_feed');
+    wp_clear_scheduled_hook('webdecoy_flush_ai_referrals');
 
         // Delete transients for this site
         $wpdb->query(

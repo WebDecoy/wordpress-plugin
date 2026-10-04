@@ -174,11 +174,11 @@ class WebDecoy_Critical_Moment
                 $n = max(1, $days);
                 return [
                     'message'   => sprintf(
-                        /* translators: %d: number of days since first seen on the network */
                         // Must not claim Pro would have BLOCKED this. Since 2.3.2 the
                         // cross-site feed is advisory and writes nothing to the block
                         // list, on any plan — see #476. Sell the history, not a block
                         // that does not happen.
+                        /* translators: %d: number of days since first seen on the network */
                         _n(
                             'This attacker was first seen on the WebDecoy network %d day ago — Pro shows you the full cross-site history for this actor.',
                             'This attacker was first seen on the WebDecoy network %d days ago — Pro shows you the full cross-site history for this actor.',

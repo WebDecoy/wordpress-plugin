@@ -53,7 +53,9 @@ $recent_flags = $wpdb->get_results($wpdb->prepare(
 
 $signal_counts = [];
 foreach ($recent_flags as $row) {
-    $flags_data = json_decode($row['flags'], true);
+    // flags is TEXT DEFAULT NULL; cast so a null row never reaches json_decode()
+    // (a deprecation on PHP 8.1+). '' decodes to null and is skipped just below.
+    $flags_data = json_decode((string) ($row['flags'] ?? ''), true);
     if (!is_array($flags_data)) {
         continue;
     }

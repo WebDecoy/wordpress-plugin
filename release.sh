@@ -46,6 +46,14 @@ echo "📝 Updating CDN metadata files..."
 CDN_DIR="./cdn-files"
 mkdir -p "$CDN_DIR"
 
+# "tested" mirrors readme.txt's "Tested up to:" so the self-hosted update
+# channel never lags the WordPress.org listing (it sat at 6.7 for a year).
+TESTED_UP_TO=$(grep -E '^Tested up to:' readme.txt | head -1 | sed -E 's/^Tested up to:[[:space:]]*//' | tr -d '[:space:]')
+if [ -z "${TESTED_UP_TO}" ]; then
+    echo "❌ Could not read 'Tested up to:' from readme.txt"
+    exit 1
+fi
+
 # Update update-info.json
 # NOTE: "sha256" MUST be present and match the ZIP, or self-hosted auto-updates
 # will be rejected by the plugin's upgrader_pre_download integrity check.
@@ -55,7 +63,7 @@ cat > "${CDN_DIR}/update-info.json" << EOF
     "download_url": "https://cdn.webdecoy.com/wordpress/webdecoy-${VERSION}.zip",
     "sha256": "${SHA256}",
     "details_url": "https://webdecoy.com/wordpress/changelog",
-    "tested": "6.7",
+    "tested": "${TESTED_UP_TO}",
     "requires_php": "7.4",
     "icons": {
         "1x": "https://cdn.webdecoy.com/wordpress/assets/icon-128x128.png",

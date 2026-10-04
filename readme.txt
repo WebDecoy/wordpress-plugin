@@ -3,8 +3,8 @@ Contributors: webdecoy1
 Donate link: https://webdecoy.com
 Tags: bot detection, security, spam protection, woocommerce, ai bots
 Requires at least: 6.1
-Tested up to: 7.0
-Stable tag: 2.7.1
+Tested up to: 7.1
+Stable tag: 2.10.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -257,6 +257,7 @@ What is sent, and when:
 * When you click "Connect to WebDecoy Cloud": your browser is redirected to app.webdecoy.com to approve the connection (carrying your site URL, site name, a one-time nonce, and your monthly-report preference). After you approve, the plugin exchanges a one-time token with api.webdecoy.com (sending the token, your site URL and the nonce) to receive the site's API keys. Cancelling sends nothing further.
 * After connecting: the plugin fetches your plan entitlements from ingest.webdecoy.com (authenticated with your API key) twice daily.
 * When a detection or rule violation occurs: the visitor's IP address, user agent, request path, threat score and detection flags are sent to ingest.webdecoy.com so the event appears in your cloud dashboard.
+* When a visitor arrives from an AI product such as ChatGPT, Claude, Perplexity or Gemini: the plugin adds one to a count for that AI product and the landing page's path, and sends those counts to ingest.webdecoy.com every fifteen minutes so they appear on your AI Traffic page. Only the AI product's name, the path and the count are sent; nothing about the visitor. Turn it off with the `webdecoy_count_ai_referrals` filter.
 * When you use an IP-reputation filter rule (e.g. ip.abuse_score, ip.tor): the visitor's IP address is sent to ingest.webdecoy.com to look up reputation/geo data.
 * When validating your key or forwarding a WooCommerce checkout detection: your API key, organization ID and the detection data above are sent to api.webdecoy.com / ingest.webdecoy.com.
 
@@ -283,6 +284,46 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 7. WooCommerce checkout protection settings
 
 == Changelog ==
+
+= 2.10.3 =
+* Fixed: rule violations reported to WebDecoy Cloud could be sent twice when two page views finished at the same moment, and were discarded if WebDecoy was briefly unavailable. They are now sent once and kept until WebDecoy is back.
+* Fixed: AI referral counts refused because WebDecoy was busy are now kept and sent later instead of being dropped.
+
+= 2.10.2 =
+* Fixed: when WebDecoy Cloud was slow or unreachable, pages a bot scored 40 or higher on could take up to 20 seconds to load while the plugin waited to report the detection. Detections are now sent after the page has been delivered, and the plugin pauses cloud calls for a minute when WebDecoy is unavailable. Blocking and the local log never wait on the cloud.
+
+= 2.10.1 =
+* Fixed: 2.10.0 stopped sites loading with a fatal error, "Class WebDecoy_AI_Referrals not found". Updating to 2.10.1 fixes it.
+
+= 2.10.0 =
+* Added: when connected to WebDecoy Cloud, the plugin counts visits that AI products such as ChatGPT, Claude, Perplexity and Gemini send to your site, so they appear on your AI Traffic page. Only the AI product's name, the landing page's path and a count are sent, every fifteen minutes; nothing about the visitor. Pages served from a full-page cache are not counted. Turn it off with the webdecoy_count_ai_referrals filter.
+
+= 2.9.1 =
+* Fixed: AI search crawlers and assistants that fetch a page for a person are no longer identified as AI training crawlers. Claude-User, Claude-SearchBot and MistralAI-User were matched as training crawlers, and PerplexityBot is now classified as the search crawler Perplexity documents it as. A cloud path rule that refuses AI training crawlers no longer refuses them.
+* Changed: with Block AI crawlers on, PerplexityBot and Claude-SearchBot are now let through like other AI search crawlers (OAI-SearchBot already was). Assistants and agents fetching for a person, such as Claude-User and ChatGPT-User, are still refused.
+* Added: Perplexity-User, MistralAI-User, Meta-ExternalFetcher and Claude-SearchBot are recognised (186 crawlers).
+
+= 2.9.0 =
+* Added: per-path crawler rules set in WebDecoy Cloud now apply in WordPress too. Connect your site, protect a path in the WebDecoy dashboard and refuse, say, AI training crawlers on it, and this plugin refuses them there as well, by the same rule the WebDecoy edge sensor uses. Watched paths and sites in Monitor count what would have been refused. Cloud rules can only refuse, never allow; Block AI crawlers and the custom allowlist keep working as before.
+* Changed: known crawlers are identified from the same registry the WebDecoy dashboard uses (182 crawlers, was 54), so a crawler is named the same thing here and in your reports. With Block AI crawlers on, AI agents and assistants that browse for a person (ChatGPT-User, Claude-User and others) are refused along with training crawlers; add a specific one to the custom allowlist to let it through.
+
+= 2.8.3 =
+* Fixed: Block AI crawlers now refuses a recognised AI crawler outright instead of leaving the outcome to heuristic scoring. Before this, a well-behaved AI crawler sending ordinary headers could stay under the block threshold. If you use this setting, please update. The custom allowlist still wins, and monitor mode still only counts what it would have blocked.
+
+= 2.8.2 =
+* Internal: release builds are now identical from any machine, and the copyright holder is named as WebDecoy LLC. No functional changes.
+
+= 2.8.1 =
+* Changed: the notice after Connect to Cloud no longer claims cloud features are active before this site has reported. Its link opens the WebDecoy page that watches this site for its first report.
+* Changed: tested up to WordPress 7.1. The 7.1 changes that broke other plugins (the always-iframed post editor, the post list table row-header move, jQuery UI 1.14.2) touch nothing this plugin does.
+* Fixed: a PHP warning logged on every save of the settings page ("Undefined array key min_threat_level"). Harmless, but noisy in debug.log.
+* Changed: tested up to WooCommerce 11.0, and the plugin now declares Cart & Checkout Blocks compatibility, so WooCommerce stops listing it as "uncertain".
+* Fixed: the WooCommerce honeytoken coupon was silently off on sites that had never saved the WebDecoy settings page, even though the setting showed as on.
+* Fixed: a PHP deprecation notice logged by the Detections and Statistics pages on PHP 8.1+ for detection rows with no flags.
+* Fixed: saving the settings page before WooCommerce was installed no longer silently turns checkout protection and the honeytoken coupon off.
+
+= 2.8.0 =
+* Changed: the plugin's cloud calls now go to in.webdecoy.com, WebDecoy's DDoS-protected ingest address. Same service, sturdier front door. If your firewall allows outbound requests by hostname, allow in.webdecoy.com. Sites that set a custom API URL are unaffected.
 
 = 2.7.1 =
 * Removed: the canary trip email introduced in 2.7.0. The canary link sits on every public page, so busy sites would receive an email every hour, forever. Detections belong on the Detections page, not in your inbox. Everything else from 2.7.0 stays: the canary URL in settings, the trip-it-yourself prompt, and the Detections page recording every hit.

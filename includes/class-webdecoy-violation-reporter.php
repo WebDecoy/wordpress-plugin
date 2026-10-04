@@ -31,7 +31,7 @@ if (!defined('ABSPATH')) {
 class WebDecoy_Violation_Reporter
 {
     /** Ingest batch endpoint. */
-    private const ENDPOINT = 'https://ingest.webdecoy.com/api/v1/sdk/violations/batch';
+    private const ENDPOINT = 'https://in.webdecoy.com/api/v1/sdk/violations/batch';
 
     /** Max events per POST body, matching node's batch size. */
     private const BATCH_SIZE = 100;
@@ -41,6 +41,17 @@ class WebDecoy_Violation_Reporter
 
     /** Hard cap on spooled rows; oldest beyond this are discarded. */
     private const MAX_QUEUE = 1000;
+
+    /**
+     * Option used as a drain lock (WebDecoy/app#1245). Every request that
+     * recorded a violation drains at shutdown, and the cron drains too; two
+     * drains at once read the same oldest rows and sent them twice.
+     * add_option() is atomic on the option name, so only one holder wins.
+     */
+    private const DRAIN_LOCK = 'webdecoy_violation_drain_lock';
+
+    /** A lock older than this belonged to a request that died; it is taken over. */
+    private const DRAIN_LOCK_TTL = 60;
 
     /** @var WebDecoy_Violation_Reporter|null */
     private static $instance = null;
@@ -134,7 +145,39 @@ class WebDecoy_Violation_Reporter
         if ($apiKey === '' || !function_exists('wp_remote_post')) {
             return;
         }
+        // While WebDecoy is refusing work, keep the spool (it is capped) rather
+        // than spend its rows' attempts on requests that cannot succeed.
+        if (class_exists('WebDecoy_Detection_Sender') && WebDecoy_Detection_Sender::backing_off()) {
+            return;
+        }
+        if (!self::acquire_drain_lock()) {
+            return;
+        }
+        try {
+            self::drain_locked($apiKey);
+        } finally {
+            delete_option(self::DRAIN_LOCK);
+        }
+    }
 
+    /**
+     * Take the drain lock, or take over one left by a request that died.
+     */
+    private static function acquire_drain_lock(): bool
+    {
+        if (add_option(self::DRAIN_LOCK, (string) time(), '', 'no')) {
+            return true;
+        }
+        $held = (int) get_option(self::DRAIN_LOCK, 0);
+        if ($held > 0 && time() - $held < self::DRAIN_LOCK_TTL) {
+            return false;
+        }
+        delete_option(self::DRAIN_LOCK);
+        return add_option(self::DRAIN_LOCK, (string) time(), '', 'no');
+    }
+
+    private static function drain_locked(string $apiKey): void
+    {
         global $wpdb;
         $table = $wpdb->prefix . 'webdecoy_violation_queue';
 
@@ -171,10 +214,15 @@ class WebDecoy_Violation_Reporter
             return;
         }
 
-        $ok = self::send($apiKey, $events);
+        $result = self::send($apiKey, $events);
 
         $idList = implode(',', array_map('intval', $ids));
-        if ($ok) {
+        if ($result === 'refused') {
+            // Ingest is unavailable, not the batch: keep its attempts for when
+            // it is back. The shared pause stops further drains meanwhile.
+            return;
+        }
+        if ($result === 'ok') {
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $wpdb->query("DELETE FROM {$table} WHERE id IN ({$idList})");
         } else {
@@ -186,11 +234,13 @@ class WebDecoy_Violation_Reporter
     }
 
     /**
-     * Blocking POST of a batch to ingest. Returns true on a 2xx response.
+     * Blocking POST of a batch to ingest: 'ok' on 2xx, 'refused' when ingest is
+     * unavailable (no answer, 429, 5xx; this also pauses cloud calls), and
+     * 'rejected' for any other answer.
      *
      * @param array<int,array<string,mixed>> $events
      */
-    private static function send(string $apiKey, array $events): bool
+    private static function send(string $apiKey, array $events): string
     {
         $response = wp_remote_post(self::ENDPOINT, [
             'timeout' => 3,
@@ -202,10 +252,13 @@ class WebDecoy_Violation_Reporter
             'body' => wp_json_encode(['events' => $events]),
         ]);
 
-        if (is_wp_error($response)) {
-            return false;
+        $code = is_wp_error($response) ? 0 : (int) wp_remote_retrieve_response_code($response);
+        if ($code === 0 || $code === 429 || $code >= 500) {
+            if (class_exists('WebDecoy_Detection_Sender')) {
+                WebDecoy_Detection_Sender::note_refusal();
+            }
+            return 'refused';
         }
-        $code = (int) wp_remote_retrieve_response_code($response);
-        return $code >= 200 && $code < 300;
+        return ($code >= 200 && $code < 300) ? 'ok' : 'rejected';
     }
 }

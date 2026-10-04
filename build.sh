@@ -57,7 +57,7 @@ rsync -a \
     `# the build and, from there, the WordPress.org SVN trunk. Nothing the plugin` \
     `# ships lives in a dotfile, so exclude the class rather than chasing members.` \
     --exclude='/.*' \
-    --exclude='/vendor' --exclude='/sdk/vendor' \
+    --exclude='/vendor' --exclude='/sdk/vendor' --exclude='/docs' \
     --exclude='node_modules' --exclude='/tests' \
     --exclude='/composer.json' --exclude='/composer.lock' \
     --exclude='/phpcs.xml.dist' --exclude='/phpstan.neon' \
@@ -68,15 +68,13 @@ echo "Setting version to ${VERSION}..."
 sed -i '' "s/Version: .*/Version: ${VERSION}/" "${BUILD_DIR}/${PLUGIN_SLUG}/webdecoy.php"
 sed -i '' "s/define('WEBDECOY_VERSION', '.*');/define('WEBDECOY_VERSION', '${VERSION}');/" "${BUILD_DIR}/${PLUGIN_SLUG}/webdecoy.php"
 
-# Install Composer dependencies (production only)
-echo "Installing Composer dependencies..."
-cd "${BUILD_DIR}/${PLUGIN_SLUG}/sdk"
-if command -v composer &> /dev/null; then
-    composer install --no-dev --optimize-autoloader --no-interaction 2>/dev/null || {
-        echo "Composer install failed or no dependencies - continuing..."
-    }
-fi
-cd - > /dev/null
+# No Composer step. The bundled SDK declares no PHP dependencies (only
+# ext-curl and ext-json), so `composer install` here produced nothing but a
+# vendor/ autoloader, and only on machines that had composer on PATH: 2.8.0
+# shipped without it, a build on a machine with composer would have shipped
+# it, and the plugin's own class loading works either way. A build that
+# differs by which laptop ran it is not a build; the autoloader also carries
+# InstalledVersions.php, which collides with other plugins' Composer trees.
 
 # Remove development files
 echo "Cleaning development files..."

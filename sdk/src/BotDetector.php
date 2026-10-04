@@ -28,6 +28,9 @@ class BotDetector
     private const SCORE_RATE_EXCEEDED = 25;
     private const SCORE_HONEYPOT = 60;
     private const SCORE_FAKE_BOT = 80; // Claiming to be a bot but IP doesn't verify
+    // The owner's own instruction to block. The top of the scale, so it clears
+    // min_score_to_block whatever the site has set it to.
+    private const SCORE_POLICY_DENIED = 100;
 
     // Path-based scoring (MITRE ATT&CK aligned)
     private const SCORE_PATH_CONFIG_FILE = 30;      // TA0006 Credential Access - config files
@@ -147,6 +150,10 @@ class BotDetector
      *   - block_ai_crawlers: bool (default: false)
      *   - custom_allowlist: array of bot names (default: [])
      *   - verify_bot_ips: bool (default: true) - Verify good bots via reverse DNS
+     *   - cloud_policy: array|null (default: null) - The site's WebDecoy Cloud
+     *     enforcement config (mode, protected paths, per-path crawler refusals),
+     *     as served by the clearance config endpoint. Null when the site is
+     *     not connected or the cached copy is too old to trust.
      */
     public function __construct(array $options = [])
     {
@@ -158,6 +165,7 @@ class BotDetector
             'custom_allowlist' => [],
             'verify_bot_ips' => true,
             'trusted_proxies' => [],
+            'cloud_policy' => null,
         ], $options);
 
         $this->goodBotList = new GoodBotList();
@@ -193,6 +201,54 @@ class BotDetector
         if ($botInfo !== null) {
             $result->setBotName($botInfo['name']);
             $result->setBotCategory($botInfo['category']);
+
+            // A crawler the owner has chosen to block is refused here, as an
+            // explicit decision, before any heuristic scoring.
+            //
+            // The setting used to work by withdrawing the crawler's good-bot
+            // pass and letting scoring decide. Scoring does not add points for a
+            // recognised bot, so a well-behaved AI crawler could finish below
+            // the block threshold. An owner's instruction should not depend on
+            // how the request happens to score.
+            //
+            // The User-Agent claim is enough to act on: refusing a request
+            // because it says it is GPTBot affects nobody who is not claiming
+            // to be GPTBot.
+            if ($this->deniedByPolicy($botInfo)) {
+                $result->setIsGoodBot(false);
+                $result->setScore(self::SCORE_POLICY_DENIED);
+                $result->setScoreBreakdown(['ai_crawler_blocked' => self::SCORE_POLICY_DENIED]);
+                $result->setConfidence(1.0);
+                $result->addFlag('ai_crawler_blocked');
+                $result->addMetadata('bot_info', $botInfo);
+                $result->addMetadata('denied_by', 'block_ai_crawlers');
+                return $result;
+            }
+
+            // A per-path crawler refusal set in WebDecoy Cloud (#995): the same
+            // policy the dashboard shows and the edge sensor applies, resolved
+            // by the same rule. It acts on the User-Agent claim, like the
+            // setting above, and for the same reason. The custom allowlist does
+            // not override it: a local exemption that opened a path the owner
+            // protected in the cloud would be a policy granting access by
+            // accident, which is the one thing a policy must not do.
+            $refusal = $this->cloudRefusal($botInfo, (string) ($signals['request_path'] ?? ''));
+            if ($refusal !== null) {
+                $result->addMetadata('bot_info', $botInfo);
+                $result->addMetadata('cloud_policy', $refusal);
+                if ($refusal['mode'] === 'enforce') {
+                    $result->setIsGoodBot(false);
+                    $result->setScore(self::SCORE_POLICY_DENIED);
+                    $result->setScoreBreakdown(['crawler_refused' => self::SCORE_POLICY_DENIED]);
+                    $result->setConfidence(1.0);
+                    $result->addFlag('crawler_refused');
+                    $result->addMetadata('denied_by', 'cloud_policy');
+                    return $result;
+                }
+                // Monitoring: counted, not applied. The crawler continues as
+                // the good bot it is, carrying what would have happened.
+                $result->addFlag('crawler_would_be_refused');
+            }
 
             // Check if this bot should be allowed
             if ($this->shouldAllowBot($botInfo)) {
@@ -514,6 +570,68 @@ class BotDetector
     public function identifyBot(string $userAgent): ?array
     {
         return $this->goodBotList->identify($userAgent);
+    }
+
+    /**
+     * Whether the owner's settings say to block this recognised bot outright.
+     *
+     * Only the AI crawler category has a "block" setting. Turning OFF "allow
+     * search engines" or "allow social bots" withdraws a free pass and lets the
+     * heuristics judge the request; it is not an instruction to block. The
+     * custom allowlist wins, as it does in shouldAllowBot().
+     *
+     * @param array $botInfo Bot information
+     * @return bool
+     */
+    private function deniedByPolicy(array $botInfo): bool
+    {
+        if (in_array($botInfo['name'] ?? '', $this->options['custom_allowlist'], true)) {
+            return false;
+        }
+        return ($botInfo['category'] ?? '') === GoodBotList::CATEGORY_AI_CRAWLER
+            && !empty($this->options['block_ai_crawlers']);
+    }
+
+    /**
+     * What the cloud policy says about this crawler on this path, or null when
+     * it says nothing: no policy, a path no protected pattern covers, a crawler
+     * of a kind the covering paths do not refuse, or a crawler the registry
+     * does not place in a kind at all.
+     *
+     * The returned mode is the deciding mode from route resolution: 'enforce'
+     * when the site enforces and a refusing path decides, 'monitor' when the
+     * site monitors or only watched paths cover the request.
+     *
+     * @param array $botInfo Bot information from identifyBot()
+     * @param string $requestPath The request URI (query string is ignored)
+     * @return array{mode:string,pattern:string,behavior:string,assurance:string}|null
+     */
+    public function cloudRefusal(array $botInfo, string $requestPath): ?array
+    {
+        $policy = $this->options['cloud_policy'];
+        if (!is_array($policy)) {
+            return null;
+        }
+        $behavior = (string) ($botInfo['behavior'] ?? '');
+        if ($behavior === '') {
+            return null;
+        }
+        $path = (string) (parse_url($requestPath, PHP_URL_PATH) ?: '/');
+        $siteMode = (string) ($policy['mode'] ?? 'monitor');
+        $resolution = RouteResolution::resolve($path, RouteResolution::rulesFromConfig($policy), $siteMode);
+        if ($resolution['deciding_mode'] === '' || !in_array($behavior, $resolution['refused_behaviors'], true)) {
+            return null;
+        }
+        return [
+            'mode' => $resolution['deciding_mode'],
+            'pattern' => $resolution['attributed'],
+            'behavior' => $behavior,
+            // What this plugin can say about the identity it acted on. It
+            // reads the User-Agent; it did not verify the source address
+            // before refusing, and does not need to: refusing a claim harms
+            // nobody who is not making it.
+            'assurance' => 'claimed',
+        ];
     }
 
     /**

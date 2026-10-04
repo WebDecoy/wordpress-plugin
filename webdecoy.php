@@ -3,7 +3,7 @@
  * Plugin Name: WebDecoy Bot Detection
  * Plugin URI: https://webdecoy.com/wordpress
  * Description: Protect your WordPress site from bots, spam, and carding attacks with WebDecoy's advanced threat detection.
- * Version: 2.7.1
+ * Version: 2.10.3
  * Requires at least: 6.1
  * Requires PHP: 7.4
  * Author: WebDecoy
@@ -13,7 +13,7 @@
  * Text Domain: webdecoy
  * Domain Path: /languages
  * WC requires at least: 5.0
- * WC tested up to: 9.4
+ * WC tested up to: 11.0
  *
  * @package WebDecoy
  */
@@ -41,7 +41,7 @@ if (!function_exists('str_starts_with')) {
 }
 
 // Plugin constants
-define('WEBDECOY_VERSION', '2.7.1');
+define('WEBDECOY_VERSION', '2.10.3');
 define('WEBDECOY_PLUGIN_FILE', __FILE__);
 define('WEBDECOY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WEBDECOY_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -69,7 +69,10 @@ foreach ($sdk_paths as $sdk_path) {
         require_once $sdk_path . 'src/Exception/WebDecoyException.php';
         require_once $sdk_path . 'src/Detection.php';
         require_once $sdk_path . 'src/DetectionResult.php';
+        require_once $sdk_path . 'src/AgentRegistry.php';
+        require_once $sdk_path . 'src/LlmReferral.php';
         require_once $sdk_path . 'src/GoodBotList.php';
+        require_once $sdk_path . 'src/RouteResolution.php';
         require_once $sdk_path . 'src/SignalCollector.php';
         require_once $sdk_path . 'src/BotDetector.php';
         require_once $sdk_path . 'src/Client.php';
@@ -199,7 +202,12 @@ final class WebDecoy_Plugin
             // is safe to expose in page markup. Enables silent wd_clearance
             // cookie minting so tripwire/decoy hits bind to a device fingerprint.
             'site_key' => '',
-            // Optional scope passed to the clearance client (advanced).
+            // Passed through to the clearance client as data-scope, and it
+            // limits nothing: a clearance token is bound to the organization,
+            // and no validator reads a token's scope (WebDecoy/app #1122).
+            // Kept so a site that set it years ago keeps working unchanged.
+            // To require more on a sensitive path, set that path's
+            // Verification required level in WebDecoy.
             'clearance_scope' => '',
 
             // Cloud connection metadata, populated by the one-click connect flow
@@ -972,6 +980,11 @@ final class WebDecoy_Plugin
         // Safety-net cron drain of the violation-report spool.
         add_action('webdecoy_flush_violations', [$this, 'cron_flush_violations']);
 
+        // AI referral counting, when connected to WebDecoy Cloud: visits AI
+        // products send, as aggregate counts for the AI Traffic page. Wired on
+        // plugins_loaded because its class is loaded there by load_includes().
+        add_action('plugins_loaded', [$this, 'register_ai_referrals'], 20);
+
         // Load text domain
 
         // Declare HPOS compatibility for WooCommerce
@@ -982,12 +995,17 @@ final class WebDecoy_Plugin
     }
 
     /**
-     * Declare High-Performance Order Storage (HPOS) compatibility for WooCommerce
+     * Declare WooCommerce feature compatibility: High-Performance Order Storage
+     * and the block-based Cart & Checkout. The Store API hooks in
+     * class-webdecoy-woocommerce.php are the blocks integration; without this
+     * declaration WooCommerce lists the plugin as "uncertain" and the Checkout
+     * block editor shows a compatibility warning naming it.
      */
     public function declare_hpos_compatibility(): void
     {
         if (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class)) {
             \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('custom_order_tables', WEBDECOY_PLUGIN_FILE, true);
+            \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('cart_checkout_blocks', WEBDECOY_PLUGIN_FILE, true);
         }
     }
 
@@ -1010,6 +1028,9 @@ final class WebDecoy_Plugin
         // script-tag attributes on older versions). Also load it async.
         if ($handle === 'webdecoy-clearance') {
             $attrs = ' async data-site-key="' . esc_attr((string) $this->options['site_key']) . '"';
+            // data-scope is inert: the client sends it, the mint signs it, and
+            // no validator reads it. Emitted only so a site that set the
+            // option behaves exactly as it did before (WebDecoy/app #1122).
             $scope = (string) ($this->options['clearance_scope'] ?? '');
             if ($scope !== '') {
                 $attrs .= ' data-scope="' . esc_attr($scope) . '"';
@@ -1033,12 +1054,15 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-pow.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-behavioral-scorer.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-violation-reporter.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-detection-sender.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ai-referrals.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-honeytoken.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ip-enrichment.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-decoy-response.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-rate-limit-rule.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-wp-traps.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-cloud-connect.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-cloud-policy.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-actor-intel.php';
 
         // WP-CLI surface for agency deploy scripts: wp webdecoy status|config|
@@ -1054,6 +1078,11 @@ final class WebDecoy_Plugin
         // until the admin explicitly clicks "Connect".
         $this->cloud_connect = new WebDecoy_Cloud_Connect();
         $this->cloud_connect->register();
+
+        // The site's cloud enforcement policy (per-path crawler refusals),
+        // refreshed on the entitlements cron. Read-only, public config; makes
+        // no request unless the site is connected.
+        (new WebDecoy_Cloud_Policy())->register();
 
         // Actor feed: hourly network-block sync. Self-guards to make no external
         // request unless connected AND entitled to the actor feed (Pro+).
@@ -1189,7 +1218,8 @@ final class WebDecoy_Plugin
             // Always log detection locally
             $this->log_detection($result, $ip);
 
-            // Submit to API (fail open)
+            // Queue for WebDecoy Cloud. Sent after the response, never in
+            // front of the block decision below (WebDecoy/app#1245).
             try {
                 $this->submit_detection($result, $ip);
             } catch (\Exception $e) {
@@ -1308,6 +1338,14 @@ final class WebDecoy_Plugin
         }
 
         return new \WebDecoy\Rules\RuleEngine($rules);
+    }
+
+    /**
+     * Register AI referral counting (a no-op unless connected to WebDecoy Cloud).
+     */
+    public function register_ai_referrals(): void
+    {
+        WebDecoy_AI_Referrals::register((string) ($this->options['api_key'] ?? ''));
     }
 
     /**
@@ -1904,8 +1942,7 @@ final class WebDecoy_Plugin
             return;
         }
 
-        $client = $this->get_client();
-        if (!$client) {
+        if (empty($this->options['api_key']) || WebDecoy_Detection_Sender::backing_off()) {
             return;
         }
 
@@ -1924,7 +1961,44 @@ final class WebDecoy_Plugin
             'metadata' => $result->getMetadata(),
         ]);
 
-        $client->submitDetection($detection);
+        // Built now, while the request is in hand; sent at shutdown, after the
+        // visitor has their response (WebDecoy/app#1245).
+        WebDecoy_Detection_Sender::defer(function () use ($detection): void {
+            $client = $this->get_detection_client();
+            if (!$client) {
+                return;
+            }
+            $client->submitDetection($detection);
+            if (empty($this->options['organization_id'])) {
+                set_transient('webdecoy_detect_org_id', $client->getOrganizationId(), DAY_IN_SECONDS);
+            }
+        });
+    }
+
+    /**
+     * The client detections are sent with (WebDecoy/app#1245): a 3 second
+     * timeout, and the organization id passed in so a send is one request,
+     * not a key lookup followed by the detection.
+     */
+    private function get_detection_client(): ?\WebDecoy\Client
+    {
+        if (empty($this->options['api_key'])) {
+            return null;
+        }
+        $org = (string) ($this->options['organization_id'] ?? '');
+        if ($org === '') {
+            $org = (string) get_transient('webdecoy_detect_org_id');
+        }
+        try {
+            return new \WebDecoy\Client([
+                'api_key' => $this->options['api_key'],
+                'organization_id' => $org !== '' ? $org : null,
+                'timeout' => 3,
+            ]);
+        } catch (\Exception $e) {
+            error_log('WebDecoy client error: ' . $e->getMessage());
+            return null;
+        }
     }
 
     /**
@@ -2326,7 +2400,8 @@ final class WebDecoy_Plugin
             $sanitized['api_key'] = $api_key;
         }
 
-        // Publishable site key + clearance scope (not secret; stored as-is).
+        // Publishable site key, and the inert clearance scope (neither is
+        // secret; stored as-is).
         $sanitized['site_key'] = sanitize_text_field($input['site_key'] ?? '');
         $sanitized['clearance_scope'] = sanitize_text_field($input['clearance_scope'] ?? '');
 
@@ -2345,9 +2420,13 @@ final class WebDecoy_Plugin
 
         // Detection Settings
         $sanitized['enabled'] = !empty($input['enabled']);
-        $sanitized['sensitivity'] = in_array($input['sensitivity'] ?? 'medium', ['low', 'medium', 'high']) ? $input['sensitivity'] : 'medium';
+        // Read each enum field once: the form omits some of these keys, and re-reading
+        // a missing key after defaulting it logged a PHP warning on every save.
+        $sensitivity = $input['sensitivity'] ?? 'medium';
+        $sanitized['sensitivity'] = in_array($sensitivity, ['low', 'medium', 'high'], true) ? $sensitivity : 'medium';
         $sanitized['min_score_to_block'] = max(0, min(100, intval($input['min_score_to_block'] ?? 75)));
-        $sanitized['min_threat_level'] = in_array($input['min_threat_level'] ?? 'HIGH', ['MINIMAL', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL']) ? $input['min_threat_level'] : 'HIGH';
+        $min_threat_level = $input['min_threat_level'] ?? 'HIGH';
+        $sanitized['min_threat_level'] = in_array($min_threat_level, ['MINIMAL', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'], true) ? $min_threat_level : 'HIGH';
 
         // Good Bot Handling
         $sanitized['allow_search_engines'] = !empty($input['allow_search_engines']);
@@ -2371,7 +2450,8 @@ final class WebDecoy_Plugin
         } else {
             $sanitized['monitor_mode'] = !empty($input['monitor_mode']);
         }
-        $sanitized['block_action'] = in_array($input['block_action'] ?? 'block', ['block', 'challenge', 'log']) ? $input['block_action'] : 'block';
+        $block_action = $input['block_action'] ?? 'block';
+        $sanitized['block_action'] = in_array($block_action, ['block', 'challenge', 'log'], true) ? $block_action : 'block';
         $sanitized['block_duration'] = max(0, intval($input['block_duration'] ?? 1));
         $sanitized['show_block_page'] = !empty($input['show_block_page']);
         $sanitized['block_page_message'] = sanitize_textarea_field($input['block_page_message'] ?? '');
@@ -2416,10 +2496,30 @@ final class WebDecoy_Plugin
         $sanitized['scanner_exclude_logged_in'] = !empty($input['scanner_exclude_logged_in']);
 
         // WooCommerce
-        $sanitized['protect_checkout'] = !empty($input['protect_checkout']);
-        $sanitized['checkout_velocity_limit'] = max(1, intval($input['checkout_velocity_limit'] ?? 5));
-        $sanitized['checkout_velocity_window'] = max(60, intval($input['checkout_velocity_window'] ?? 3600));
-        $sanitized['woo_honeytoken_coupons'] = !empty($input['woo_honeytoken_coupons']);
+        // These fields render only when WooCommerce is active — the settings
+        // section is gated behind class_exists('WooCommerce'). When it is not
+        // active, the submitted form cannot contain them, so reading them as
+        // empty here would silently switch checkout protection and the
+        // honeytoken coupon OFF on the next settings save. The admin never sees
+        // it (the section is hidden) and it contradicts the on-by-default
+        // promise the moment WooCommerce is later activated. So when WooCommerce
+        // is inactive, carry the stored values forward — the same guard
+        // monitor_mode uses above for its disabled, unposted checkbox.
+        if (class_exists('WooCommerce')) {
+            $sanitized['protect_checkout'] = !empty($input['protect_checkout']);
+            $sanitized['checkout_velocity_limit'] = max(1, intval($input['checkout_velocity_limit'] ?? 5));
+            $sanitized['checkout_velocity_window'] = max(60, intval($input['checkout_velocity_window'] ?? 3600));
+            $sanitized['woo_honeytoken_coupons'] = !empty($input['woo_honeytoken_coupons']);
+        } else {
+            $woo_stored = get_option('webdecoy_options', []);
+            $woo_stored = is_array($woo_stored) ? $woo_stored : [];
+            // ?? preserves an explicit stored false; a never-configured install
+            // has no key, so it falls through to the on-by-default value.
+            $sanitized['protect_checkout'] = !empty($woo_stored['protect_checkout'] ?? true);
+            $sanitized['checkout_velocity_limit'] = max(1, intval($woo_stored['checkout_velocity_limit'] ?? 5));
+            $sanitized['checkout_velocity_window'] = max(60, intval($woo_stored['checkout_velocity_window'] ?? 3600));
+            $sanitized['woo_honeytoken_coupons'] = !empty($woo_stored['woo_honeytoken_coupons'] ?? true);
+        }
 
         // Proof-of-Work
         $sanitized['pow_enabled'] = !empty($input['pow_enabled']);
@@ -2662,7 +2762,7 @@ final class WebDecoy_Plugin
             'user_agent' => $user_agent,
         ];
 
-        wp_remote_post('https://ingest.webdecoy.com/api/v1/page-serve', [
+        wp_remote_post('https://in.webdecoy.com/api/v1/page-serve', [
             'timeout'  => 1,
             'blocking' => false,
             'headers'  => [
@@ -2811,7 +2911,7 @@ final class WebDecoy_Plugin
      */
     private function forward_to_ingest(array $detection, string $ip): void
     {
-        $ingest_url = 'https://ingest.webdecoy.com/api/v1/detect';
+        $ingest_url = 'https://in.webdecoy.com/api/v1/detect';
 
         // Get API key (decrypt if needed)
         $api_key = $this->options['api_key'];

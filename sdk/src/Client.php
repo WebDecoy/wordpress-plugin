@@ -15,7 +15,7 @@ use WebDecoy\Exception\WebDecoyException;
 class Client
 {
     private const DEFAULT_BASE_URL = 'https://api.webdecoy.com';
-    private const DEFAULT_INGEST_URL = 'https://ingest.webdecoy.com';
+    private const DEFAULT_INGEST_URL = 'https://in.webdecoy.com';
     private const DEFAULT_TIMEOUT = 10;
 
     /**
@@ -43,7 +43,7 @@ class Client
      *   - api_key: (required) Your WebDecoy API key
      *   - organization_id: (optional) Your organization UUID - will be auto-fetched if not provided
      *   - base_url: (optional) API base URL, defaults to https://api.webdecoy.com
-     *   - ingest_url: (optional) Ingest service URL, defaults to https://ingest.webdecoy.com
+     *   - ingest_url: (optional) Ingest service URL, defaults to https://in.webdecoy.com
      *   - timeout: (optional) Request timeout in seconds, defaults to 10
      *   - verify_ssl: (optional) Verify SSL certificates, defaults to true
      * @throws WebDecoyException If required configuration is missing

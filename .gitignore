@@ -32,3 +32,6 @@ composer.lock
 
 # WordPress.org SVN working copy (created by bin/deploy-wporg.sh)
 /.svn-wporg/
+
+# python bytecode from tests/wp-compat/roundtrip.py
+__pycache__/
