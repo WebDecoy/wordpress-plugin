@@ -187,9 +187,12 @@ class BotDetector
             $signals = $this->signalCollector->collect();
         }
 
-        // Get client IP if not provided
+        // Get client IP if not provided. A valid supplied ip_address is kept;
+        // anything else goes to the collector's trusted-proxy-aware resolver,
+        // never to the raw forwarding headers, which any client can set (#85).
         if ($clientIP === null) {
-            $clientIP = $signals['ip_address'] ?? $this->getClientIP();
+            $supplied = is_string($signals['ip_address'] ?? null) ? trim($signals['ip_address']) : '';
+            $clientIP = filter_var($supplied, FILTER_VALIDATE_IP) ? $supplied : $this->signalCollector->getIP();
         }
 
         $result = new DetectionResult(0, []);
@@ -301,39 +304,6 @@ class BotDetector
         $result->setConfidence(min(1.0, $signalCount / 10));
 
         return $result;
-    }
-
-    /**
-     * Get client IP address
-     *
-     * @return string
-     */
-    private function getClientIP(): string
-    {
-        // Priority: CF-Connecting-IP > X-Forwarded-For > X-Real-IP > REMOTE_ADDR
-        $headers = [
-            'HTTP_CF_CONNECTING_IP',
-            'HTTP_X_FORWARDED_FOR',
-            'HTTP_X_REAL_IP',
-            'REMOTE_ADDR',
-        ];
-
-        foreach ($headers as $header) {
-            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- IP validated with FILTER_VALIDATE_IP below
-            if (!empty($_SERVER[$header])) {
-                // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- WP path unslashes + sanitizes; the standalone fallback trims the raw value because wp_unslash() is unavailable outside WordPress
-                $ip = function_exists('sanitize_text_field') ? sanitize_text_field(wp_unslash($_SERVER[$header])) : trim($_SERVER[$header]);
-                // X-Forwarded-For can contain multiple IPs
-                if (strpos($ip, ',') !== false) {
-                    $ip = trim(explode(',', $ip)[0]);
-                }
-                if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                    return $ip;
-                }
-            }
-        }
-
-        return '0.0.0.0';
     }
 
     /**
