@@ -1,5 +1,9 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.10.5 - 2026-10-04 =
+* Fixed: maybe_flag_proxy() flagged an unconfigured proxy whenever an admin request carried any forwarding header. Hosts that rewrite REMOTE_ADDR to the visitor (WordPress.com, nginx real_ip, mod_remoteip) still forward X-Forwarded-For, so the notice showed on nearly every install and enforcement was suppressed with no cause. It now flags only when REMOTE_ADDR is absent from every forwarded address (WebDecoy_Blocker::unresolved_forwarding_header()); stale flags clear on the next admin page load.
+* Fixed: the state notices linked to admin.php?page=webdecoy-settings, which is not a registered page; the settings slug is webdecoy. The proxy button is also anchored to the trusted-proxies field.
+
 = 2.10.4 - 2026-10-04 =
 * Security: BotDetector::analyze(), given signals without ip_address, resolved the client IP from CF-Connecting-IP or the leftmost X-Forwarded-For with no trusted-proxy check, so a client chose the address its claimed good bot was reverse-DNS verified against. It now keeps a valid supplied ip_address and otherwise uses SignalCollector::getIP(), the trusted-proxy-aware resolver; the second resolver is removed (#85).
 * Fixed: WebDecoy_Detector, used by WooCommerce checkout, built its BotDetector without the configured trusted proxies, so behind Cloudflare it verified good bots against the edge address. It now uses webdecoy_plugin_trusted_proxies().

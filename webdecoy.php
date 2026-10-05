@@ -3,7 +3,7 @@
  * Plugin Name: WebDecoy Bot Detection
  * Plugin URI: https://webdecoy.com/wordpress
  * Description: Protect your WordPress site from bots, spam, and carding attacks with WebDecoy's advanced threat detection.
- * Version: 2.10.4
+ * Version: 2.10.5
  * Requires at least: 6.1
  * Requires PHP: 7.4
  * Author: WebDecoy
@@ -41,7 +41,7 @@ if (!function_exists('str_starts_with')) {
 }
 
 // Plugin constants
-define('WEBDECOY_VERSION', '2.10.4');
+define('WEBDECOY_VERSION', '2.10.5');
 define('WEBDECOY_PLUGIN_FILE', __FILE__);
 define('WEBDECOY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WEBDECOY_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -418,13 +418,14 @@ final class WebDecoy_Plugin
             return;
         }
 
-        $seen = WebDecoy_Blocker::forwarding_header_seen();
+        $seen = WebDecoy_Blocker::unresolved_forwarding_header();
         $flagged = (bool) get_option('webdecoy_proxy_detected', false);
 
         if ($seen !== '' && !$flagged) {
             update_option('webdecoy_proxy_detected', $seen, false);
         } elseif ($seen === '' && $flagged) {
-            // The proxy is gone, or the admin is reaching the origin directly.
+            // The proxy is gone, the host already resolves REMOTE_ADDR to the
+            // visitor, or the admin is reaching the origin directly.
             delete_option('webdecoy_proxy_detected');
         }
     }
@@ -522,7 +523,7 @@ final class WebDecoy_Plugin
             return;
         }
 
-        $settings_url = admin_url('admin.php?page=webdecoy-settings');
+        $settings_url = admin_url('admin.php?page=webdecoy');
 
         if (defined('WEBDECOY_DISABLE') && WEBDECOY_DISABLE) {
             printf(
@@ -554,7 +555,7 @@ final class WebDecoy_Plugin
                     ['code' => []]
                 ),
                 esc_html__('Detection, logging and reporting continue as normal. Only blocking, rate limiting and the 403 page are withheld.', 'webdecoy'),
-                esc_url($settings_url),
+                esc_url($settings_url . '#webdecoy_trusted_proxies'),
                 esc_html__('Configure trusted proxies', 'webdecoy')
             );
             return;

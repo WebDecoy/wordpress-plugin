@@ -210,6 +210,89 @@ class WebDecoy_Blocker
     }
 
     /**
+     * Like forwarding_header_seen(), but only for a header the server has NOT
+     * already resolved. Most managed hosts (WordPress.com, nginx real_ip,
+     * Apache mod_remoteip) rewrite REMOTE_ADDR to the visitor and still pass the
+     * forwarding headers along. In that case REMOTE_ADDR appears among the
+     * forwarded addresses, every visitor already has their own address, and there
+     * is nothing to fix. Only when REMOTE_ADDR is absent from every forwarded
+     * value is it the proxy rather than the visitor.
+     *
+     * Same restriction as forwarding_header_seen(): admin-side detection only.
+     */
+    public static function unresolved_forwarding_header(): string
+    {
+        $seen = self::forwarding_header_seen();
+        if ($seen === '') {
+            return '';
+        }
+
+        $remote = isset($_SERVER['REMOTE_ADDR'])
+            ? self::canonical_ip(sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])))
+            : '';
+        if ($remote === '') {
+            return $seen;
+        }
+
+        foreach (array_keys(self::FORWARDING_HEADERS) as $key) {
+            if (empty($_SERVER[$key])) {
+                continue;
+            }
+            $value = sanitize_text_field(wp_unslash($_SERVER[$key]));
+            foreach (self::forwarded_addresses($value) as $addr) {
+                if ($addr === $remote) {
+                    return '';
+                }
+            }
+        }
+
+        return $seen;
+    }
+
+    /**
+     * Every IP address in a forwarding header value, canonicalised. Handles the
+     * comma-separated X-Forwarded-For form and RFC 7239 `Forwarded: for=...`.
+     *
+     * @return string[]
+     */
+    private static function forwarded_addresses(string $value): array
+    {
+        $out = [];
+        foreach (preg_split('/[,;]/', $value) ?: [] as $part) {
+            $part = trim($part);
+            if (stripos($part, 'for=') === 0) {
+                $part = substr($part, 4);
+            } elseif (strpos($part, '=') !== false) {
+                continue; // by=, proto=, host=
+            }
+            $ip = self::canonical_ip($part);
+            if ($ip !== '') {
+                $out[] = $ip;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Normalise an address token (quotes, [v6]:port, v4:port) to inet_ntop form,
+     * or '' when it is not an IP.
+     */
+    private static function canonical_ip(string $token): string
+    {
+        $token = trim($token, " \t\"");
+        if (preg_match('/^\[([^\]]+)\](?::\d+)?$/', $token, $m)) {
+            $token = $m[1];
+        } elseif (preg_match('/^(\d{1,3}(?:\.\d{1,3}){3}):\d+$/', $token, $m)) {
+            $token = $m[1];
+        }
+        if (!filter_var($token, FILTER_VALIDATE_IP)) {
+            return '';
+        }
+        $packed = inet_pton($token);
+        return $packed === false ? '' : (string) inet_ntop($packed);
+    }
+
+    /**
      * Record a refused block so it is visible rather than silent, and fire a hook.
      *
      * @return bool Always false — the caller's block did not happen.
