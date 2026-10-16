@@ -36,6 +36,15 @@ services:
       - wp_data:/var/www/html
       # The working tree is the plugin; edits are live inside the container.
       - ../..:/var/www/html/wp-content/plugins/webdecoy
+  # Reverse proxy for proxy.sh: `docker compose up -d proxy`.
+  proxy:
+    image: nginx:alpine
+    depends_on:
+      - wp
+    ports:
+      - "${PROXY_PORT:-8072}:80"
+    volumes:
+      - ./proxy-nginx.conf:/etc/nginx/conf.d/default.conf:ro
   cli:
     image: ${WP_CLI_IMAGE:-wordpress:cli-php8.3}
     depends_on:
