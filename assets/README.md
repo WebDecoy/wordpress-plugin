@@ -36,8 +36,8 @@ rsvg-convert -w 772 -h 250 banner.svg > banner-772x250.png
   the same artwork as `frontend/src/assets/duck-logo.svg` in the app monorepo,
   embedded as a base64 PNG. Brand colors: hoodie pink `#F90289`, ink
   `#111C26`, bill orange `#F99717`.
-- The banner wordmark/tagline are live `<text>` set in Avenir Next — render the
-  PNGs on macOS (or a machine with Avenir Next installed) or the type falls
-  back to a different face.
+- The banner embeds the approved raster artwork at 1544 × 500, including its
+  typography. Rendering does not depend on installed fonts. The campaign reads
+  “Stop bots. Keep customers.” with WordPress + WooCommerce and capability copy.
 - Upload the generated PNGs (not the SVGs) to the WordPress.org SVN `assets/`
   directory. SVG files are kept here as editable sources only.
