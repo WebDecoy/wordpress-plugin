@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: bot detection, security, spam protection, woocommerce, ai bots
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.10.5
+Stable tag: 2.10.6
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -285,6 +285,9 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 
 == Changelog ==
 
+= 2.10.6 =
+* Fixed: classic WooCommerce checkout protection and attempt tracking now register after all plugins load. Previously, loading WebDecoy before WooCommerce silently skipped these hooks.
+
 = 2.10.5 =
 * Fixed: the warning that WebDecoy is not blocking because the site is behind an unconfigured proxy no longer appears on hosts that already pass the visitor's real address to WordPress, such as WordPress.com. On those sites blocking was being withheld for no reason.
 * Fixed: the warning's "Configure trusted proxies" button, and the monitor-mode "Review and turn on blocking" button, led to a "not allowed to access this page" error. They now open the settings page.
@@ -472,6 +475,9 @@ Safety release. Please update. This version deliberately makes the plugin do les
 * Initial release
 
 == Upgrade Notice ==
+
+= 2.10.6 =
+Restores classic WooCommerce checkout protection when WebDecoy loads before WooCommerce. Recommended for WooCommerce stores.
 
 = 2.10.5 =
 Fixes a false "behind a proxy" warning that switched off blocking on many managed hosts, and the broken button in that warning.
