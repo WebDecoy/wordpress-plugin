@@ -23,6 +23,23 @@ WP plugin is-installed woocommerce || WP plugin install woocommerce ${WOO_VERSIO
 WP plugin activate woocommerce | tail -1
 echo "WooCommerce $(WP plugin get woocommerce --field=version) on WordPress $(WP core version) / PHP $(WP eval 'echo PHP_VERSION;')"
 
+echo "## classic checkout callbacks exist after both plugins load"
+# On a fresh install WordPress loads webdecoy before woocommerce. The old
+# constructor-time class_exists() gate silently skipped these callbacks.
+WP eval '
+$callbacks = [
+    "woocommerce_checkout_process" => "check_checkout",
+    "woocommerce_payment_complete" => "track_payment",
+    "woocommerce_checkout_order_processed" => "track_checkout_attempt",
+];
+foreach ($callbacks as $hook => $method) {
+    if (has_action($hook, [webdecoy(), $method]) === false) {
+        WP_CLI::error("Missing checkout callback: " . $hook);
+    }
+}
+WP_CLI::success("Classic validation, payment and attempt callbacks registered.");
+' || fail=1
+
 echo "## store setup (guest checkout, COD, one virtual product)"
 WP option update woocommerce_onboarding_profile '{"skipped":true}' --format=json >/dev/null
 WP option update woocommerce_coming_soon no >/dev/null

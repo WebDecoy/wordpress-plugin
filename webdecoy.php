@@ -3,7 +3,7 @@
  * Plugin Name: WebDecoy Bot Detection
  * Plugin URI: https://webdecoy.com/wordpress
  * Description: Protect your WordPress site from bots, spam, and carding attacks with WebDecoy's advanced threat detection.
- * Version: 2.10.5
+ * Version: 2.10.6
  * Requires at least: 6.1
  * Requires PHP: 7.4
  * Author: WebDecoy
@@ -41,7 +41,7 @@ if (!function_exists('str_starts_with')) {
 }
 
 // Plugin constants
-define('WEBDECOY_VERSION', '2.10.5');
+define('WEBDECOY_VERSION', '2.10.6');
 define('WEBDECOY_PLUGIN_FILE', __FILE__);
 define('WEBDECOY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WEBDECOY_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -921,12 +921,9 @@ final class WebDecoy_Plugin
             add_action('register_form', [$this, 'inject_register_honeypot']);
         }
 
-        // WooCommerce hooks
-        if ($this->options['protect_checkout'] && class_exists('WooCommerce')) {
-            add_action('woocommerce_checkout_process', [$this, 'check_checkout']);
-            add_action('woocommerce_payment_complete', [$this, 'track_payment']);
-            add_action('woocommerce_checkout_order_processed', [$this, 'track_checkout_attempt']);
-        }
+        // WooCommerce may load after this plugin. Register checkout callbacks
+        // only after all plugin entry points and our includes have loaded.
+        add_action('plugins_loaded', [$this, 'register_woocommerce_hooks'], 20);
 
         // AJAX handlers (admin)
         add_action('wp_ajax_webdecoy_test_connection', [$this, 'ajax_test_connection']);
@@ -993,6 +990,20 @@ final class WebDecoy_Plugin
 
         // Add defer attribute to frontend scanner script for better performance
         add_filter('script_loader_tag', [$this, 'add_defer_to_scanner'], 10, 3);
+    }
+
+    /**
+     * Register classic checkout protection independently of plugin load order.
+     */
+    public function register_woocommerce_hooks(): void
+    {
+        if (!$this->options['protect_checkout'] || !class_exists('WooCommerce')) {
+            return;
+        }
+
+        add_action('woocommerce_checkout_process', [$this, 'check_checkout']);
+        add_action('woocommerce_payment_complete', [$this, 'track_payment']);
+        add_action('woocommerce_checkout_order_processed', [$this, 'track_checkout_attempt']);
     }
 
     /**
