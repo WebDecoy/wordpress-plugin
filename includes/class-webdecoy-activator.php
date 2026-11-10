@@ -21,7 +21,7 @@ class WebDecoy_Activator
     /**
      * Database version for migrations
      */
-    private const DB_VERSION = '2.3.0';
+    private const DB_VERSION = '2.11.0';
 
     /**
      * Plugin activation
@@ -144,6 +144,17 @@ class WebDecoy_Activator
             KEY batch_id (batch_id)
         ) $charset_collate;";
 
+        // Crawler visit counters (2.11.0): visits from known crawlers, AI
+        // agents and bot tools, per hour, agent and verification state. Counts
+        // only; nothing about a request is stored. See WebDecoy_Crawler_Visits.
+        $sql_crawler_visits = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}webdecoy_crawler_visits (
+            bucket DATETIME NOT NULL,
+            agent_id VARCHAR(64) NOT NULL,
+            verification VARCHAR(12) NOT NULL,
+            hits BIGINT UNSIGNED NOT NULL DEFAULT 0,
+            PRIMARY KEY  (bucket, agent_id, verification)
+        ) $charset_collate;";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
         dbDelta($sql_blocked);
@@ -152,6 +163,7 @@ class WebDecoy_Activator
         dbDelta($sql_checkout);
         dbDelta($sql_violation_queue);
         dbDelta($sql_ai_referrals);
+        dbDelta($sql_crawler_visits);
     }
 
     /**
@@ -270,6 +282,8 @@ class WebDecoy_Activator
             $wpdb->prefix . 'webdecoy_rate_limits',
             $wpdb->prefix . 'webdecoy_checkout_attempts',
             $wpdb->prefix . 'webdecoy_violation_queue',
+            $wpdb->prefix . 'webdecoy_ai_referrals',
+            $wpdb->prefix . 'webdecoy_crawler_visits',
         ];
 
         foreach ($tables as $table) {
@@ -319,6 +333,11 @@ add_action('webdecoy_cleanup_expired', function () {
         "DELETE FROM {$wpdb->prefix}webdecoy_detections WHERE created_at < %s",
         gmdate('Y-m-d H:i:s', strtotime("-{$retention_days} days"))
     ));
+
+    // Crawler visit counters keep 30 days of hourly rows.
+    if (class_exists('WebDecoy_Crawler_Visits')) {
+        WebDecoy_Crawler_Visits::prune();
+    }
 
     // Clean up old checkout attempts (keep 7 days)
     $wpdb->query($wpdb->prepare(
