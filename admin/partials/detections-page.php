@@ -284,6 +284,7 @@ if ($wd_intel_connected && !empty($detections) && class_exists('WebDecoy_Actor_I
                 <tr>
                     <th class="check-column"><input type="checkbox" id="webdecoy-select-all" /></th>
                     <th class="column-date"><?php esc_html_e('Date', 'webdecoy'); ?></th>
+                    <th class="column-what"><?php esc_html_e('What happened', 'webdecoy'); ?></th>
                     <th class="column-ip"><?php esc_html_e('IP Address', 'webdecoy'); ?></th>
                     <th class="column-score"><?php esc_html_e('Score', 'webdecoy'); ?></th>
                     <th class="column-level"><?php esc_html_e('Level', 'webdecoy'); ?></th>
@@ -303,6 +304,22 @@ if ($wd_intel_connected && !empty($detections) && class_exists('WebDecoy_Actor_I
                     <td>
                         <?php // created_at is stored UTC (#55); convert before formatting or the site shows UTC labelled as local. ?>
                         <?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime(get_date_from_gmt($detection['created_at'])))); ?>
+                    </td>
+                    <td class="column-what">
+                        <?php
+                        // Plain-language sentence for a decoy hit (WebDecoy/app#443), the
+                        // same words the WordPress digest email uses for it. Rows that
+                        // are not decoy hits have no sentence; their detail is in the
+                        // technical columns.
+                        $wd_what = class_exists('\WebDecoy\HitExplanation')
+                            ? \WebDecoy\HitExplanation::forLocalFlags(isset($detection['flags']) ? (string) $detection['flags'] : null)
+                            : '';
+                        if ($wd_what !== '') :
+                            ?>
+                            <span class="webdecoy-what"><?php echo esc_html($wd_what); ?></span>
+                        <?php else : ?>
+                            <span class="webdecoy-mitre-na">—</span>
+                        <?php endif; ?>
                     </td>
                     <td>
                         <code><?php echo esc_html($detection['ip_address']); ?></code>
@@ -460,7 +477,7 @@ if ($wd_intel_connected && !empty($detections) && class_exists('WebDecoy_Actor_I
                     </td>
                 </tr>
                 <tr class="webdecoy-detail-row" style="display:none;">
-                    <td colspan="10">
+                    <td colspan="11">
                         <div class="webdecoy-detection-detail">
                             <strong><?php esc_html_e('User Agent:', 'webdecoy'); ?></strong>
                             <code><?php echo esc_html($detection['user_agent']); ?></code>

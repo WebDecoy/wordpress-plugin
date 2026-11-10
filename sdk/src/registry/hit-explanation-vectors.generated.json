@@ -1,0 +1,335 @@
+[
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "hidden_link",
+      "path": "/trap/hidden_link"
+    },
+    "kind": "hidden_link",
+    "explanation": "A visitor requested /trap/hidden_link, the address of a hidden link on your pages. People can't see or click that link."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "hidden_link",
+      "path": ""
+    },
+    "kind": "hidden_link",
+    "explanation": "A visitor requested the address of a hidden link on your pages. People can't see or click that link."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "fake_plugin",
+      "path": "/trap/fake_plugin"
+    },
+    "kind": "fake_plugin",
+    "explanation": "A visitor requested /trap/fake_plugin. That plugin is not installed on your site, so the path exists only as a trap."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "fake_plugin",
+      "path": ""
+    },
+    "kind": "fake_plugin",
+    "explanation": "A visitor requested a path inside a plugin that is not installed on your site. The path exists only as a trap."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "author_lookup",
+      "path": "/trap/author_lookup"
+    },
+    "kind": "author_lookup",
+    "explanation": "A visitor asked your site for the user name behind an author number, without logging in."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "author_lookup",
+      "path": ""
+    },
+    "kind": "author_lookup",
+    "explanation": "A visitor asked your site for the user name behind an author number, without logging in."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "user_list",
+      "path": "/trap/user_list"
+    },
+    "kind": "user_list",
+    "explanation": "A visitor asked your site's API for its list of users, without logging in."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "user_list",
+      "path": ""
+    },
+    "kind": "user_list",
+    "explanation": "A visitor asked your site's API for its list of users, without logging in."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "probe_path",
+      "path": "/trap/probe_path"
+    },
+    "kind": "probe_path",
+    "explanation": "A visitor requested /trap/probe_path, a path that scanners commonly try. It is set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "probe_path",
+      "path": ""
+    },
+    "kind": "probe_path",
+    "explanation": "A visitor requested a path that scanners commonly try. It is set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "trap_path",
+      "path": "/trap/trap_path"
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested /trap/trap_path, a path set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "trap_path",
+      "path": ""
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested a path set up as a trap on your site. The path was not recorded."
+  },
+  {
+    "hit": {
+      "source": "decoy_link",
+      "trap_kind": "",
+      "path": "/pricing-archive"
+    },
+    "kind": "decoy_url",
+    "explanation": "A visitor opened /pricing-archive, a decoy URL that exists only as a trap."
+  },
+  {
+    "hit": {
+      "source": "decoy_link",
+      "trap_kind": "",
+      "path": ""
+    },
+    "kind": "decoy_url",
+    "explanation": "A visitor opened a decoy URL that exists only as a trap. The path was not recorded."
+  },
+  {
+    "hit": {
+      "source": "endpoint",
+      "trap_kind": "",
+      "path": "/api/v2/export"
+    },
+    "kind": "decoy_endpoint",
+    "explanation": "A visitor called /api/v2/export, a decoy API address that exists only as a trap."
+  },
+  {
+    "hit": {
+      "source": "endpoint",
+      "trap_kind": "hidden_link",
+      "path": "/api/v2/export"
+    },
+    "kind": "decoy_endpoint",
+    "explanation": "A visitor called /api/v2/export, a decoy API address that exists only as a trap."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "",
+      "path": "/__wd/3f9a2c71b0de"
+    },
+    "kind": "hidden_link",
+    "explanation": "A visitor requested /__wd/3f9a2c71b0de, the address of a hidden link on your pages. People can't see or click that link."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "",
+      "path": "/__wd"
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested /__wd, a path set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "",
+      "path": "/.env"
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested /.env, a path set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "",
+      "path": ""
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested a path set up as a trap on your site. The path was not recorded."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "decoy_url",
+      "path": "/x"
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested /x, a path set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "Hidden_Link",
+      "path": "/x"
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested /x, a path set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "made_up",
+      "path": "/x"
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested /x, a path set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "bot_scanner",
+      "trap_kind": "",
+      "path": "/pricing"
+    },
+    "kind": "",
+    "explanation": ""
+  },
+  {
+    "hit": {
+      "source": "",
+      "trap_kind": "hidden_link",
+      "path": "/__wd/abc"
+    },
+    "kind": "",
+    "explanation": ""
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "trap_path",
+      "path": "/reset?token=secret\u0026email=a@b.c"
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested /reset, a path set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "trap_path",
+      "path": "/page#frag"
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested /page, a path set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "trap_path",
+      "path": "?only=query"
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested a path set up as a trap on your site. The path was not recorded."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "trap_path",
+      "path": "  /spaced  "
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested /spaced, a path set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "trap_path",
+      "path": "/a\r\nInjected: header\t/b"
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested /aInjected: header/b, a path set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "trap_path",
+      "path": "/evil‮gnp.exe"
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested /evilgnp.exe, a path set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "trap_path",
+      "path": "/\u003cscript\u003ealert(1)\u003c/script\u003e"
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested /\u003cscript\u003ealert(1)\u003c/script\u003e, a path set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "trap_path",
+      "path": "/café/日本"
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested /café/日本, a path set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "trap_path",
+      "path": "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested /aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, a path set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "trap_path",
+      "path": "/éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested /ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé..., a path set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "trap_path",
+      "path": "/{path}"
+    },
+    "kind": "trap_path",
+    "explanation": "A visitor requested /{path}, a path set up as a trap on your site."
+  },
+  {
+    "hit": {
+      "source": "sdk_tripwire",
+      "trap_kind": "",
+      "path": " /__wd/abc"
+    },
+    "kind": "hidden_link",
+    "explanation": "A visitor requested /__wd/abc, the address of a hidden link on your pages. People can't see or click that link."
+  }
+]

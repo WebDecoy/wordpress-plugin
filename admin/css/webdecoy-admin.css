@@ -495,7 +495,14 @@
 
 /* Column Widths */
 .column-date { width: 150px; }
+.column-what { width: 260px; }
 .column-ip { width: 130px; }
+
+/* The plain-language decoy hit sentence leads the row (WebDecoy/app#443). */
+.webdecoy-what {
+    color: #1d2327;
+    line-height: 1.4;
+}
 .column-score { width: 60px; }
 .column-level { width: 90px; }
 .column-source { width: 130px; }
