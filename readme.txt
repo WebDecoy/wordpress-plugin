@@ -1,7 +1,7 @@
-=== WebDecoy Bot Detection - Block AI Crawlers, Spam Bots & Card Testing ===
+=== WebDecoy Bot Detection - Stop Card Testing, Fake Orders & AI Crawlers ===
 Contributors: webdecoy1
 Donate link: https://webdecoy.com
-Tags: bot detection, security, spam protection, woocommerce, ai bots
+Tags: card testing, fake orders, woocommerce, ai crawlers, bot detection
 Requires at least: 6.1
 Tested up to: 7.1
 Stable tag: 2.10.6
@@ -9,22 +9,15 @@ Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Stop card testing, fake orders, comment spam, and AI crawlers with no CAPTCHA. 100% local, no account or API key, works instantly on activation.
+Stop WooCommerce card testing, fake orders and checkout bots, and see which AI crawlers read your site. No account, no CAPTCHA, runs locally.
 
 == Description ==
 
-WebDecoy is a **free, fully-functional** bot detection and protection plugin that works 100% locally. It stops the symptoms you actually see: card-testing hits on your WooCommerce checkout, waves of fake registrations, comment spam, login brute force, and content scraped by AI crawlers. Unlike CAPTCHA solutions that frustrate visitors, WebDecoy uses invisible multi-layer detection: legitimate users never see challenges or interruptions.
+WebDecoy stops the bots that cost a store money: card-testing scripts running stolen cards through your WooCommerce checkout, fake orders, and checkout bots. And from the first hour after you activate it, it shows you which crawlers and AI agents are reading your site, and whether they are who they claim to be.
+
+It is a **free, fully-functional** plugin that works 100% locally. It also stops fake registrations, comment spam and login brute force, and no human visitor ever sees a CAPTCHA.
 
 **Works immediately on activation.** No account needed. No API key required. No external connections at all until you optionally connect a WebDecoy Cloud account.
-
-= Why WebDecoy? =
-
-* **Zero friction**: humans never see CAPTCHAs or challenges
-* **Zero configuration**: install, activate, done
-* **Zero dependencies**: everything runs locally on your server
-* **Deception, not just filtering**: hidden tripwires and honeytokens that only bots can touch, so a catch is a certainty, not a guess
-* **Multi-layer detection**: server-side + client-side + proof-of-work challenges
-* **Free forever**: full protection at no cost. Premium cloud features are optional.
 
 = Stop WooCommerce card testing and fake orders =
 
@@ -34,8 +27,30 @@ Card-testing bots run stolen card numbers through your checkout. You pay a gatew
 * Card-testing pattern detection: small amounts, rapid succession, repeated declines across more than one card
 * A hidden decoy coupon code that only bots ever find and apply
 * Works with both the classic checkout and WooCommerce Blocks
+* Checkout bot signals from the last 24 hours, right on your WordPress dashboard
 
 Suspicious checkouts are refused and recorded, not silently allowed. And by default the whole plugin runs in monitor mode, so you can watch exactly what it would have done before you let it act.
+
+= See which bots and AI crawlers read your site =
+
+Most site owners have no idea how much of their traffic is GPTBot, ClaudeBot, Bytespider, or something pretending to be Googlebot. WebDecoy tells you, with no account:
+
+* **Dashboard widget**: known bot visits in the last 24 hours, with AI crawlers and agents counted separately, and the busiest bots by name
+* **Verified or just claimed**: Googlebot, Bingbot, Applebot, DuckDuckBot, Yandex, Baidu and the major social crawlers are checked with reverse and forward DNS. A visitor that claims to be one of them from someone else's address is flagged as an impersonator. Every other bot is labelled as identified by its User-Agent only, so you know how far to trust the name.
+* **Statistics page**: every known bot from the last 7 days, with its operator, its type (AI training crawler, AI search crawler, AI agent, search engine, SEO tool, scraper and more) and its verified, claimed and failed counts
+* **Named from a shared registry** of more than 180 crawlers, AI agents and bot tools, the same one the WebDecoy dashboard uses
+* **One switch to refuse AI crawlers** (Settings > Good Bots), with search engines unaffected
+
+Only a count per bot per hour is kept: no IP addresses, no pages, and nothing about human visitors. Pages served from a page cache never reach WordPress, so the counts are minimums.
+
+= Why WebDecoy? =
+
+* **Zero friction**: humans never see CAPTCHAs or challenges
+* **Zero configuration**: install, activate, done
+* **Zero dependencies**: everything runs locally on your server
+* **Deception, not just filtering**: hidden tripwires and honeytokens that only bots can touch, so a catch is a certainty, not a guess
+* **Multi-layer detection**: server-side + client-side + proof-of-work challenges
+* **Free forever**: full protection at no cost. Premium cloud features are optional.
 
 = Deception: the zero-false-positive layer =
 
@@ -103,13 +118,14 @@ Registration spam and comment spam are the same disease: automation pointed at y
 * Detection log with threat scores and MITRE tactic mapping
 * Statistics page with 30-day trend charts
 * Blocked IPs management
-* Dashboard widget with threat overview
+* Dashboard widget: bots seen in the last 24 hours, checkout bot signals, threat overview
 * CSV export
 * Automatic data cleanup (30 days)
 
 **Smart Bot Recognition**
-* 60+ known good bots automatically allowed
-* Search engines, social media, monitoring services, SEO tools
+* More than 130 known good bots recognized and allowed
+* Search engines, AI crawlers, social media, monitoring services, SEO tools, feed readers
+* Local counts of every known bot visit, verified, claimed or failed
 * Optional AI crawler blocking
 * Custom allowlist support
 
@@ -154,7 +170,7 @@ Connect an API key to unlock cloud-powered intelligence:
 * **GeoIP Enrichment**: geographic data from MaxMind
 * **Cloud Sync**: forward detections to a centralized dashboard
 * **Cross-Site Intelligence**: aggregate threat data from all WebDecoy customers
-* **Advanced Analytics**: cloud dashboard at app.webdecoy.com with indefinite history
+* **Advanced Analytics**: cloud dashboard at app.webdecoy.com, with history kept according to your plan
 * **Webhooks & Alerts**: automated response chains, plus a monthly email report of what was caught
 
 [Explore Plans](https://webdecoy.com/pricing) | [Create a free account](https://app.webdecoy.com/register)
@@ -212,7 +228,7 @@ Firewalls match requests against known-bad signatures, and scanners look for inf
 
 = What does WebDecoy Cloud add? =
 
-WebDecoy Cloud adds threat intelligence feeds (AbuseIPDB, VPNAPI, MaxMind), centralized monitoring across multiple sites, indefinite detection history, a monthly email report, webhook automation, and WAF integrations: from your dashboard, confirmed attackers can be pushed to Cloudflare or AWS WAF so they're blocked at the edge, before ever reaching your server. [Compare plans](https://webdecoy.com/pricing).
+WebDecoy Cloud adds threat intelligence feeds (AbuseIPDB, VPNAPI, MaxMind), centralized monitoring across multiple sites, a monthly email report, webhook automation, and WAF integrations: from your dashboard, confirmed attackers can be pushed to Cloudflare or AWS WAF so they're blocked at the edge, before ever reaching your server. [Compare plans](https://webdecoy.com/pricing).
 
 = Does WebDecoy slow down my site? =
 
@@ -228,11 +244,15 @@ Yes. WebDecoy works alongside popular caching plugins. The client-side scanner r
 
 = What about search engine bots? =
 
-WebDecoy automatically recognizes and allows 60+ legitimate bots including Googlebot, Bingbot, and other search engine crawlers. Good bot verification uses reverse DNS lookup. Your SEO won't be affected.
+WebDecoy automatically recognizes and allows more than 130 legitimate bots including Googlebot, Bingbot, and other search engine crawlers. Good bot verification uses reverse DNS lookup. Your SEO won't be affected.
+
+= Can I see which AI crawlers visit my site without an account? =
+
+Yes. The WebDecoy widget on your WordPress dashboard shows known bot visits from the last 24 hours, with AI crawlers and agents counted separately, and the Statistics page lists every known bot from the last 7 days. Search engine crawlers are checked with reverse DNS, so you can tell a real Googlebot from an impersonator. It is counted on your own server; no account is needed and nothing is sent anywhere.
 
 = Can I block AI training crawlers like GPTBot and ClaudeBot? =
 
-Yes. WebDecoy identifies AI crawlers (GPTBot, ClaudeBot, PerplexityBot, Bytespider, and others) and lets you block them with one setting, without touching robots.txt and without affecting search engine crawlers. Enable this in Settings > Good Bots.
+Yes. WebDecoy identifies AI training crawlers and AI agents (GPTBot, ClaudeBot, Bytespider, CCBot, and others) and lets you block them with one setting, without touching robots.txt and without affecting search engine crawlers. AI search crawlers such as PerplexityBot and OAI-SearchBot are treated like search engines and stay allowed. Enable this in Settings > Good Bots.
 
 = Does it work with WooCommerce? =
 
@@ -500,6 +520,8 @@ WebDecoy collects the following data locally for bot detection purposes:
 * HTTP headers
 * Browser fingerprint signals
 * Request patterns
+
+Visits from known crawlers and bots are also counted per bot and per hour. Those counters hold only the bot's name, whether its address was verified, and a number: no IP address, page or anything else about the request.
 
 This data is stored in your WordPress database and automatically cleaned up after 30 days. No data is sent externally unless you configure a WebDecoy Cloud API key.
 
