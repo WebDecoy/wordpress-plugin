@@ -33,6 +33,7 @@ if (file_exists($activator_file)) {
         $wpdb->prefix . 'webdecoy_rate_limits',
         $wpdb->prefix . 'webdecoy_checkout_attempts',
         $wpdb->prefix . 'webdecoy_ai_referrals',
+        $wpdb->prefix . 'webdecoy_crawler_visits',
     ];
 
     foreach ($tables as $table) {

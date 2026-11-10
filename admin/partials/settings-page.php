@@ -488,7 +488,7 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                             <label>
                                 <input type="checkbox" name="webdecoy_options[block_ai_crawlers]" value="1"
                                        <?php checked(!empty($options['block_ai_crawlers'])); ?> />
-                                <?php esc_html_e('Block AI crawlers (GPTBot, ClaudeBot, PerplexityBot, etc.)', 'webdecoy'); ?>
+                                <?php esc_html_e('Block AI crawlers (GPTBot, ClaudeBot, Bytespider, etc.)', 'webdecoy'); ?>
                             </label>
                             <p class="description"><?php esc_html_e('AI crawlers are allowed by default. Enable this to block them.', 'webdecoy'); ?></p>
                             <?php $cloud_policy = WebDecoy_Cloud_Policy::describe(); ?>
@@ -891,7 +891,7 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                             <li><?php esc_html_e('IP reputation data (AbuseIPDB integration)', 'webdecoy'); ?></li>
                             <li><?php esc_html_e('VPN, proxy, and Tor exit node detection', 'webdecoy'); ?></li>
                             <li><?php esc_html_e('Cross-site threat intelligence from all WebDecoy users', 'webdecoy'); ?></li>
-                            <li><?php esc_html_e('Advanced cloud analytics with indefinite data retention', 'webdecoy'); ?></li>
+                            <li><?php esc_html_e('A cloud dashboard for every site you connect', 'webdecoy'); ?></li>
                             <?php // Not "email alerts": per-detection email is refused by the API
                                   // (#702) because decoys are public bait and a busy site records
                                   // thousands of hits a day. Email is the digest; webhooks are the

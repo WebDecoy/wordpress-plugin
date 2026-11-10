@@ -1069,6 +1069,7 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-violation-reporter.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-detection-sender.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ai-referrals.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-crawler-visits.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-honeytoken.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ip-enrichment.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-decoy-response.php';
@@ -1217,7 +1218,21 @@ final class WebDecoy_Plugin
         // detector path (SDK BotDetector + WP-specific signals), the same one
         // WooCommerce uses. It collects request signals, adds the request path
         // for MITRE ATT&CK path analysis, and merges WP context.
-        $result = (new WebDecoy_Detector($this->options))->analyze();
+        $detector = new WebDecoy_Detector($this->options);
+        $result = $detector->analyze();
+
+        // Count known crawlers, AI agents and bot tools for the dashboard
+        // widget: a counter per hour, agent and verification state, nothing
+        // about the request itself. Works with no account. Runs before the
+        // good-bot exit, because the crawlers a site allows are exactly the
+        // ones its owner cannot otherwise see.
+        if (class_exists('WebDecoy_Crawler_Visits')) {
+            WebDecoy_Crawler_Visits::observe(
+                $detector->get_signal_collector()->getUserAgent(),
+                $result->getFlags(),
+                $this->proxy_misconfigured()
+            );
+        }
 
         // Skip if good bot
         if ($result->isGoodBot()) {

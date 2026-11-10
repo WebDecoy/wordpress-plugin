@@ -87,6 +87,24 @@ final class AgentRegistry
     }
 
     /**
+     * The agent with this registry id, or null when the table has none.
+     *
+     * For readers that stored an id earlier and need its name and category
+     * now; it never consults a User-Agent.
+     *
+     * @return array<string,mixed>|null
+     */
+    public static function find(string $id): ?array
+    {
+        foreach (self::table()['agents'] as $agent) {
+            if ((string) $agent['id'] === $id) {
+                return $agent;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Every agent, in match order.
      *
      * @return list<array<string,mixed>>

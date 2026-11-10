@@ -1082,3 +1082,48 @@
     display: inline;
     margin: 0;
 }
+
+/* ==========================================================================
+   Dashboard Widget: bots seen in the last 24 hours
+   ========================================================================== */
+
+.webdecoy-widget-crawlers {
+    padding-bottom: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.webdecoy-widget-crawlers h4 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.webdecoy-widget-crawlers .webdecoy-widget-stats {
+    border-bottom: 0;
+}
+
+.webdecoy-widget-verification,
+.webdecoy-widget-footnote {
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: #646970;
+}
+
+.webdecoy-widget-agents {
+    margin: 0 0 8px;
+    padding: 0;
+    list-style: none;
+}
+
+.webdecoy-widget-agents li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+}
+
+.webdecoy-agent-category {
+    display: block;
+    font-size: 11px;
+    color: #646970;
+}

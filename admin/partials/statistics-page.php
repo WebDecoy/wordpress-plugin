@@ -123,6 +123,9 @@ if (class_exists('WooCommerce')) {
     ];
 }
 
+// Known crawlers, AI agents and bot tools over 7 days (counters only).
+$crawler_summary = class_exists('WebDecoy_Crawler_Visits') ? WebDecoy_Crawler_Visits::summary(7 * 24) : null;
+
 $options = get_option('webdecoy_options', []);
 ?>
 
@@ -203,6 +206,52 @@ $options = get_option('webdecoy_options', []);
         <?php endif; ?>
     </div>
 
+    <!-- Known bots and AI crawlers -->
+    <?php if ($crawler_summary !== null) : ?>
+    <div class="webdecoy-chart-card">
+        <h3><?php esc_html_e('Bots and AI Crawlers (7 Days)', 'webdecoy'); ?></h3>
+        <p class="description">
+            <?php esc_html_e('Every visit from a known crawler, AI agent or bot tool, counted on this server. Only a count per bot per hour is kept: no addresses, no pages, and nothing about human visitors. Verified means the address passed reverse and forward DNS for that crawler; failed means it claimed to be a crawler it is not.', 'webdecoy'); ?>
+        </p>
+        <?php if (empty($crawler_summary['agents'])) : ?>
+            <p class="description"><?php esc_html_e('No known bot has visited in the last 7 days.', 'webdecoy'); ?></p>
+        <?php else : ?>
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e('Bot', 'webdecoy'); ?></th>
+                        <th><?php esc_html_e('Type', 'webdecoy'); ?></th>
+                        <th><?php esc_html_e('Visits', 'webdecoy'); ?></th>
+                        <th><?php esc_html_e('Verified', 'webdecoy'); ?></th>
+                        <th><?php esc_html_e('User-Agent only', 'webdecoy'); ?></th>
+                        <th><?php esc_html_e('Failed verification', 'webdecoy'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach (array_slice($crawler_summary['agents'], 0, 50) as $agent_row) : ?>
+                    <tr>
+                        <td>
+                            <strong><?php echo esc_html($agent_row['name']); ?></strong>
+                            <?php if ($agent_row['organization'] !== '') : ?>
+                                <br><span class="description"><?php echo esc_html($agent_row['organization']); ?></span>
+                            <?php endif; ?>
+                        </td>
+                        <td><?php echo esc_html(WebDecoy_Crawler_Visits::category_label((string) $agent_row['category'])); ?></td>
+                        <td><strong><?php echo esc_html(number_format((int) $agent_row['hits'])); ?></strong></td>
+                        <td><?php echo esc_html(number_format((int) $agent_row['verified'])); ?></td>
+                        <td><?php echo esc_html(number_format((int) $agent_row['claimed'])); ?></td>
+                        <td><?php echo esc_html(number_format((int) $agent_row['failed'])); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <p class="description">
+                <?php esc_html_e('To refuse AI crawlers, turn on Block AI crawlers under Settings, Good Bots. Pages served from a page cache are not counted, so these are minimums.', 'webdecoy'); ?>
+            </p>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
+
     <!-- Source Distribution -->
     <?php if (!empty($source_distribution)) : ?>
     <div class="webdecoy-chart-card">
@@ -247,7 +296,7 @@ $options = get_option('webdecoy_options', []);
     <?php if (empty($options['api_key'])) : ?>
     <div class="webdecoy-cloud-upsell">
         <h3><?php esc_html_e('Want deeper insights?', 'webdecoy'); ?></h3>
-        <p><?php esc_html_e('WebDecoy Cloud provides IP reputation scoring, VPN/proxy detection, geographic analysis, and indefinite data retention. Local data is automatically cleaned up after 30 days.', 'webdecoy'); ?></p>
+        <p><?php esc_html_e('Connect for free to see these detections in the WebDecoy dashboard alongside your other sites, and get a monthly report. Local data is automatically cleaned up after 30 days.', 'webdecoy'); ?></p>
         <a href="<?php echo esc_url(admin_url('admin.php?page=webdecoy&tab=cloud')); ?>" class="button button-primary">
             <?php esc_html_e('Connect to WebDecoy Cloud', 'webdecoy'); ?>
         </a>
