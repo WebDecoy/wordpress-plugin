@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: card testing, fake orders, woocommerce, ai crawlers, bot detection
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.10.6
+Stable tag: 2.11.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -304,6 +304,12 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 7. WooCommerce checkout protection settings
 
 == Changelog ==
+
+= 2.11.0 =
+* New: the dashboard widget and Statistics page show the bots and AI crawlers seen on your site in the last 24 hours, split into verified, claimed and failed verification, with no account needed. Only counts are kept, never visitor addresses or user agents.
+* New: the Detections page explains each decoy hit in one plain sentence.
+* Changed: the plugin description now leads with card testing and fake WooCommerce orders, and no longer claims indefinite retention or that "Block AI crawlers" blocks AI search crawlers such as PerplexityBot.
+* Fixed: the AI referrals table is now created on sites that upgraded past 2.10.0 instead of only on fresh activation.
 
 = 2.10.6 =
 * Fixed: classic WooCommerce checkout protection and attempt tracking now register after all plugins load. Previously, loading WebDecoy before WooCommerce silently skipped these hooks.
