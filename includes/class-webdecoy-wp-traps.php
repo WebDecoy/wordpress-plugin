@@ -119,7 +119,7 @@ class WebDecoy_WP_Traps
             return; // /?author=slug is not numeric enumeration
         }
 
-        $this->record('tripwire', '/?author=' . $author);
+        $this->record('tripwire', '/?author=' . $author, 'author_lookup');
 
         $canary = WebDecoy_Decoy_Response::canaries()['author_user'] ?? 'editor';
 
@@ -159,7 +159,7 @@ class WebDecoy_WP_Traps
             return $response;
         }
 
-        $this->record('tripwire', $route);
+        $this->record('tripwire', $route, 'user_list');
 
         $canary = WebDecoy_Decoy_Response::canaries()['author_user'] ?? 'editor';
         $fake = [[
@@ -172,12 +172,13 @@ class WebDecoy_WP_Traps
     }
 
     /**
-     * Record a synthetic tripwire hit through the supplied recorder.
+     * Record a synthetic tripwire hit through the supplied recorder, with the
+     * trap kind the plain-language sentence is chosen by (WebDecoy/app#443).
      */
-    private function record(string $rule, string $path): void
+    private function record(string $rule, string $path, string $trap_kind): void
     {
         if (is_callable($this->recorder)) {
-            call_user_func($this->recorder, $rule, $path);
+            call_user_func($this->recorder, $rule, $path, $trap_kind);
         }
     }
 }

@@ -63,6 +63,20 @@ class TripwireRule implements RuleInterface
     /** @var bool */
     private $dryRun;
 
+    /** @var string Which trap this rule guards; '' to derive it per hit. */
+    private $trapKind;
+
+    /** @var bool Whether DEFAULT_TRIPWIRE_PATHS were merged in. */
+    private $includeDefaults;
+
+    /**
+     * Trap kinds recorded under metadata "trap_kind" (WebDecoy/app#443). The
+     * names belong to the generated sdk/src/registry/hit-explanations.generated.php;
+     * tests/HitExplanationTest.php fails on one it does not know.
+     */
+    public const TRAP_KIND_PROBE_PATH = 'probe_path';
+    public const TRAP_KIND_TRAP_PATH = 'trap_path';
+
     /**
      * @param array<string,mixed> $config {
      *     @type string[] $paths            Extra exact paths.
@@ -71,12 +85,16 @@ class TripwireRule implements RuleInterface
      *     @type bool     $includeDefaults  Merge DEFAULT_TRIPWIRE_PATHS (default true).
      *     @type string   $action           DENY (default) or THROTTLE.
      *     @type bool     $dryRun           Record but don't block (default false).
+     *     @type string   $trapKind         Which trap this rule guards (hidden_link,
+     *                                      fake_plugin, ...). Default: probe_path for a
+     *                                      default path, trap_path for anything else.
      * }
      */
     public function __construct(array $config = [])
     {
         $paths = $config['paths'] ?? [];
-        if ($config['includeDefaults'] ?? true) {
+        $this->includeDefaults = (bool) ($config['includeDefaults'] ?? true);
+        if ($this->includeDefaults) {
             $paths = array_merge($paths, self::DEFAULT_TRIPWIRE_PATHS);
         }
 
@@ -89,6 +107,24 @@ class TripwireRule implements RuleInterface
         $this->patterns = $config['patterns'] ?? [];
         $this->action = $config['action'] ?? RuleResult::DENY;
         $this->dryRun = $config['dryRun'] ?? false;
+        $this->trapKind = isset($config['trapKind']) && is_string($config['trapKind']) ? $config['trapKind'] : '';
+    }
+
+    /**
+     * Which trap a hit on $path touched, so the Detections list and the digest
+     * email can say what happened in plain words (WebDecoy/app#443). Not part
+     * of @webdecoy/node's tripwire. A kind the shared table does not know falls
+     * back to the generic sentence wherever it is read.
+     */
+    private function trapKindFor(string $path): string
+    {
+        if ($this->trapKind !== '') {
+            return $this->trapKind;
+        }
+        if ($this->includeDefaults && in_array($path, self::DEFAULT_TRIPWIRE_PATHS, true)) {
+            return self::TRAP_KIND_PROBE_PATH;
+        }
+        return self::TRAP_KIND_TRAP_PATH;
     }
 
     public function getName(): string
@@ -139,7 +175,7 @@ class TripwireRule implements RuleInterface
                 $this->dryRun ? RuleResult::ALLOW : $this->action,
                 'tripwire',
                 'Tripwire hit: ' . $path . ' — hidden honeypot path, deterministic automated-intent signal',
-                ['path' => $path, 'dryRun' => $this->dryRun, 'confidence' => 100]
+                ['path' => $path, 'dryRun' => $this->dryRun, 'confidence' => 100, 'trap_kind' => $this->trapKindFor($path)]
             );
         }
 

@@ -71,6 +71,7 @@ foreach ($sdk_paths as $sdk_path) {
         require_once $sdk_path . 'src/DetectionResult.php';
         require_once $sdk_path . 'src/AgentRegistry.php';
         require_once $sdk_path . 'src/LlmReferral.php';
+        require_once $sdk_path . 'src/HitExplanation.php';
         require_once $sdk_path . 'src/GoodBotList.php';
         require_once $sdk_path . 'src/RouteResolution.php';
         require_once $sdk_path . 'src/SignalCollector.php';
@@ -1281,27 +1282,33 @@ final class WebDecoy_Plugin
                 'includeDefaults' => false,
                 'action' => $action,
                 'dryRun' => $dryRun,
+                'trapKind' => 'hidden_link',
             ]);
         }
 
         // WordPress-native path traps: fake vulnerable-plugin routes (only for
-        // absent plugins) and, optionally, xmlrpc.php. Armed as a tripwire so
+        // absent plugins) and, optionally, xmlrpc.php. Armed as tripwires so
         // they get the full DENY + violation + clearance + optional-decoy path.
-        $trap_prefixes = [];
-        $trap_paths = [];
-        if (!empty($this->options['traps_fake_plugins'])) {
-            $trap_prefixes = array_merge($trap_prefixes, WebDecoy_WP_Traps::plugin_path_prefixes());
-        }
-        if (!empty($this->options['traps_xmlrpc'])) {
-            $trap_paths[] = '/xmlrpc.php';
-        }
-        if ($trap_prefixes !== [] || $trap_paths !== []) {
+        // Two rules rather than one so each hit records which trap it was
+        // (WebDecoy/app#443): xmlrpc.php is a real WordPress endpoint, not a
+        // missing plugin.
+        $trap_prefixes = !empty($this->options['traps_fake_plugins']) ? WebDecoy_WP_Traps::plugin_path_prefixes() : [];
+        if ($trap_prefixes !== []) {
             $rules[] = new \WebDecoy\Rules\TripwireRule([
-                'paths' => $trap_paths,
                 'prefixes' => $trap_prefixes,
                 'includeDefaults' => false,
                 'action' => $action,
                 'dryRun' => $dryRun,
+                'trapKind' => 'fake_plugin',
+            ]);
+        }
+        if (!empty($this->options['traps_xmlrpc'])) {
+            $rules[] = new \WebDecoy\Rules\TripwireRule([
+                'paths' => ['/xmlrpc.php'],
+                'includeDefaults' => false,
+                'action' => $action,
+                'dryRun' => $dryRun,
+                'trapKind' => 'trap_path',
             ]);
         }
 
@@ -1378,8 +1385,10 @@ final class WebDecoy_Plugin
      *
      * @param string $rule
      * @param string $path
+     * @param string $trap_kind Which trap it was (WebDecoy/app#443), for the
+     *                          plain-language sentence; '' for the generic one.
      */
-    public function record_synthetic_tripwire(string $rule, string $path): void
+    public function record_synthetic_tripwire(string $rule, string $path, string $trap_kind = ''): void
     {
         $ip = $this->get_client_ip();
         $ua = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
@@ -1397,7 +1406,7 @@ final class WebDecoy_Plugin
             $ua !== '' ? $ua : null,
             'WordPress trap hit: ' . $path,
             $clearance,
-            ['path' => $path, 'confidence' => 100, 'trap' => true],
+            ['path' => $path, 'confidence' => 100, 'trap' => true, 'trap_kind' => $trap_kind !== '' ? $trap_kind : \WebDecoy\Rules\TripwireRule::TRAP_KIND_TRAP_PATH],
             false,
             gmdate('Y-m-d\TH:i:s') . '.000Z'
         );
