@@ -19,6 +19,14 @@ Use that visibility to choose what should be allowed. WebDecoy also protects aga
 
 **Free and local.** No account or API key is needed for local detection and crawler counts. WebDecoy Cloud is optional. Local crawler counts include requests that reach WordPress PHP; cached pages served before PHP are outside that view.
 
+= Watch the local AI traffic test (24 seconds) =
+
+https://www.youtube.com/watch?v=tmRfJkZnuSA
+
+In this controlled localhost test, two requests claim GPTBot and one claims ClaudeBot. WebDecoy counts all three and keeps their identities marked as User-Agent claims, with zero verified identities. A normal-browser control adds no crawler count. These are synthetic requests, not visits from AI vendors.
+
+See screenshot 8 for the actual dashboard. Local crawler counts are free, with no account or API key. Open Dashboard for 24 hours or Statistics for 7 days. Cached responses that never reach PHP are outside this view. Start in monitor mode while checking your normal site flows.
+
 = See which bots and AI crawlers read your site =
 
 Most site owners have no idea how much of their traffic is GPTBot, ClaudeBot, Bytespider, or something pretending to be Googlebot. WebDecoy tells you, with no account:
@@ -302,6 +310,7 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 5. Dashboard widget: threat overview at a glance
 6. WebDecoy Cloud: optional premium features
 7. WooCommerce checkout protection settings
+8. Local AI traffic dashboard: controlled test with 3 synthetic crawler claims, 0 verified identities and no cloud account. GPTBot 2; ClaudeBot 1. Counts cover requests reaching PHP.
 
 == Changelog ==
 
