@@ -1,5 +1,8 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.11.1 - 2026-11-11 =
+* Added: six more crawlers and AI agents are recognised (192 in total): PetalBot (Huawei's Petal Search), Meta-WebIndexer and ShapBot as search crawlers, ExaUser and Shap-User as AI assistants, and Manus-User as an AI agent. Exa's crawler now matches on its product token, so ExaUser is no longer counted as Exa's search crawler.
+
 = 2.11.0 - 2026-11-10 =
 * New: the dashboard widget and Statistics page show the bots and AI crawlers seen on your site in the last 24 hours, split into verified, claimed and failed verification, with no account needed. Only counts are kept, never visitor addresses or user agents.
 * New: the Detections page explains each decoy hit in one plain sentence.

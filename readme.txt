@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: card testing, fake orders, woocommerce, ai crawlers, bot detection
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.11.0
+Stable tag: 2.11.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -304,6 +304,9 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 7. WooCommerce checkout protection settings
 
 == Changelog ==
+
+= 2.11.1 =
+* Added: six more crawlers and AI agents are recognised (192 in total): PetalBot (Huawei's Petal Search), Meta-WebIndexer and ShapBot as search crawlers, ExaUser and Shap-User as AI assistants, and Manus-User as an AI agent. Exa's crawler now matches on its product token, so ExaUser is no longer counted as Exa's search crawler.
 
 = 2.11.0 =
 * New: the dashboard widget and Statistics page show the bots and AI crawlers seen on your site in the last 24 hours, split into verified, claimed and failed verification, with no account needed. Only counts are kept, never visitor addresses or user agents.
