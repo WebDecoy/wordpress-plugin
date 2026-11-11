@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: ai crawlers, bot analytics, bot detection, woocommerce, card testing
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.11.2
+Stable tag: 2.11.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -313,6 +313,9 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 8. Local AI traffic dashboard: controlled test with 3 synthetic crawler claims, 0 verified identities and no cloud account. GPTBot 2; ClaudeBot 1. Counts cover requests reaching PHP.
 
 == Changelog ==
+
+= 2.11.3 =
+* Added: 14 more crawlers and bots are recognised (235 in total), including RiverBot, IsonSearchBot, Barkrowler, Stripebot, Brightbot, Cloudflare's crawl service, and security scanners from Palo Alto Networks, Recorded Future and VirusTotal.
 
 = 2.11.2 =
 * Added: 29 more crawlers and AI agents are recognised (221 in total), including Bravebot, Coc Coc, YisouSpider, KimiBot, Kimi-SearchBot, GrokBot, ElevenlabsCrawler, OAI-AdsBot, AdsBot-Google and Meta's ads crawler. Qwant and Ibou are now recognised by their current names (Qwantbot, ibou-search).

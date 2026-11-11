@@ -1,5 +1,8 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.11.3 - 2026-11-11 =
+* Added: 14 more crawlers and bots are recognised (235 in total), including RiverBot, IsonSearchBot, Barkrowler, Stripebot, Brightbot, Cloudflare's crawl service, and security scanners from Palo Alto Networks, Recorded Future and VirusTotal.
+
 = 2.11.2 - 2026-11-11 =
 * Added: 29 more crawlers and AI agents are recognised (221 in total), including Bravebot, Coc Coc, YisouSpider, KimiBot, Kimi-SearchBot, GrokBot, ElevenlabsCrawler, OAI-AdsBot, AdsBot-Google and Meta's ads crawler. Qwant and Ibou are now recognised by their current names (Qwantbot, ibou-search).
 
