@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: ai crawlers, bot analytics, bot detection, woocommerce, card testing
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.11.1
+Stable tag: 2.11.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -304,6 +304,9 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 7. WooCommerce checkout protection settings
 
 == Changelog ==
+
+= 2.11.2 =
+* Added: 29 more crawlers and AI agents are recognised (221 in total), including Bravebot, Coc Coc, YisouSpider, KimiBot, Kimi-SearchBot, GrokBot, ElevenlabsCrawler, OAI-AdsBot, AdsBot-Google and Meta's ads crawler. Qwant and Ibou are now recognised by their current names (Qwantbot, ibou-search).
 
 = 2.11.1 =
 * Added: six more crawlers and AI agents are recognised (192 in total): PetalBot (Huawei's Petal Search), Meta-WebIndexer and ShapBot as search crawlers, ExaUser and Shap-User as AI assistants, and Manus-User as an AI agent. Exa's crawler now matches on its product token, so ExaUser is no longer counted as Exa's search crawler.
