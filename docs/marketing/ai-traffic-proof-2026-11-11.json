@@ -1,0 +1,12 @@
+{
+  "purpose": "WordPress.org listing video and actual local AI traffic dashboard",
+  "video": "https://www.youtube.com/watch?v=tmRfJkZnuSA",
+  "screenshot": ".wordpress-org/screenshot-8.png",
+  "capture": "Chrome native DevTools Capture node screenshot of the actual WordPress WebDecoy dashboard widget, November 11, 2026",
+  "environment": "Fresh local WordPress7.1/PHP8.3; plugin2.11.1; monitor mode; no cloud account",
+  "requests": "Two GPTBot/1.2 and one ClaudeBot/1.0 homepage GET requests",
+  "result": "3 AI crawler requests; 0 verified; all3 User-Agent-only claims; no detections or blockedIPs",
+  "limits": "Synthetic requests, not actualAIvendorvisits. Screenshot unretouched; otherWordPresswidgets hidden using ScreenOptions. OnlyPHPobservedrequests count.",
+  "packaging": ".wordpress-org directory excluded from runtime archives by build.sh top-level dotfile exclusion",
+  "listing_release": "Readme-only update in SVNtrunk/currentstabletag plus screenshot8 inSVNassets; no runtime package/version release."
+}
