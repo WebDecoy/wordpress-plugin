@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: WebDecoy Bot Detection
+ * Plugin Name: WebDecoy - AI Traffic Analytics & Bot Protection
  * Plugin URI: https://webdecoy.com/wordpress
- * Description: Protect your WordPress site from bots, spam, and carding attacks with WebDecoy's advanced threat detection.
+ * Description: Understand AI crawler visits and bot identity evidence in WordPress, with local analytics and protection against spam, login abuse, and WooCommerce card testing.
  * Version: 2.11.1
  * Requires at least: 6.1
  * Requires PHP: 7.4

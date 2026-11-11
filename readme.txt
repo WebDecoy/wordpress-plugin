@@ -1,7 +1,7 @@
-=== WebDecoy Bot Detection - Stop Card Testing, Fake Orders & AI Crawlers ===
+=== WebDecoy - AI Traffic Analytics & Bot Protection ===
 Contributors: webdecoy1
 Donate link: https://webdecoy.com
-Tags: card testing, fake orders, woocommerce, ai crawlers, bot detection
+Tags: ai crawlers, bot analytics, bot detection, woocommerce, card testing
 Requires at least: 6.1
 Tested up to: 7.1
 Stable tag: 2.11.1
@@ -9,27 +9,15 @@ Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Stop WooCommerce card testing, fake orders and checkout bots, and see which AI crawlers read your site. No account, no CAPTCHA, runs locally.
+Understand your AI bot traffic: see crawler counts and identity evidence, then choose protection. Free local analytics. No account needed.
 
 == Description ==
 
-WebDecoy stops the bots that cost a store money: card-testing scripts running stolen cards through your WooCommerce checkout, fake orders, and checkout bots. And from the first hour after you activate it, it shows you which crawlers and AI agents are reading your site, and whether they are who they claim to be.
+**Understand the AI traffic reaching your WordPress site.** WebDecoy shows which known bots and AI crawlers visit, how often they appear, and whether a supported crawler's identity is verified, claimed or failed. See local counts in your WordPress dashboard and the per-bot breakdown in Statistics, without creating an account.
 
-It is a **free, fully-functional** plugin that works 100% locally. It also stops fake registrations, comment spam and login brute force, and no human visitor ever sees a CAPTCHA.
+Use that visibility to choose what should be allowed. WebDecoy also protects against spam submissions, fake registrations, login abuse and WooCommerce card testing. Monitor mode is the default, so you can review activity before enabling blocking.
 
-**Works immediately on activation.** No account needed. No API key required. No external connections at all until you optionally connect a WebDecoy Cloud account.
-
-= Stop WooCommerce card testing and fake orders =
-
-Card-testing bots run stolen card numbers through your checkout. You pay a gateway fee for every attempt, your decline rate climbs until the processor takes notice, and real orders drown in the noise. WebDecoy watches checkout the way a fraud analyst would:
-
-* Velocity limits per address (configurable attempts per time window)
-* Card-testing pattern detection: small amounts, rapid succession, repeated declines across more than one card
-* A hidden decoy coupon code that only bots ever find and apply
-* Works with both the classic checkout and WooCommerce Blocks
-* Checkout bot signals from the last 24 hours, right on your WordPress dashboard
-
-Suspicious checkouts are refused and recorded, not silently allowed. And by default the whole plugin runs in monitor mode, so you can watch exactly what it would have done before you let it act.
+**Free and local.** No account or API key is needed for local detection and crawler counts. WebDecoy Cloud is optional. Local crawler counts include requests that reach WordPress PHP; cached pages served before PHP are outside that view.
 
 = See which bots and AI crawlers read your site =
 
@@ -42,6 +30,18 @@ Most site owners have no idea how much of their traffic is GPTBot, ClaudeBot, By
 * **One switch to refuse AI crawlers** (Settings > Good Bots), with search engines unaffected
 
 Only a count per bot per hour is kept: no IP addresses, no pages, and nothing about human visitors. Pages served from a page cache never reach WordPress, so the counts are minimums.
+
+= Stop WooCommerce card testing and fake orders =
+
+Card-testing bots run stolen card numbers through your checkout. You pay a gateway fee for every attempt, your decline rate climbs until the processor takes notice, and real orders drown in the noise. WebDecoy watches checkout the way a fraud analyst would:
+
+* Velocity limits per address (configurable attempts per time window)
+* Card-testing pattern detection: small amounts, rapid succession, repeated declines across more than one card
+* A hidden decoy coupon code that only bots ever find and apply
+* Works with both the classic checkout and WooCommerce Blocks
+* Checkout bot signals from the last 24 hours, right on your WordPress dashboard
+
+Suspicious checkouts are refused and recorded, not silently allowed. And by default the whole plugin runs in monitor mode, so you can watch exactly what it would have done before you let it act.
 
 = Why WebDecoy? =
 
