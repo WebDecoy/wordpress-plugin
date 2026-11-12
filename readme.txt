@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: ai crawlers, bot analytics, bot detection, woocommerce, card testing
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.11.3
+Stable tag: 2.11.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -313,6 +313,9 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 8. Local AI traffic dashboard: controlled test with 3 synthetic crawler claims, 0 verified identities and no cloud account. GPTBot 2; ClaudeBot 1. Counts cover requests reaching PHP.
 
 == Changelog ==
+
+= 2.11.4 =
+* Added: after a week on your site, WebDecoy asks once for a review on WordPress.org, naming how many bot visits it counted. Only administrators see it, only on the dashboard and WebDecoy pages, and only when bots were counted. Choose Leave a review, Maybe later or Don't ask again.
 
 = 2.11.3 =
 * Added: 14 more crawlers and bots are recognised (235 in total), including RiverBot, IsonSearchBot, Barkrowler, Stripebot, Brightbot, Cloudflare's crawl service, and security scanners from Palo Alto Networks, Recorded Future and VirusTotal.

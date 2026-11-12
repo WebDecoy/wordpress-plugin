@@ -1,5 +1,8 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.11.4 - 2026-11-11 =
+* Added: after a week on your site, WebDecoy asks once for a review on WordPress.org, naming how many bot visits it counted. Only administrators see it, only on the dashboard and WebDecoy pages, and only when bots were counted. Choose Leave a review, Maybe later or Don't ask again.
+
 = 2.11.3 - 2026-11-11 =
 * Added: 14 more crawlers and bots are recognised (235 in total), including RiverBot, IsonSearchBot, Barkrowler, Stripebot, Brightbot, Cloudflare's crawl service, and security scanners from Palo Alto Networks, Recorded Future and VirusTotal.
 
