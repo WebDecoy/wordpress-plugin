@@ -1087,6 +1087,7 @@ final class WebDecoy_Plugin
         }
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-actor-feed.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-critical-moment.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-review-ask.php';
 
         // One-click Cloud connect + entitlements sync. Makes no external request
         // until the admin explicitly clicks "Connect".
@@ -1107,6 +1108,9 @@ final class WebDecoy_Plugin
         // the CRITICAL detection insert sites; renders in wp-admin only.
         $this->critical_moment = new WebDecoy_Critical_Moment();
         $this->critical_moment->register();
+
+        // One wordpress.org review ask, after a week with bots counted. Admin only.
+        (new WebDecoy_Review_Ask())->register();
 
         if (class_exists('WooCommerce')) {
             require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-woocommerce.php';
