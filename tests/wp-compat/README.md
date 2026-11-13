@@ -36,3 +36,15 @@ resolved (`mod_remoteip` switched off, so `REMOTE_ADDR` is the proxy), where
 the notice must show and its button must open the trusted-proxies field; and
 with that proxy configured as trusted. 2.10.4 fails it on the false notice and
 the button's 403; the script restores `mod_remoteip` on exit.
+
+## Detection hook ordering
+
+`hook-order.py` checks redirect timing and intentional admin/AJAX exclusions
+without a database or live site. Supply existing WordPress core hook files:
+
+```sh
+python3 tests/wp-compat/hook-order.py /path/to/wordpress/wp-includes php
+```
+
+This supplements the Docker smoke tests; it is not a full plugin-stack test.
+See [scope and measured results](../../docs/hook-order-compatibility.md).
