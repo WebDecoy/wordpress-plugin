@@ -1,0 +1,218 @@
+{
+  "tested_at": "2026-11-13",
+  "runtime": {
+    "wordpress": "7.1.4",
+    "php": "8.3.33",
+    "mariadb": "11.8.9",
+    "webdecoy": "2.11.4",
+    "wordpress_image_id": "sha256:8801a1239d7ba9fb340a5fc5ba0bf7f8d3652adbd64893e3fba7992ba618108e",
+    "mariadb_image_id": "sha256:2439dcd7d14010ecd1ff7a4e1c5abe8e208c34fe35290744deeeaac3569043c3"
+  },
+  "packages": [
+    {
+      "slug": "webdecoy",
+      "version": "2.11.4",
+      "url": "https://downloads.wordpress.org/plugin/webdecoy.2.11.4.zip",
+      "sha256": "6fc5d8a1e6c520f98ca67e4ab9d0274cdc1d7c06967c4ad6fbd5f0ee3a912e11"
+    },
+    {
+      "slug": "redirection",
+      "version": "5.10.1",
+      "url": "https://downloads.wordpress.org/plugin/redirection.5.10.1.zip",
+      "sha256": "f68a4be447ecba00c64e8a39d7517807ed49cc18e77b7a364c20cb31848235b7"
+    },
+    {
+      "slug": "wps-hide-login",
+      "version": "1.9.20",
+      "url": "https://downloads.wordpress.org/plugin/wps-hide-login.1.9.20.zip",
+      "sha256": "86fc072944700163a221c11ea4d132bd907e04229d38c3e98030e47a46ba6b72"
+    },
+    {
+      "slug": "wordfence",
+      "version": "9.1.1",
+      "url": "https://downloads.wordpress.org/plugin/wordfence.9.1.1.zip",
+      "sha256": "51acb206ebaef1756e03112df81c749a70e4086d1a71b6e3426373e393880ad1"
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "baseline",
+      "mode": "Wordfence default/learning where active",
+      "plugins": [
+        "webdecoy/webdecoy.php"
+      ],
+      "http_cases": 10,
+      "passed": true,
+      "wordfence": null
+    },
+    {
+      "name": "redirection",
+      "mode": "Wordfence default/learning where active",
+      "plugins": [
+        "redirection/redirection.php",
+        "webdecoy/webdecoy.php"
+      ],
+      "http_cases": 11,
+      "passed": true,
+      "wordfence": null
+    },
+    {
+      "name": "hide",
+      "mode": "Wordfence default/learning where active",
+      "plugins": [
+        "webdecoy/webdecoy.php",
+        "wps-hide-login/wps-hide-login.php"
+      ],
+      "http_cases": 11,
+      "passed": true,
+      "wordfence": null
+    },
+    {
+      "name": "wordfence",
+      "mode": "Wordfence default/learning where active",
+      "plugins": [
+        "webdecoy/webdecoy.php",
+        "wordfence/wordfence.php"
+      ],
+      "http_cases": 10,
+      "passed": true,
+      "wordfence": {
+        "api_key_configured": false,
+        "is_paid": false,
+        "waf_status": "learning-mode",
+        "waf_rules_file_present": true,
+        "basic_protection": true
+      }
+    },
+    {
+      "name": "all",
+      "mode": "Wordfence default/learning where active",
+      "plugins": [
+        "redirection/redirection.php",
+        "webdecoy/webdecoy.php",
+        "wordfence/wordfence.php",
+        "wps-hide-login/wps-hide-login.php"
+      ],
+      "http_cases": 12,
+      "passed": true,
+      "wordfence": {
+        "api_key_configured": false,
+        "is_paid": false,
+        "waf_status": "learning-mode",
+        "waf_rules_file_present": true,
+        "basic_protection": true
+      }
+    },
+    {
+      "name": "all-reverse",
+      "mode": "Wordfence default/learning where active",
+      "plugins": [
+        "redirection/redirection.php",
+        "webdecoy/webdecoy.php",
+        "wordfence/wordfence.php",
+        "wps-hide-login/wps-hide-login.php"
+      ],
+      "http_cases": 12,
+      "passed": true,
+      "wordfence": {
+        "api_key_configured": false,
+        "is_paid": false,
+        "waf_status": "learning-mode",
+        "waf_rules_file_present": true,
+        "basic_protection": true
+      }
+    },
+    {
+      "name": "all-waf-enabled",
+      "mode": "Wordfence enabled, native plugin bootstrap",
+      "plugins": [
+        "redirection/redirection.php",
+        "webdecoy/webdecoy.php",
+        "wordfence/wordfence.php",
+        "wps-hide-login/wps-hide-login.php"
+      ],
+      "http_cases": 14,
+      "passed": true,
+      "wordfence": {
+        "api_key_configured": false,
+        "is_paid": false,
+        "waf_status": "learning-mode",
+        "waf_rules_file_present": true,
+        "basic_protection": true
+      }
+    },
+    {
+      "name": "all-waf-enabled-reverse",
+      "mode": "Wordfence enabled, native plugin bootstrap",
+      "plugins": [
+        "redirection/redirection.php",
+        "webdecoy/webdecoy.php",
+        "wordfence/wordfence.php",
+        "wps-hide-login/wps-hide-login.php"
+      ],
+      "http_cases": 14,
+      "passed": true,
+      "wordfence": {
+        "api_key_configured": false,
+        "is_paid": false,
+        "waf_status": "learning-mode",
+        "waf_rules_file_present": true,
+        "basic_protection": true
+      }
+    },
+    {
+      "name": "all-extended",
+      "mode": "Wordfence enabled, native auto_prepend_file",
+      "plugins": [
+        "redirection/redirection.php",
+        "webdecoy/webdecoy.php",
+        "wordfence/wordfence.php",
+        "wps-hide-login/wps-hide-login.php"
+      ],
+      "http_cases": 14,
+      "passed": true,
+      "wordfence": {
+        "api_key_configured": false,
+        "is_paid": false,
+        "waf_status": "learning-mode",
+        "waf_rules_file_present": true,
+        "basic_protection": true
+      }
+    },
+    {
+      "name": "all-extended-reverse",
+      "mode": "Wordfence enabled, native auto_prepend_file",
+      "plugins": [
+        "redirection/redirection.php",
+        "webdecoy/webdecoy.php",
+        "wordfence/wordfence.php",
+        "wps-hide-login/wps-hide-login.php"
+      ],
+      "http_cases": 14,
+      "passed": true,
+      "wordfence": {
+        "api_key_configured": false,
+        "is_paid": false,
+        "waf_status": "learning-mode",
+        "waf_rules_file_present": true,
+        "basic_protection": true
+      }
+    }
+  ],
+  "http_cases_passed": 122,
+  "independent_server_receipts_matched": 122,
+  "local_detection_rows_in_these_cases": 54,
+  "limitations": [
+    "Synthetic HTTP clients; no browser JavaScript/client scanner exercise.",
+    "No Wordfence license or downloaded vendor signatures; local manual UA rule tested in both basic and auto_prepend modes.",
+    "No cloud reporting, real OpenAI identity/DNS verification, Apache/FPM, CDN or full-page-cache certification."
+  ],
+  "findings": [
+    "No conflict observed in the tested login, navigation, redirect, AI counter and WebDecoy trap enforcement flows.",
+    "Wordfence manual block returns503 before WebDecoy detection; auto_prepend cases terminate before WordPress loads.",
+    "Repeated already-blocked-IP requests return403 without a fresh detection row.",
+    "WPS Hide Login rewrites the hidden login path before WebDecoy sees its request context."
+  ],
+  "production_changes": false,
+  "wordfence_downloaded_rule_feed_bytes": 0
+}

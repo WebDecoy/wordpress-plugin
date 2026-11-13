@@ -1,0 +1,71 @@
+# Only for an already staged, disposable WordPress source tree.
+# No port mappings; HTTP clients run via docker exec inside private loopback.
+services:
+  db:
+    image: mariadb:11
+    pull_policy: never
+    labels:
+      webdecoy.task: wp-stack-compat
+    network_mode: none
+    read_only: true
+    user: "999:999"
+    mem_limit: 384m
+    memswap_limit: 384m
+    cpus: 1
+    pids_limit: 96
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      HOME: /tmp
+      MARIADB_DATABASE: wp
+      MARIADB_USER: wp
+      MARIADB_PASSWORD: fixture-db-password
+      MARIADB_ROOT_PASSWORD: fixture-root-password
+    tmpfs:
+      - /var/lib/mysql:rw,size=268435456,uid=999,gid=999,mode=0700
+      - /run/mysqld:rw,size=1048576,uid=999,gid=999,mode=0750
+      - /tmp:rw,size=16777216,uid=999,gid=999,mode=0700
+    ulimits:
+      nofile: 256
+      fsize: 134217728
+    command: [--bind-address=127.0.0.1, --skip-name-resolve, --innodb-buffer-pool-size=32M, --innodb-log-file-size=8M, --innodb-log-buffer-size=4M, --max-connections=12, --performance-schema=OFF]
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    logging:
+      options: {max-size: 1m, max-file: "1"}
+  wp:
+    image: wordpress:7.1-php8.3-apache
+    pull_policy: never
+    labels:
+      webdecoy.task: wp-stack-compat
+    depends_on:
+      db: {condition: service_healthy}
+    network_mode: service:db
+    read_only: true
+    user: "33:33"
+    mem_limit: 384m
+    memswap_limit: 384m
+    cpus: 1
+    pids_limit: 32
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment: {HOME: /scratch, TMPDIR: /tmp}
+    working_dir: /scratch
+    volumes:
+      - ${COMPAT_WORDPRESS_DIR:?Set a disposable staged WordPress directory}:/site:ro
+      - .:/fixture:ro
+    tmpfs:
+      - /scratch:rw,size=67108864,uid=33,gid=33,mode=0700
+      - /tmp:rw,size=16777216,uid=33,gid=33,mode=0700
+      - /site/wp-content/uploads:rw,size=16777216,uid=33,gid=33,mode=0750
+      - /site/wp-content/wflogs:rw,size=33554432,uid=33,gid=33,mode=0750
+    ulimits:
+      nofile: 128
+      fsize: 16777216
+    entrypoint: php
+    command: [-d, display_errors=0, -d, log_errors=1, -d, error_log=/scratch/php-errors.log, -d, memory_limit=128M, -d, max_execution_time=10, -d, session.save_path=/scratch, -S, "127.0.0.1:8080", -t, /site, /fixture/router.php]
+    logging:
+      options: {max-size: 1m, max-file: "1"}
