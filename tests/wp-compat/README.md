@@ -48,3 +48,11 @@ python3 tests/wp-compat/hook-order.py /path/to/wordpress/wp-includes php
 
 This supplements the Docker smoke tests; it is not a full plugin-stack test.
 See [scope and measured results](../../docs/hook-order-compatibility.md).
+
+## Installed companion-plugin matrix
+
+The [isolated plugin-stack fixture](plugin-stack/README.md) exercises full
+WordPress HTTP requests, real MariaDB storage, Redirection, WPS Hide Login and
+Wordfence, including native `auto_prepend_file`. See the
+[122-case measured results](../../docs/plugin-stack-compatibility-2026-11-13.md)
+for the tested versions, observation limits and remaining scope.

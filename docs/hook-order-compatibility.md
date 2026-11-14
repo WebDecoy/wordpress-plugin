@@ -3,6 +3,10 @@
 Focused check on 2026-11-13: WebDecoy 2.11.4 at `92a92da`, PHP 8.5.10,
 WordPress 7.1.4 hook dispatcher. Fourteen request cases passed.
 
+A follow-up [installed-plugin HTTP matrix](plugin-stack-compatibility-2026-11-13.md)
+now adds 122 measured cases using real WordPress and MariaDB. This page describes
+the earlier, narrower hook fixture.
+
 The general front-end check is registered on `init` at priority 1. A callback
 that exits before it runs prevents detection of that request. Later redirects
 do not erase an already recorded detection.
@@ -28,7 +32,8 @@ nonce, authentication, or enforcement behavior.
 
 ## Current companion sources reviewed
 
-These are source reviews, **not installed-plugin compatibility certifications**:
+These were source reviews during the initial pass. The linked installed-plugin
+follow-up records the runtime cases now exercised and the remaining limits:
 
 - Redirection 5.10.1: `includes/module/class-plugin.php` registers canonical
   redirects and initialization at default `init` priority 10, with page
@@ -37,11 +42,14 @@ These are source reviews, **not installed-plugin compatibility certifications**:
   default `init` priority 10 and its main login handling on `wp_loaded`.
   Its earlier `plugins_loaded` handler rewrites login request paths and
   `$pagenow`; consequently WebDecoy may inspect the rewritten path rather than
-  the original login URL. Complete mixed-plugin behavior remains untested.
+  the original login URL. The follow-up exercises the main login and redirect
+  flows, but not every setting.
 - Wordfence 9.1.1 has earlier bootstrap protection and later hooks. Its optimized
   firewall runs before WordPress. Requests it ends before WebDecoy runs are
-  outside this plugin's observation window; no complete Wordfence coexistence
-  or Extended Protection installation was tested.
+  outside this plugin's observation window; the initial hook fixture did not
+  exercise that runtime. The follow-up now
+  tests a manual Wordfence block in basic and native prepend modes; licensed
+  vendor signatures remain outside its scope.
 
 Official packages reviewed:
 [Redirection](https://downloads.wordpress.org/plugin/redirection.5.10.1.zip),
