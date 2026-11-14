@@ -1,0 +1,41 @@
+{
+  "unit_tests_passed": 235,
+  "focused_checks_passed": 13,
+  "focused_http_requests": 58,
+  "measurements": {
+    "monitor": {
+      "request_count": 1,
+      "withheld_actions": 3
+    },
+    "repeat_blocks": {
+      "initial_and_repeat_count": 2,
+      "concurrent_requests": 40,
+      "counter_delta": 40,
+      "detection_delta": 0,
+      "aggregate_rows": 1
+    }
+  },
+  "checks": [
+    "new schema and tracking-start metadata",
+    "setup-test 403 excluded",
+    "multiple monitor decisions deduplicated per request",
+    "fresh and repeated IP blocks counted without duplicate findings",
+    "40 concurrent repeat blocks reconcile with one aggregate bucket",
+    "challenge responses separate from blocks",
+    "actual 429 throttles separate from 403 blocks",
+    "nonce rejection and CLI operations excluded",
+    "authenticated dashboard and Statistics show separate measured counts",
+    "failed upgrade preserves protection and retries without backfilling",
+    "30 UTC calendar-day retention preserves the boundary bucket",
+    "all HTTP results matched independent server receipts",
+    "actual WordPress uninstall removes counters and start metadata"
+  ],
+  "compatibility_cases": {
+    "matrix-waf-enabled-results.json": 28,
+    "matrix-results.json": 66,
+    "matrix-extended-results.json": 28
+  },
+  "compatibility_total": 122,
+  "scope": "Request accounting and admin presentation only; no blocking decision changes.",
+  "release_status": "Unreleased implementation; release and marketplace publication not performed."
+}

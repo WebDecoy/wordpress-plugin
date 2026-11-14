@@ -125,6 +125,7 @@ Registration spam and comment spam are the same disease: automation pointed at y
 **Local Dashboard & Analytics**
 * Detection log with threat scores and MITRE tactic mapping
 * Statistics page with 30-day trend charts
+* Separate request counters: actual blocks, throttles, challenges and withheld enforcement, including repeat IP blocks
 * Blocked IPs management
 * Dashboard widget: bots seen in the last 24 hours, checkout bot signals, threat overview
 * CSV export
