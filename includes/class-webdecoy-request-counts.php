@@ -84,7 +84,10 @@ class WebDecoy_Request_Counts
             return;
         }
         $switched = false;
+        $previous_errors = null;
         try {
+            global $wpdb;
+            $previous_errors = $wpdb->suppress_errors(true);
             // A later switch_to_blog must not attribute this request to another site.
             if (self::$blog_id !== null && get_current_blog_id() !== self::$blog_id) {
                 switch_to_blog(self::$blog_id);
@@ -93,7 +96,6 @@ class WebDecoy_Request_Counts
             if (!self::ready()) {
                 return;
             }
-            global $wpdb;
             $table = self::table();
             // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- trusted table prefix; outcome is a closed enum
             $wpdb->query($wpdb->prepare(
@@ -108,6 +110,13 @@ class WebDecoy_Request_Counts
             if ($switched) {
                 try {
                     restore_current_blog();
+                } catch (\Throwable $error) {
+                    unset($error);
+                }
+            }
+            if ($previous_errors !== null) {
+                try {
+                    $wpdb->suppress_errors($previous_errors);
                 } catch (\Throwable $error) {
                     unset($error);
                 }

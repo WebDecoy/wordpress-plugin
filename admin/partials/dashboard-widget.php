@@ -161,7 +161,7 @@ if (class_exists('WooCommerce')) {
     <div class="webdecoy-widget-stats">
         <div class="webdecoy-stat">
             <span class="webdecoy-stat-value"><?php echo esc_html(number_format($stats['total'])); ?></span>
-            <span class="webdecoy-stat-label"><?php esc_html_e('Detection rows (7 days)', 'webdecoy'); ?></span>
+            <span class="webdecoy-stat-label"><?php esc_html_e('Detection rows (rolling 7 days)', 'webdecoy'); ?></span>
         </div>
         <div class="webdecoy-stat">
             <span class="webdecoy-stat-value webdecoy-stat-danger"><?php echo esc_html(number_format($stats['high_risk'])); ?></span>

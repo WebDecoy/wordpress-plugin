@@ -1,7 +1,7 @@
 {
   "unit_tests_passed": 235,
-  "focused_checks_passed": 13,
-  "focused_http_requests": 58,
+  "focused_checks_passed": 14,
+  "focused_http_requests": 60,
   "measurements": {
     "monitor": {
       "request_count": 1,
@@ -20,9 +20,10 @@
     "setup-test 403 excluded",
     "multiple monitor decisions deduplicated per request",
     "fresh and repeated IP blocks counted without duplicate findings",
-    "40 concurrent repeat blocks reconcile with one aggregate bucket",
+    "40 concurrent repeat blocks reconcile with hourly aggregates",
     "challenge responses separate from blocks",
     "actual 429 throttles separate from 403 blocks",
+    "counter write failure preserves denial and recovery resumes counting",
     "nonce rejection and CLI operations excluded",
     "authenticated dashboard and Statistics show separate measured counts",
     "failed upgrade preserves protection and retries without backfilling",

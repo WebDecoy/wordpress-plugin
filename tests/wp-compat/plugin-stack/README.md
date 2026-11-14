@@ -88,7 +88,8 @@ python3 check-request-counts.py --uninstall
 
 This is deliberately destructive to the **disposable test database**. It drops
 only the fixture counter table to simulate an old release, temporarily revokes
-CREATE from the dummy database user (restored in `finally`), verifies retry and
+CREATE from the dummy database user (restored in `finally`), rejects a counter
+insert with a temporary database trigger (also removed in `finally`), verifies retry and
 continued protection, checks retention, and optionally invokes actual plugin
 uninstall last. It checks setup-test exclusion, multiple withheld decisions in
 one login request, fresh/repeated blocks, 40 concurrent hits, challenges, 429s,

@@ -40,7 +40,8 @@ actions as blocked requests.
 Schema 2.11.1 adds `webdecoy_request_counts`. Its only columns are UTC hour,
 outcome and count, with a primary key on hour/outcome. Each counted request
 uses an atomic `INSERT ... ON DUPLICATE KEY UPDATE hits = hits + 1`, preventing
-concurrent lost updates without writing another detection row. There are at
+concurrent lost updates without writing another detection row. Counter-write errors are suppressed and
+do not alter the protection response; a failed write is not invented or backfilled. There are at
 most four outcome buckets per hour. No new visitor IP, URL, User-Agent or
 fingerprint is stored.
 
@@ -58,7 +59,7 @@ per-site cleanup paths. No cloud reporting/API contract is changed.
 
 - 235 dependency-free tests passed, including outcome precedence, final-status
   validation, setup-test exclusion, aggregation and UTC/leap-day boundaries.
-- 13 focused checks passed across 58 actual HTTP requests, each reconciled with
+- 14 focused checks passed across 60 actual HTTP requests, each reconciled with
   an independent server receipt in full WordPress/MariaDB.
 - One monitor-mode login produced 3 withheld actions and exactly 1 request count.
 - 40 concurrent repeat-block requests produced exactly 40 counter increments,
@@ -69,6 +70,8 @@ per-site cleanup paths. No cloud reporting/API contract is changed.
 - A simulated CREATE-permission failure preserved blocking, left tracking
   unavailable, and retried successfully after permissions were restored,
   without backfilling past requests. Repeated upgrade preserved start metadata.
+- A database trigger rejecting counter-only writes preserved the 403 response
+  without leaking database errors; removing the trigger resumed counting.
 - Retention preserved the boundary bucket and removed older buckets; actual
   WordPress uninstall removed the table and start metadata.
 - The full 122-request installed-plugin matrix passed again, including

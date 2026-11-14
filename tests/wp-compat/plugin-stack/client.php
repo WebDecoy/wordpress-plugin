@@ -16,5 +16,6 @@ foreach($cells as $cell)$summary['request_count_cells'][$cell[1]][$cell[2]]=$cel
 $summary['widget_counts']=[];
 preg_match_all('/data-webdecoy-count="([a-z]+)">([0-9,]+)<\/span>/', $body, $widgets, PREG_SET_ORDER);
 foreach($widgets as $widget)$summary['widget_counts'][$widget[1]]=(int)str_replace(',','',$widget[2]);
+$summary['counter_error_visible']=strpos($body,'fixture counter write rejected')!==false || strpos($body,'WordPress database error')!==false;
 $summary['tracking_start_visible']=strpos($body,'Request tracking started')!==false;
 file_put_contents('/scratch/client-results.jsonl',json_encode($summary)."\n",FILE_APPEND|LOCK_EX);echo json_encode($summary);

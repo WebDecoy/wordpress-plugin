@@ -159,7 +159,7 @@ if ($wd_intel_connected && !empty($detections) && class_exists('WebDecoy_Actor_I
     <div class="webdecoy-detection-stats">
         <div class="webdecoy-stat-box">
             <span class="value"><?php echo esc_html(number_format($stats['total'])); ?></span>
-            <span class="label"><?php esc_html_e('Detection rows (7 days)', 'webdecoy'); ?></span>
+            <span class="label"><?php esc_html_e('Detection rows (rolling 7 days)', 'webdecoy'); ?></span>
         </div>
         <div class="webdecoy-stat-box webdecoy-stat-danger">
             <span class="value"><?php echo esc_html(number_format($stats['high_risk'])); ?></span>

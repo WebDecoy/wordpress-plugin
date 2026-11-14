@@ -83,6 +83,17 @@ try:
  s=state();same(2,s['today']['throttled']);same(0,s['today']['blocked']);same(0,s['today']['withheld'])
  check('actual 429 throttles separate from 403 blocks')
 
+ # A DB trigger rejects just counter inserts. Detection writes must still work.
+ reset();configure(rate_limit_enabled=False,tripwire_enabled=True,tripwire_response='block',monitor_mode=False)
+ root=['docker','exec',db_id,'mariadb','-uroot','-pfixture-root-password','-e']
+ try:
+  subprocess.run(root+["CREATE TRIGGER wp.fixture_counter_failure BEFORE INSERT ON wp.wp_webdecoy_request_counts FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='fixture counter write rejected';"],check=True,capture_output=True,text=True,timeout=15)
+  r=request('counter-write-failure','/compat-trap/');same(403,r['status']);assert not r['counter_error_visible'];same(0,state()['today']['blocked'])
+ finally:
+  subprocess.run(root+["DROP TRIGGER IF EXISTS wp.fixture_counter_failure;"],check=True,capture_output=True,text=True,timeout=15)
+ same(403,request('counter-write-recovery')['status']);same(1,state()['today']['blocked'])
+ check('counter write failure preserves denial and recovery resumes counting')
+
  reset();configure(rate_limit_enabled=False,tripwire_enabled=True,monitor_mode=True)
  r=request('ajax-no-nonce','/wp-admin/admin-ajax.php',post={'action':'webdecoy_client_detection'});same(403,r['status']);same([],state()['rows'])
  action('cli-mark');same([],state()['rows']);check('nonce rejection and CLI operations excluded')

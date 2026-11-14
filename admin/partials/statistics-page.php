@@ -97,7 +97,7 @@ $total_7d = $wpdb->get_var($wpdb->prepare(
     gmdate('Y-m-d H:i:s', strtotime('-7 days'))
 ));
 $total_today = $wpdb->get_var($wpdb->prepare(
-    "SELECT COUNT(*) FROM {$detections_table} WHERE created_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
+    "SELECT COUNT(*) FROM {$detections_table} WHERE created_at >= %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
     gmdate('Y-m-d 00:00:00')
 ));
 // expires_at is stored in UTC, so it must be compared against a UTC value. MySQL's
@@ -141,7 +141,7 @@ $options = get_option('webdecoy_options', []);
         </div>
         <div class="webdecoy-stat-box">
             <span class="value"><?php echo esc_html(number_format((int) $total_7d)); ?></span>
-            <span class="label"><?php esc_html_e('Detection rows (7 days)', 'webdecoy'); ?></span>
+            <span class="label"><?php esc_html_e('Detection rows (rolling 7 days)', 'webdecoy'); ?></span>
         </div>
         <div class="webdecoy-stat-box">
             <span class="value"><?php echo esc_html(number_format($total_30d)); ?></span>
