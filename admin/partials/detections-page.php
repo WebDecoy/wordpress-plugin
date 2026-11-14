@@ -151,11 +151,15 @@ if ($wd_intel_connected && !empty($detections) && class_exists('WebDecoy_Actor_I
 
 <div class="wrap">
     <h1><?php esc_html_e('Bot Detections', 'webdecoy'); ?></h1>
+    <p class="description">
+        <?php esc_html_e('These are saved findings, not a count of blocked requests. One request can create several rows; repeat IP blocks may create none.', 'webdecoy'); ?>
+        <a href="<?php echo esc_url(admin_url('admin.php?page=webdecoy-statistics')); ?>"><?php esc_html_e('See request counts', 'webdecoy'); ?></a>
+    </p>
 
     <div class="webdecoy-detection-stats">
         <div class="webdecoy-stat-box">
             <span class="value"><?php echo esc_html(number_format($stats['total'])); ?></span>
-            <span class="label"><?php esc_html_e('Total (7 days)', 'webdecoy'); ?></span>
+            <span class="label"><?php esc_html_e('Detection rows (rolling 7 days)', 'webdecoy'); ?></span>
         </div>
         <div class="webdecoy-stat-box webdecoy-stat-danger">
             <span class="value"><?php echo esc_html(number_format($stats['high_risk'])); ?></span>

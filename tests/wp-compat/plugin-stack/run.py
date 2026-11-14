@@ -31,7 +31,7 @@ def req(stage,name,path,browser=False,**extra):
  if browser:p.update(browser=True,ua=BROWSER)
  p.update(extra)
  if WAF_ENABLED:p['headers']=['X-Real-IP: 192.0.2.42']
- if EXTENDED:p['extended']=True
+ if EXTENDED:p.update(extended=True,backend_ip=os.environ.get('WP_COMPAT_PREPEND_IP','127.0.0.3'))
  response=php('client.php',json.dumps(p));response['detections']=ctl('query','Compat-'+marker)['rows'];response['stage']=stage;response['case']=name
  RESULTS.append(response);return response
 def expect(r,condition,detail):
@@ -72,7 +72,11 @@ try:
   ctl('configure','monitor')
   if WAF_ENABLED:
    wf_marker=RUN_ID+'-'+stage+'-wf-rule-block'
+   counter_before=ctl('eval','request-counts.php','summary') if ctl('state').get('request_counts_supported') else None
    r=req(stage,'wf-rule-block','/compat-target/',ua='python-requests/2.32.3 Compat-wf-rule-block Compat-'+wf_marker)
+   if counter_before is not None:
+    counter_after=ctl('eval','request-counts.php','summary')
+    expect(r,counter_after['today']['blocked']==counter_before['today']['blocked'],'Wordfence block not attributed to WebDecoy request counts')
    expect(r,r['status']==503 and r['wordfence_block'] and not r['target_content'] and not r['detections'],'Wordfence manual block before WebDecoy detection')
   if 'redirection' in names:
    r=req(stage,'redirect','/compat-old/');expect(r,r['status']==301 and r['headers'].get('location')=='http://127.0.0.1:8080/compat-target/' and flags(r,'cli_tool'),'Redirection redirect retains detection')

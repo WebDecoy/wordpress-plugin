@@ -10,20 +10,12 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Get local stats (cached for 5 minutes to avoid DB queries on every admin page)
-$stats = get_transient('webdecoy_dashboard_stats');
-if ($stats === false) {
-    $detector = new WebDecoy_Detector();
-    $stats = $detector->get_stats(7);
-    set_transient('webdecoy_dashboard_stats', $stats, 5 * MINUTE_IN_SECONDS);
-}
-
-$blocked_stats = get_transient('webdecoy_dashboard_blocked_stats');
-if ($blocked_stats === false) {
-    $blocker = new WebDecoy_Blocker();
-    $blocked_stats = $blocker->get_stats();
-    set_transient('webdecoy_dashboard_blocked_stats', $blocked_stats, 5 * MINUTE_IN_SECONDS);
-}
+// Keep the displayed findings and active-IP totals current with request counters.
+// These are admin-only reads; no cache invalidation writes are added to bot requests.
+$detector = new WebDecoy_Detector();
+$stats = $detector->get_stats(7);
+$blocker = new WebDecoy_Blocker();
+$blocked_stats = $blocker->get_stats();
 
 // Known crawlers, AI agents and bot tools seen in the last 24 hours. Counted
 // locally on every install, connected or not (WebDecoy_Crawler_Visits).
@@ -34,6 +26,8 @@ if ($crawlers === false) {
         : ['total' => 0, 'verified' => 0, 'claimed' => 0, 'failed' => 0, 'groups' => ['ai' => 0, 'search' => 0, 'other' => 0], 'agents' => []];
     set_transient('webdecoy_dashboard_crawlers', $crawlers, 5 * MINUTE_IN_SECONDS);
 }
+
+$request_counts_today = WebDecoy_Request_Counts::summary(1);
 
 // Checkout bot signals in the last 24 hours: velocity, card-testing patterns,
 // bot scores at checkout and the decoy coupon, all recorded as detections
@@ -132,10 +126,42 @@ if (class_exists('WooCommerce')) {
         </p>
     </div>
 
+    <div class="webdecoy-widget-request-counts">
+        <h4><?php esc_html_e('Detection rows and requests today (UTC)', 'webdecoy'); ?></h4>
+        <?php if ($request_counts_today['available']) : ?>
+        <div class="webdecoy-widget-stats">
+            <?php foreach (['detections' => __('Detection rows', 'webdecoy'), 'blocked' => __('Blocked requests', 'webdecoy'), 'withheld' => __('Enforcement withheld', 'webdecoy')] as $metric => $label) : ?>
+            <div class="webdecoy-stat">
+                <span class="webdecoy-stat-value" data-webdecoy-count="<?php echo esc_attr($metric); ?>"><?php echo esc_html(number_format($request_counts_today[$metric])); ?></span>
+                <span class="webdecoy-stat-label"><?php echo esc_html($label); ?></span>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <p>
+            <?php echo esc_html(sprintf(
+                /* translators: 1: requests throttled, 2: requests challenged */
+                __('Throttled requests: %1$s. Challenges served: %2$s.', 'webdecoy'),
+                number_format($request_counts_today['throttled']), number_format($request_counts_today['challenged'])
+            )); ?>
+        </p>
+        <p class="description">
+            <?php esc_html_e('Repeat blocks are included. Detection rows are saved findings; one request can create several. Withheld enforcement is not a block.', 'webdecoy'); ?>
+            <?php echo esc_html(sprintf(
+                /* translators: %s: UTC date and time when request tracking started */
+                __('Request tracking started %s UTC; earlier request totals are unavailable.', 'webdecoy'),
+                gmdate('Y-m-d H:i', $request_counts_today['started_at'])
+            )); ?>
+            <a href="<?php echo esc_url(admin_url('admin.php?page=webdecoy-statistics')); ?>"><?php esc_html_e('Compare request counts', 'webdecoy'); ?></a>
+        </p>
+        <?php else : ?>
+        <p class="description"><?php esc_html_e('Request counters are not available yet. Reload after the database update finishes.', 'webdecoy'); ?></p>
+        <?php endif; ?>
+    </div>
+
     <div class="webdecoy-widget-stats">
         <div class="webdecoy-stat">
             <span class="webdecoy-stat-value"><?php echo esc_html(number_format($stats['total'])); ?></span>
-            <span class="webdecoy-stat-label"><?php esc_html_e('Detections (7 days)', 'webdecoy'); ?></span>
+            <span class="webdecoy-stat-label"><?php esc_html_e('Detection rows (rolling 7 days)', 'webdecoy'); ?></span>
         </div>
         <div class="webdecoy-stat">
             <span class="webdecoy-stat-value webdecoy-stat-danger"><?php echo esc_html(number_format($stats['high_risk'])); ?></span>
@@ -143,7 +169,7 @@ if (class_exists('WooCommerce')) {
         </div>
         <div class="webdecoy-stat">
             <span class="webdecoy-stat-value"><?php echo esc_html(number_format($blocked_stats['active'])); ?></span>
-            <span class="webdecoy-stat-label"><?php esc_html_e('Blocked IPs', 'webdecoy'); ?></span>
+            <span class="webdecoy-stat-label"><?php esc_html_e('Active blocked IPs', 'webdecoy'); ?></span>
         </div>
     </div>
 

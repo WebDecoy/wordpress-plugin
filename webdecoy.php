@@ -1070,6 +1070,7 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-detection-sender.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ai-referrals.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-crawler-visits.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-request-counts.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-honeytoken.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ip-enrichment.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-decoy-response.php';
@@ -1600,6 +1601,7 @@ final class WebDecoy_Plugin
      */
     private function record_suppressed_action(string $suppression, string $reason): void
     {
+        WebDecoy_Request_Counts::mark('withheld');
         $stats = get_option('webdecoy_suppressed_actions', []);
         if (!is_array($stats)) {
             $stats = [];
@@ -1670,6 +1672,7 @@ final class WebDecoy_Plugin
             $retryAfter = isset($meta['retryAfter']) ? max(1, intval($meta['retryAfter'])) : 60;
             nocache_headers();
             status_header(429);
+            WebDecoy_Request_Counts::mark('throttled');
             header('Retry-After: ' . $retryAfter);
             if (isset($meta['max'])) {
                 header('X-RateLimit-Limit: ' . (int) $meta['max']);
@@ -1907,6 +1910,7 @@ final class WebDecoy_Plugin
      */
     private function serve_challenge_page(string $ip): void
     {
+        WebDecoy_Request_Counts::mark('challenged');
         nocache_headers();
         status_header(403);
 
@@ -1931,6 +1935,8 @@ final class WebDecoy_Plugin
      */
     private function block_request(string $message): void
     {
+        // Includes repeat hits on an already-blocked IP; no detection rescore needed.
+        WebDecoy_Request_Counts::mark('blocked');
         // Send no-cache headers to prevent caching of block pages
         // This ensures unblocking takes effect immediately
         nocache_headers();
@@ -2133,6 +2139,7 @@ final class WebDecoy_Plugin
             // Reachable at default sensitivity and serves a literal 403 — same gate.
             $suppression = $this->suppression_reason();
             if ($suppression === '') {
+                WebDecoy_Request_Counts::mark('blocked');
                 wp_die(
                     esc_html__('Your comment has been blocked due to suspicious activity.', 'webdecoy'),
                     esc_html__('Comment Blocked', 'webdecoy'),

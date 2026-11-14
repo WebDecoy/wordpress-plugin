@@ -5,6 +5,11 @@ with independent server-side access receipts. No conflict was observed in the
 tested navigation, login, redirect, AI-counter or WebDecoy blocking flows.
 No production detection-hook change is supported by this check.
 
+A [request-counter follow-up](request-counting.md) corrects fixture admin-directory
+routing and replaces an admin-bar-only assertion with a real `wp-admin` screen
+check. All 122 cases passed again with that correction and the request-counter
+implementation. The stronger UI checks supersede the initial admin-page evidence.
+
 This follows the [14-case hook-order check](hook-order-compatibility.md).
 These tests use actual installed plugins, full WordPress bootstrap and a real
 MariaDB database. They do not use the earlier in-memory service adapters.

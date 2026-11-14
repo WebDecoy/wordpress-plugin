@@ -33,6 +33,7 @@ if (file_exists($activator_file)) {
         $wpdb->prefix . 'webdecoy_rate_limits',
         $wpdb->prefix . 'webdecoy_checkout_attempts',
         $wpdb->prefix . 'webdecoy_ai_referrals',
+        $wpdb->prefix . 'webdecoy_request_counts',
         $wpdb->prefix . 'webdecoy_crawler_visits',
     ];
 
@@ -44,6 +45,7 @@ if (file_exists($activator_file)) {
     // Delete plugin options
     delete_option('webdecoy_options');
     delete_option('webdecoy_db_version');
+    delete_option('webdecoy_request_counts_started_at');
     delete_option('webdecoy_api_status');
     delete_option('webdecoy_api_last_check');
     delete_option('webdecoy_api_last_error');
@@ -87,6 +89,7 @@ if (is_multisite()) {
             $wpdb->prefix . 'webdecoy_rate_limits',
             $wpdb->prefix . 'webdecoy_checkout_attempts',
             $wpdb->prefix . 'webdecoy_ai_referrals',
+            $wpdb->prefix . 'webdecoy_request_counts',
         ];
 
         foreach ($tables as $table) {
@@ -97,6 +100,7 @@ if (is_multisite()) {
         // Delete options for this site
         delete_option('webdecoy_options');
         delete_option('webdecoy_db_version');
+        delete_option('webdecoy_request_counts_started_at');
         delete_option('webdecoy_api_status');
         delete_option('webdecoy_api_last_check');
         delete_option('webdecoy_api_last_error');

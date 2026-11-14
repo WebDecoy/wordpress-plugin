@@ -74,3 +74,33 @@ The output directory contains only parsed measurements and can be retained.
 ```sh
 docker compose -p wd-plugin-stack down
 ```
+
+## Request counters (implementation under test)
+
+Use a staged plugin build containing `WebDecoy_Request_Counts` (the original
+public 2.11.4 package does not contain it). The counter-specific check uses a
+second ordinary PHP worker for concurrent SQL increments:
+
+```sh
+docker exec -d "$WP_COMPAT_CONTAINER" sh -c 'exec php -d display_errors=0 -d log_errors=1 -d error_log=/scratch/counter-worker-errors.log -d memory_limit=128M -d max_execution_time=10 -d session.save_path=/scratch -S 127.0.0.3:8080 -t /site /fixture/router.php > /scratch/counter-worker.log 2>&1'
+python3 check-request-counts.py --uninstall
+```
+
+This is deliberately destructive to the **disposable test database**. It drops
+only the fixture counter table to simulate an old release, temporarily revokes
+CREATE from the dummy database user (restored in `finally`), rejects a counter
+insert with a temporary database trigger (also removed in `finally`), verifies retry and
+continued protection, checks retention, and optionally invokes actual plugin
+uninstall last. It checks setup-test exclusion, multiple withheld decisions in
+one login request, fresh/repeated blocks, 40 concurrent hits, challenges, 429s,
+nonce/CLI exclusions and actual authenticated dashboard/Statistics values.
+Fresh markers/cookie jars prevent results from earlier runs satisfying a check.
+
+The router delegates real directories to PHP, and admin assertions require the
+`wp-admin` body class. A front-end admin bar is not proof of an admin screen.
+
+If the concurrency worker already occupies 127.0.0.3, a native-prepend listener
+can use 127.0.0.4 instead; set `WP_COMPAT_PREPEND_IP=127.0.0.4` for `run.py --extended`.
+The public-plugin matrix skips counter-specific assertions when the capability
+is absent. Tracking starts with the schema update; no historical block counts
+are inferred from detections. See [request-count definitions](../../../docs/request-counting.md).

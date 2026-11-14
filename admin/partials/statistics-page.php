@@ -97,7 +97,7 @@ $total_7d = $wpdb->get_var($wpdb->prepare(
     gmdate('Y-m-d H:i:s', strtotime('-7 days'))
 ));
 $total_today = $wpdb->get_var($wpdb->prepare(
-    "SELECT COUNT(*) FROM {$detections_table} WHERE created_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
+    "SELECT COUNT(*) FROM {$detections_table} WHERE created_at >= %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
     gmdate('Y-m-d 00:00:00')
 ));
 // expires_at is stored in UTC, so it must be compared against a UTC value. MySQL's
@@ -126,6 +126,7 @@ if (class_exists('WooCommerce')) {
 // Known crawlers, AI agents and bot tools over 7 days (counters only).
 $crawler_summary = class_exists('WebDecoy_Crawler_Visits') ? WebDecoy_Crawler_Visits::summary(7 * 24) : null;
 
+$request_windows = [1 => WebDecoy_Request_Counts::summary(1), 7 => WebDecoy_Request_Counts::summary(7), 30 => WebDecoy_Request_Counts::summary(30)];
 $options = get_option('webdecoy_options', []);
 ?>
 
@@ -136,20 +137,58 @@ $options = get_option('webdecoy_options', []);
     <div class="webdecoy-stats-summary">
         <div class="webdecoy-stat-box">
             <span class="value"><?php echo esc_html(number_format($total_today)); ?></span>
-            <span class="label"><?php esc_html_e('Today', 'webdecoy'); ?></span>
+            <span class="label"><?php esc_html_e('Detection rows today', 'webdecoy'); ?></span>
         </div>
         <div class="webdecoy-stat-box">
             <span class="value"><?php echo esc_html(number_format((int) $total_7d)); ?></span>
-            <span class="label"><?php esc_html_e('Last 7 Days', 'webdecoy'); ?></span>
+            <span class="label"><?php esc_html_e('Detection rows (rolling 7 days)', 'webdecoy'); ?></span>
         </div>
         <div class="webdecoy-stat-box">
             <span class="value"><?php echo esc_html(number_format($total_30d)); ?></span>
-            <span class="label"><?php esc_html_e('Last 30 Days', 'webdecoy'); ?></span>
+            <span class="label"><?php esc_html_e('Detection rows (30 days)', 'webdecoy'); ?></span>
         </div>
         <div class="webdecoy-stat-box webdecoy-stat-success">
             <span class="value"><?php echo esc_html(number_format((int) $active_blocks)); ?></span>
-            <span class="label"><?php esc_html_e('Active Blocks', 'webdecoy'); ?></span>
+            <span class="label"><?php esc_html_e('Active blocked IPs', 'webdecoy'); ?></span>
         </div>
+    </div>
+
+    <div class="webdecoy-chart-card">
+        <h2><?php esc_html_e('Detection rows and request outcomes', 'webdecoy'); ?></h2>
+        <p class="description"><?php esc_html_e('Detection rows are saved findings, not a request total. One request can create several findings, while a repeat IP block may create no new finding. Each request is counted once under its strongest outcome below.', 'webdecoy'); ?></p>
+        <table class="wp-list-table widefat striped">
+            <thead><tr>
+                <th scope="col"><?php esc_html_e('Metric', 'webdecoy'); ?></th>
+                <th scope="col"><?php esc_html_e('Today (UTC)', 'webdecoy'); ?></th>
+                <th scope="col"><?php esc_html_e('7 calendar days (UTC)', 'webdecoy'); ?></th>
+                <th scope="col"><?php esc_html_e('30 calendar days (UTC)', 'webdecoy'); ?></th>
+            </tr></thead>
+            <tbody>
+                <?php foreach ([
+                    'detections' => __('Detection rows', 'webdecoy'),
+                    'blocked' => __('Blocked requests (403)', 'webdecoy'),
+                    'throttled' => __('Throttled requests (429)', 'webdecoy'),
+                    'challenged' => __('Challenges served', 'webdecoy'),
+                    'withheld' => __('Requests with enforcement withheld', 'webdecoy'),
+                ] as $metric => $label) : ?>
+                <tr><th scope="row"><?php echo esc_html($label); ?></th>
+                    <?php foreach ($request_windows as $days => $counts) : ?>
+                    <td data-webdecoy-outcome="<?php echo esc_attr($metric); ?>" data-window="<?php echo esc_attr($days); ?>"><?php echo $counts['available'] ? esc_html(number_format($counts[$metric])) : '&mdash;'; ?></td>
+                    <?php endforeach; ?>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <p class="description"><?php esc_html_e('Calendar windows include today. Blocked and throttled counts require an actual denial from WebDecoy; challenges are separate. Withheld enforcement includes monitor mode and is not a block. Setup-test responses, decoy pages, form-validation notices and requests stopped earlier by another firewall or cache are excluded from request-denial counts.', 'webdecoy'); ?></p>
+        <?php if ($request_windows[1]['available']) : ?>
+        <p class="description"><?php echo esc_html(sprintf(
+            /* translators: %s: UTC date and time when request tracking started */
+            __('Request tracking started %s UTC. Earlier request totals cannot be reconstructed from detection rows. Request counters retain 30 calendar days.', 'webdecoy'),
+            gmdate('Y-m-d H:i', $request_windows[1]['started_at'])
+        )); ?></p>
+        <?php else : ?>
+        <p class="description"><?php esc_html_e('Request counters are not available yet. Reload after the database update finishes.', 'webdecoy'); ?></p>
+        <?php endif; ?>
     </div>
 
     <!-- Charts Grid -->

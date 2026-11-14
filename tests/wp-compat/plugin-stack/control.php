@@ -34,7 +34,7 @@ if($cmd==='query'){
  echo json_encode(['rows'=>$rows,'db_error'=>$wpdb->last_error]);exit;
 }
 if($cmd==='state'){
- global $wp_version;echo json_encode(['wp'=>$wp_version,'php'=>PHP_VERSION,'plugins'=>get_option('active_plugins',[]),'webdecoy'=>get_option('webdecoy_options',[]),'wordfence_api_key_configured'=>class_exists('wfConfig') ? (bool)wfConfig::get('apiKey','') : null]);exit;
+ global $wp_version;echo json_encode(['request_counts_supported'=>class_exists('WebDecoy_Request_Counts'),'wp'=>$wp_version,'php'=>PHP_VERSION,'plugins'=>get_option('active_plugins',[]),'webdecoy'=>get_option('webdecoy_options',[]),'wordfence_api_key_configured'=>class_exists('wfConfig') ? (bool)wfConfig::get('apiKey','') : null]);exit;
 }
 if($cmd==='eval'){
  // Trusted fixture file supplied by the test runner, never an HTTP parameter.

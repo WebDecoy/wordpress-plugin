@@ -21,19 +21,21 @@ class WebDecoy_Activator
     /**
      * Database version for migrations
      */
-    private const DB_VERSION = '2.11.0';
+    private const DB_VERSION = '2.11.1';
 
     /**
      * Plugin activation
      */
     public static function activate(): void
     {
-        self::create_tables();
+        $storage_ready = self::create_tables();
         self::set_default_options();
         self::schedule_cleanup();
 
-        // Store DB version
-        update_option('webdecoy_db_version', self::DB_VERSION);
+        // Retry a failed schema install on the next admin request.
+        if ($storage_ready) {
+            update_option('webdecoy_db_version', self::DB_VERSION);
+        }
 
         // Flush rewrite rules
         flush_rewrite_rules();
@@ -57,7 +59,7 @@ class WebDecoy_Activator
     /**
      * Create database tables
      */
-    private static function create_tables(): void
+    private static function create_tables(): bool
     {
         global $wpdb;
 
@@ -155,6 +157,14 @@ class WebDecoy_Activator
             PRIMARY KEY  (bucket, agent_id, verification)
         ) $charset_collate;";
 
+        // At most four aggregate rows per UTC hour; no IP, URL or User-Agent.
+        $sql_request_counts = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}webdecoy_request_counts (
+            bucket DATETIME NOT NULL,
+            outcome VARCHAR(16) NOT NULL,
+            hits BIGINT UNSIGNED NOT NULL DEFAULT 0,
+            PRIMARY KEY  (bucket, outcome)
+        ) $charset_collate;";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
         dbDelta($sql_blocked);
@@ -164,6 +174,13 @@ class WebDecoy_Activator
         dbDelta($sql_violation_queue);
         dbDelta($sql_ai_referrals);
         dbDelta($sql_crawler_visits);
+        dbDelta($sql_request_counts);
+        $table = $wpdb->prefix . 'webdecoy_request_counts';
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($table))) === $table;
+        if ($exists) {
+            add_option('webdecoy_request_counts_started_at', time(), '', false);
+        }
+        return $exists;
     }
 
     /**
@@ -260,9 +277,10 @@ class WebDecoy_Activator
     {
         $current_version = get_option('webdecoy_db_version', '0');
 
-        if (version_compare($current_version, self::DB_VERSION, '<')) {
-            self::create_tables();
-            update_option('webdecoy_db_version', self::DB_VERSION);
+        if (version_compare($current_version, self::DB_VERSION, '<') || !get_option('webdecoy_request_counts_started_at')) {
+            if (self::create_tables()) {
+                update_option('webdecoy_db_version', self::DB_VERSION);
+            }
             // Clear the dead sync-blocked-ips schedule left by older installs.
             wp_clear_scheduled_hook('webdecoy_sync_blocked_ips');
         }
@@ -284,6 +302,7 @@ class WebDecoy_Activator
             $wpdb->prefix . 'webdecoy_violation_queue',
             $wpdb->prefix . 'webdecoy_ai_referrals',
             $wpdb->prefix . 'webdecoy_crawler_visits',
+            $wpdb->prefix . 'webdecoy_request_counts',
         ];
 
         foreach ($tables as $table) {
@@ -294,6 +313,7 @@ class WebDecoy_Activator
         // Delete options
         delete_option('webdecoy_options');
         delete_option('webdecoy_db_version');
+        delete_option('webdecoy_request_counts_started_at');
         delete_option('webdecoy_entitlements');
         delete_option('webdecoy_actor_feed_cursor');
         delete_option('webdecoy_critical_moment_last');
@@ -337,6 +357,10 @@ add_action('webdecoy_cleanup_expired', function () {
     // Crawler visit counters keep 30 days of hourly rows.
     if (class_exists('WebDecoy_Crawler_Visits')) {
         WebDecoy_Crawler_Visits::prune();
+    }
+
+    if (class_exists('WebDecoy_Request_Counts')) {
+        WebDecoy_Request_Counts::prune();
     }
 
     // Clean up old checkout attempts (keep 7 days)
