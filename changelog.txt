@@ -1,5 +1,11 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.12.0 - 2026-11-13 =
+* Added: separate request counters on Dashboard and Statistics for WebDecoy blocks (HTTP 403), throttles (429), challenges and decisions withheld by monitor mode or safety checks. Repeated blocks count even when no new detection row is saved.
+* Added: Today, 7-day and 30-day UTC calendar comparisons, with the tracking start time shown. Counts start after upgrade; historical requests are not reconstructed.
+* Privacy: request counters keep only an hourly bucket, outcome and count for 30 UTC calendar days. Requests stopped by another firewall or served before WordPress are outside these counters.
+* Fixed: counter storage failures do not alter the protection response or display database errors.
+
 = 2.11.4 - 2026-11-11 =
 * Added: after a week on your site, WebDecoy asks once for a review on WordPress.org, naming how many bot visits it counted. Only administrators see it, only on the dashboard and WebDecoy pages, and only when bots were counted. Choose Leave a review, Maybe later or Don't ask again.
 

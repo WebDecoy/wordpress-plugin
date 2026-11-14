@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: ai crawlers, bot analytics, bot detection, woocommerce, card testing
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.11.4
+Stable tag: 2.12.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -38,6 +38,12 @@ Most site owners have no idea how much of their traffic is GPTBot, ClaudeBot, By
 * **One switch to refuse AI crawlers** (Settings > Good Bots), with search engines unaffected
 
 Only a count per bot per hour is kept: no IP addresses, no pages, and nothing about human visitors. Pages served from a page cache never reach WordPress, so the counts are minimums.
+
+= See detections and actual blocked requests separately =
+
+A saved detection is a finding, not a count of every blocked request. Dashboard and Statistics now separate detection rows from WebDecoy HTTP blocks, throttles, challenges and decisions withheld by monitor mode or safety checks. Repeated requests from a blocked address increase the request counter without creating duplicate findings.
+
+Compare Today, 7 days and 30 days in UTC calendar windows. Tracking starts after upgrading to 2.12.0, with no historical backfill. Only requests reaching WordPress PHP and handled by WebDecoy count; another firewall's blocks and cached responses are outside this view. Local counters need no account.
 
 = Stop WooCommerce card testing and fake orders =
 
@@ -315,6 +321,12 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 
 == Changelog ==
 
+= 2.12.0 =
+* Added: separate request counters on Dashboard and Statistics for WebDecoy blocks (HTTP 403), throttles (429), challenges and decisions withheld by monitor mode or safety checks. Repeated blocks count even when no new detection row is saved.
+* Added: Today, 7-day and 30-day UTC calendar comparisons, with the tracking start time shown. Counts start after upgrade; historical requests are not reconstructed.
+* Privacy: request counters keep only an hourly bucket, outcome and count for 30 UTC calendar days. Requests stopped by another firewall or served before WordPress are outside these counters.
+* Fixed: counter storage failures do not alter the protection response or display database errors.
+
 = 2.11.4 =
 * Added: after a week on your site, WebDecoy asks once for a review on WordPress.org, naming how many bot visits it counted. Only administrators see it, only on the dashboard and WebDecoy pages, and only when bots were counted. Choose Leave a review, Maybe later or Don't ask again.
 
@@ -523,6 +535,9 @@ Safety release. Please update. This version deliberately makes the plugin do les
 * Initial release
 
 == Upgrade Notice ==
+
+= 2.12.0 =
+Separate blocked-request counters from saved detections. New counters start after upgrade; no historical backfill. Local analytics need no account.
 
 = 2.10.6 =
 Restores classic WooCommerce checkout protection when WebDecoy loads before WooCommerce. Recommended for WooCommerce stores.
