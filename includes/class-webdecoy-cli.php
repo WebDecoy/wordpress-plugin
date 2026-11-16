@@ -49,6 +49,7 @@ class WebDecoy_CLI_Command
         'rate_limit_requests'  => ['type' => 'int', 'min' => 1, 'max' => 100000],
         'rate_limit_window'    => ['type' => 'int', 'min' => 1, 'max' => 86400],
         'behind_cloudflare'    => ['type' => 'bool'],
+        'robots_disallow_categories' => ['type' => 'categories'],
     ];
 
     /**
@@ -128,6 +129,8 @@ class WebDecoy_CLI_Command
      *
      *     wp webdecoy config set mode monitor
      *     wp webdecoy config set block_ai_crawlers true
+     *     wp webdecoy config set robots_disallow_categories training_crawler,seo_crawler
+     *     wp webdecoy config set robots_disallow_categories none
      *     wp webdecoy config get sensitivity
      *
      * @when after_wp_load
@@ -147,7 +150,7 @@ class WebDecoy_CLI_Command
                 $rows[] = [
                     'key' => $name,
                     'value' => self::display_value($name, $options),
-                    'type' => $spec['type'] === 'enum' ? implode('|', $spec['values']) : $spec['type'],
+                    'type' => $spec['type'] === 'enum' ? implode('|', $spec['values'] ?? []) : $spec['type'],
                 ];
             }
             \WP_CLI\Utils\format_items('table', $rows, ['key', 'value', 'type']);
@@ -329,6 +332,17 @@ class WebDecoy_CLI_Command
             case 'enum':
                 $lowered = strtolower(trim($raw));
                 return in_array($lowered, $spec['values'], true) ? [$key, $lowered] : null;
+            case 'categories':
+                // Comma-separated category ids; `none` or an empty value clears.
+                $lowered = strtolower(trim($raw));
+                if ($lowered === '' || $lowered === 'none') {
+                    return [$key, []];
+                }
+                $requested = array_values(array_filter(array_map('trim', explode(',', $lowered)), 'strlen'));
+                $selected = WebDecoy_Robots_Txt::sanitize_categories($requested);
+                // Refuse the whole value when any id is unknown, rather than
+                // silently dropping a typo.
+                return count($selected) === count(array_unique($requested)) ? [$key, $selected] : null;
             default:
                 return null;
         }
@@ -348,6 +362,9 @@ class WebDecoy_CLI_Command
         if (is_bool($value)) {
             return $value ? 'true' : 'false';
         }
+        if (is_array($value) || (self::CONFIG_KEYS[$key]['type'] ?? '') === 'categories') {
+            return (array) $value === [] ? 'none' : implode(',', array_map('strval', (array) $value));
+        }
         return (string) ($value ?? '');
     }
 
@@ -366,6 +383,13 @@ class WebDecoy_CLI_Command
                 return sprintf("'%s' is out of range for %s (%d-%d).", $raw, $key, $spec['min'] ?? 0, $spec['max'] ?? 0);
             case 'enum':
                 return sprintf("'%s' is not valid for %s. Use: %s.", $raw, $key, implode(', ', $spec['values']));
+            case 'categories':
+                return sprintf(
+                    "'%s' is not valid for %s. Use none, or a comma-separated list of: %s.",
+                    $raw,
+                    $key,
+                    implode(', ', array_keys(WebDecoy_Robots_Txt::choices()))
+                );
             default:
                 return "'{$raw}' is not valid for {$key}.";
         }

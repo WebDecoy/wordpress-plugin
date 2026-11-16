@@ -217,6 +217,7 @@ class WebDecoy_Activator
             'allow_social_bots' => true,
             'block_ai_crawlers' => false,
             'custom_allowlist' => [],
+            'robots_disallow_categories' => [],
 
             // Blocking Settings
             // Monitor mode on by default: detect and log everything, block nothing,
