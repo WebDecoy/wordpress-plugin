@@ -58,6 +58,9 @@ class WebDecoy_Robots_Txt
      */
     public static function register($categories): void
     {
+        // Register even for an empty selection so enabling the first category
+        // also invalidates VIP's long-lived virtual robots.txt response.
+        add_action('update_option_webdecoy_options', [self::class, 'settings_updated'], 10, 2);
         if (defined('WEBDECOY_DISABLE') && WEBDECOY_DISABLE) {
             return;
         }
@@ -69,6 +72,7 @@ class WebDecoy_Robots_Txt
         // only the output: the site's "discourage search engines" flag does
         // not decide this, because the owner chose these categories and the
         // noindex tag that setting adds does not keep training crawlers away.
+        // phpcs:ignore WordPressVIPMinimum.Hooks.RestrictedHooks.robots_txt -- Category changes queue a targeted VIP robots.txt purge in settings_updated(); deployment changes still require an operator purge.
         add_filter('robots_txt', static function ($output) use ($selected) {
             return self::append(
                 (string) $output,
@@ -76,6 +80,23 @@ class WebDecoy_Robots_Txt
                 defined('WEBDECOY_VERSION') ? (string) WEBDECOY_VERSION : ''
             );
         }, 100, 1);
+    }
+
+    /** Queue a targeted VIP purge only when the robots policy changes. */
+    public static function settings_updated($old, $new): void
+    {
+        $before = self::sanitize_categories(is_array($old) ? ($old[self::OPTION_KEY] ?? []) : []);
+        $after = self::sanitize_categories(is_array($new) ? ($new[self::OPTION_KEY] ?? []) : []);
+        sort($before);
+        sort($after);
+        if ($before === $after) {
+            return;
+        }
+        if (function_exists('wpvip_purge_edge_cache_for_url')) {
+            wpvip_purge_edge_cache_for_url(home_url('/robots.txt'));
+        } elseif (function_exists('wpcom_vip_purge_edge_cache_for_url')) {
+            wpcom_vip_purge_edge_cache_for_url(home_url('/robots.txt'));
+        }
     }
 
     /**

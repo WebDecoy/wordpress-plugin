@@ -1,0 +1,20 @@
+name: VIP coding standards
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  vip-phpcs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
+      - name: Install isolated, locked VIP standards
+        run: composer --working-dir=docs/integrations/wordpress-vip install --no-interaction --no-progress --prefer-dist
+      - name: Require zero unreviewed VIP errors and warnings
+        run: docs/integrations/wordpress-vip/vendor/bin/phpcs --standard=WordPress-VIP-Go --extensions=php webdecoy.php uninstall.php admin includes public sdk/src templates

@@ -48,6 +48,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/class-webdecoy-http.php';
+
 /**
  * WebDecoy Actor Feed controller.
  */
@@ -153,7 +155,7 @@ class WebDecoy_Actor_Feed
         $cursor = (int) get_option(self::CURSOR_OPTION, 0);
         $latest_cursor = $cursor;
 
-        $ip_map = [];   // ip => ['actor_id' => string, 'last_seen' => int]
+        $ip_map = [];   // Each IP maps to its actor identifier and last-seen timestamp.
         $pages = 0;
 
         do {
@@ -230,7 +232,8 @@ class WebDecoy_Actor_Feed
 
         $url = self::FEED_ENDPOINT . '?since=' . rawurlencode((string) $since);
 
-        $response = wp_remote_get($url, [
+        $response = WebDecoy_HTTP::get($url, [
+            // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- WebDecoy_HTTP caps this to 3 seconds on VIP; retains the non-VIP caller budget.
             'timeout' => 8,
             'headers' => [
                 'Accept'        => 'application/json',

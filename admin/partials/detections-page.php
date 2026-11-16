@@ -19,9 +19,9 @@ global $wpdb;
 
 $table = esc_sql($wpdb->prefix . 'webdecoy_detections');
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only admin list filtering via GET, no state change
-$page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
-$per_page = 50;
-$offset = ($page - 1) * $per_page;
+$wd_current_page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+$wd_per_page = 50;
+$offset = ($wd_current_page - 1) * $wd_per_page;
 
 // Filters
 $threat_level = isset($_GET['threat_level']) ? sanitize_text_field(wp_unslash($_GET['threat_level'])) : '';
@@ -86,13 +86,15 @@ if (isset($_GET['action']) && sanitize_text_field(wp_unslash($_GET['action'])) =
     };
 
     $output = fopen('php://output', 'w');
+    // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.file_ops_fputcsv -- Writes exclusively to the already-open php://output CSV download stream; no local filesystem path is used.
     fputcsv($output, ['Date', 'IP Address', 'Score', 'Threat Level', 'Source', 'User Agent', 'Flags']);
 
     $export_query = "SELECT * FROM {$table} WHERE {$where} ORDER BY created_at DESC";
-    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Query built dynamically with safe table/column names
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Query built dynamically with safe table/column names
     $export_results = $wpdb->get_results($wpdb->prepare($export_query, $params), ARRAY_A);
 
     foreach ($export_results as $row) {
+        // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.file_ops_fputcsv -- Writes exclusively to the already-open php://output CSV download stream; no local filesystem path is used.
         fputcsv($output, [
             $csv_safe($row['created_at']),
             $csv_safe($row['ip_address']),
@@ -110,14 +112,14 @@ if (isset($_GET['action']) && sanitize_text_field(wp_unslash($_GET['action'])) =
 
 // Get total - always use prepare()
 $total_query = "SELECT COUNT(*) FROM {$table} WHERE {$where}";
-// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Query built dynamically with safe table/column names
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Query built dynamically with safe table/column names
 $total = $wpdb->get_var($wpdb->prepare($total_query, $params));
-$total_pages = ceil($total / $per_page);
+$total_pages = ceil($total / $wd_per_page);
 
 // Get detections - always use prepare()
 $query = "SELECT * FROM {$table} WHERE {$where} ORDER BY created_at DESC LIMIT %d OFFSET %d";
-$query_params = array_merge($params, [$per_page, $offset]);
-// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Query built dynamically with safe table/column names
+$query_params = array_merge($params, [$wd_per_page, $offset]);
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Query built dynamically with safe table/column names
 $detections = $wpdb->get_results($wpdb->prepare($query, $query_params), ARRAY_A);
 
 // Get stats
@@ -536,7 +538,7 @@ if ($wd_intel_connected && !empty($detections) && class_exists('WebDecoy_Actor_I
                     'prev_text' => '&laquo;',
                     'next_text' => '&raquo;',
                     'total' => $total_pages,
-                    'current' => $page,
+                    'current' => $wd_current_page,
                 ];
                 // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- paginate_links returns safe HTML
                 echo paginate_links($pagination_args);

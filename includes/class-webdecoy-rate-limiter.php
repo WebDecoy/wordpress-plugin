@@ -88,6 +88,7 @@ class WebDecoy_Rate_Limiter
         $now = current_time('mysql', true);
         $window_start_threshold = gmdate('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions.
         $existing = $wpdb->get_row($wpdb->prepare(
             "SELECT request_count, window_start FROM {$table} WHERE ip_address = %s AND window_start > %s",
             $key,
@@ -96,10 +97,13 @@ class WebDecoy_Rate_Limiter
 
         if ($existing) {
             $current = (int) $existing['request_count'] + 1;
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
             $wpdb->update($table, ['request_count' => $current], ['ip_address' => $key]);
             $reset_at = strtotime($existing['window_start']) + $this->window;
         } else {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
             $wpdb->delete($table, ['ip_address' => $key]);
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
             $wpdb->insert($table, [
                 'ip_address' => $key,
                 'request_count' => 1,
@@ -131,6 +135,7 @@ class WebDecoy_Rate_Limiter
         $window_start = gmdate('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
 
         // Check for existing record in current window
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions.
         $existing = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$table} WHERE ip_address = %s AND window_start > %s",
             $ip,
@@ -140,6 +145,7 @@ class WebDecoy_Rate_Limiter
         if ($existing) {
             // Increment existing count
             $new_count = (int) $existing['request_count'] + 1;
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
             $wpdb->update(
                 $table,
                 ['request_count' => $new_count],
@@ -148,7 +154,9 @@ class WebDecoy_Rate_Limiter
             return $new_count;
         } else {
             // Delete old record if exists and create new
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
             $wpdb->delete($table, ['ip_address' => $ip]);
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
             $wpdb->insert($table, [
                 'ip_address' => $ip,
                 'request_count' => 1,
@@ -171,6 +179,7 @@ class WebDecoy_Rate_Limiter
         $table = esc_sql($wpdb->prefix . 'webdecoy_rate_limits');
         $window_start = gmdate('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions.
         $count = $wpdb->get_var($wpdb->prepare(
             "SELECT request_count FROM {$table} WHERE ip_address = %s AND window_start > %s",
             $ip,
@@ -205,6 +214,7 @@ class WebDecoy_Rate_Limiter
         $table = esc_sql($wpdb->prefix . 'webdecoy_rate_limits');
         $window_start_threshold = gmdate('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions.
         $window_start = $wpdb->get_var($wpdb->prepare(
             "SELECT window_start FROM {$table} WHERE ip_address = %s AND window_start > %s",
             $ip,
@@ -233,6 +243,7 @@ class WebDecoy_Rate_Limiter
 
         $table = esc_sql($wpdb->prefix . 'webdecoy_rate_limits');
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
         return $wpdb->delete($table, ['ip_address' => $ip]) !== false;
     }
 
@@ -248,6 +259,7 @@ class WebDecoy_Rate_Limiter
         $table = esc_sql($wpdb->prefix . 'webdecoy_rate_limits');
         $threshold = gmdate('Y-m-d H:i:s', strtotime('-1 hour'));
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions.
         return $wpdb->query($wpdb->prepare(
             "DELETE FROM {$table} WHERE window_start < %s",
             $threshold
@@ -341,16 +353,19 @@ class WebDecoy_Rate_Limiter
         $table = esc_sql($wpdb->prefix . 'webdecoy_rate_limits');
         $window_start = gmdate('Y-m-d H:i:s', strtotime("-{$this->window} seconds"));
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions.
         $active_ips = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(DISTINCT ip_address) FROM {$table} WHERE window_start > %s",
             $window_start
         ));
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions.
         $total_requests = $wpdb->get_var($wpdb->prepare(
             "SELECT SUM(request_count) FROM {$table} WHERE window_start > %s",
             $window_start
         ));
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions.
         $exceeded = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$table} WHERE window_start > %s AND request_count >= %d",
             $window_start,

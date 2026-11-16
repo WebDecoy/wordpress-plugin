@@ -1,0 +1,11 @@
+{
+  "environmentId": 42,
+  "capturedAt": "2026-11-15T12:00:00.000Z",
+  "groups": [
+    {
+      "id": "ad46770d-c785-4479-86a5-4d57b41f2a5d",
+      "notes": "Existing operator rule: synthetic example",
+      "rules": [{"operator": "equals", "value": "ExampleBlockedClient/1.0"}]
+    }
+  ]
+}

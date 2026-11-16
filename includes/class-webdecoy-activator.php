@@ -38,7 +38,8 @@ class WebDecoy_Activator
         }
 
         // Flush rewrite rules
-        flush_rewrite_rules();
+        // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.flush_rewrite_rules_flush_rewrite_rules -- Lifecycle only; soft flush updates rewrite options without writing .htaccess.
+        flush_rewrite_rules(false);
     }
 
     /**
@@ -53,7 +54,8 @@ class WebDecoy_Activator
         wp_clear_scheduled_hook('webdecoy_sync_actor_feed');
 
         // Flush rewrite rules
-        flush_rewrite_rules();
+        // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.flush_rewrite_rules_flush_rewrite_rules -- Lifecycle only; soft flush updates rewrite options without writing .htaccess.
+        flush_rewrite_rules(false);
     }
 
     /**
@@ -190,6 +192,7 @@ class WebDecoy_Activator
         dbDelta($sql_ai_referral_days);
         dbDelta($sql_request_counts);
         $table = $wpdb->prefix . 'webdecoy_request_counts';
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state.
         $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($table))) === $table;
         if ($exists) {
             add_option('webdecoy_request_counts_started_at', time(), '', false);
@@ -322,7 +325,7 @@ class WebDecoy_Activator
         ];
 
         foreach ($tables as $table) {
-            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, built from $wpdb->prefix
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, built from $wpdb->prefix
             $wpdb->query("DROP TABLE IF EXISTS {$table}");
         }
 
@@ -349,12 +352,14 @@ add_action('webdecoy_cleanup_expired', function () {
     global $wpdb;
 
     // Clean up expired blocks
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state.
     $wpdb->query($wpdb->prepare(
         "DELETE FROM {$wpdb->prefix}webdecoy_blocked_ips WHERE expires_at IS NOT NULL AND expires_at < %s",
         current_time('mysql', true)
     ));
 
     // Clean up old rate limit entries
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state.
     $wpdb->query($wpdb->prepare(
         "DELETE FROM {$wpdb->prefix}webdecoy_rate_limits WHERE window_start < %s",
         gmdate('Y-m-d H:i:s', strtotime('-1 hour'))
@@ -365,6 +370,7 @@ add_action('webdecoy_cleanup_expired', function () {
     $retention_days = class_exists('WebDecoy_Runtime_Config')
         ? WebDecoy_Runtime_Config::log_retention_days()
         : 30;
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state.
     $wpdb->query($wpdb->prepare(
         "DELETE FROM {$wpdb->prefix}webdecoy_detections WHERE created_at < %s",
         gmdate('Y-m-d H:i:s', strtotime("-{$retention_days} days"))
@@ -385,6 +391,7 @@ add_action('webdecoy_cleanup_expired', function () {
     }
 
     // Clean up old checkout attempts (keep 7 days)
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state.
     $wpdb->query($wpdb->prepare(
         "DELETE FROM {$wpdb->prefix}webdecoy_checkout_attempts WHERE created_at < %s",
         gmdate('Y-m-d H:i:s', strtotime('-7 days'))

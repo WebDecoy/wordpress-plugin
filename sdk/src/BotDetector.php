@@ -586,6 +586,7 @@ class BotDetector
         if ($behavior === '') {
             return null;
         }
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url -- Bundled SDK also runs without WordPress; native PHP parsing/serialization preserves its cross-framework contract and has standalone tests.
         $path = (string) (parse_url($requestPath, PHP_URL_PATH) ?: '/');
         $siteMode = (string) ($policy['mode'] ?? 'monitor');
         $resolution = RouteResolution::resolve($path, RouteResolution::rulesFromConfig($policy), $siteMode);

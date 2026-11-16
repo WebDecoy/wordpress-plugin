@@ -142,6 +142,7 @@ class WebDecoy_Detector
      */
     private function has_wordpress_cookies(): bool
     {
+        // phpcs:ignore WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___COOKIE -- Cookie presence is only a request-local detection signal, never authentication; cached page hits remain outside PHP coverage.
         foreach ($_COOKIE as $name => $value) {
             if (strpos($name, 'wordpress_') === 0 ||
                 strpos($name, 'wp-') === 0 ||
@@ -241,13 +242,14 @@ class WebDecoy_Detector
 
         $table = esc_sql($wpdb->prefix . 'webdecoy_detections');
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
         $wpdb->insert($table, [
             'ip_address' => $ip,
             'user_agent' => $this->get_signal_collector()->getUserAgent(),
             'score' => $result->getScore(),
             'threat_level' => $result->getThreatLevel(),
             'source' => 'wordpress_plugin',
-            'flags' => json_encode($result->getFlags()),
+            'flags' => wp_json_encode($result->getFlags()),
             // STORAGE CONVENTION (#55): every timestamp this plugin writes is UTC,
             // and conversion happens at the display boundary via get_date_from_gmt().
             // It was previously current_time('mysql') (site-local) while the readers
@@ -276,6 +278,7 @@ class WebDecoy_Detector
 
         $table = esc_sql($wpdb->prefix . 'webdecoy_detections');
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Current operator audit rows are deliberately uncached so a setup test appears immediately; row limit is prepared.
         return $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$table} ORDER BY created_at DESC LIMIT %d",
             $limit
@@ -290,38 +293,52 @@ class WebDecoy_Detector
      */
     public function get_stats(int $days = 7): array
     {
+        // Presentation only: enforcement and velocity checks never read this cache.
+        $days = max(1, min(3650, $days));
+        $cache_key = 'detection_stats' . '_' . $days;
+        $cached = wp_cache_get($cache_key, 'webdecoy_analytics');
+        if (is_array($cached)) {
+            return $cached;
+        }
+
         global $wpdb;
 
         $table = esc_sql($wpdb->prefix . 'webdecoy_detections');
         $since = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement.
         $total = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$table} WHERE created_at > %s",
             $since
         ));
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement.
         $by_level = $wpdb->get_results($wpdb->prepare(
             "SELECT threat_level, COUNT(*) as count FROM {$table} WHERE created_at > %s GROUP BY threat_level",
             $since
         ), OBJECT_K);
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement.
         $by_day = $wpdb->get_results($wpdb->prepare(
             "SELECT DATE(created_at) as date, COUNT(*) as count FROM {$table} WHERE created_at > %s GROUP BY DATE(created_at) ORDER BY date",
             $since
         ), ARRAY_A);
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement.
         $high_risk = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$table} WHERE created_at > %s AND threat_level IN ('HIGH', 'CRITICAL')",
             $since
         ));
 
-        return [
+        $stats = [
             'total' => (int) $total,
             'high_risk' => (int) $high_risk,
             'by_level' => $by_level,
             'by_day' => $by_day,
             'period_days' => $days,
         ];
+        wp_cache_set($cache_key, $stats, 'webdecoy_analytics', 60);
+        return $stats;
     }
 
     /**
@@ -337,6 +354,7 @@ class WebDecoy_Detector
         $table = esc_sql($wpdb->prefix . 'webdecoy_detections');
         $since = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Current operator distinct-IP total from the plugin detection table; not used on public enforcement paths.
         return (int) $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(DISTINCT ip_address) FROM {$table} WHERE created_at > %s",
             $since

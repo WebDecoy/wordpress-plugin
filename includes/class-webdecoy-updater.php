@@ -6,6 +6,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/class-webdecoy-http.php';
+
 /**
  * Self-hosted update mechanism (CDN distribution ONLY).
  *
@@ -55,7 +57,8 @@ class WebDecoy_Updater
         $update_info = get_transient('webdecoy_update_info');
 
         if ($update_info === false) {
-            $response = wp_remote_get('https://cdn.webdecoy.com/wordpress/update-info.json', [
+            $response = WebDecoy_HTTP::get('https://cdn.webdecoy.com/wordpress/update-info.json', [
+                // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- WebDecoy_HTTP caps this to 3 seconds on VIP; retains the non-VIP caller budget.
                 'timeout' => 10,
                 'headers' => [
                     'Accept' => 'application/json',
@@ -180,7 +183,8 @@ class WebDecoy_Updater
             return $result;
         }
 
-        $response = wp_remote_get('https://cdn.webdecoy.com/wordpress/plugin-info.json', [
+        $response = WebDecoy_HTTP::get('https://cdn.webdecoy.com/wordpress/plugin-info.json', [
+            // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- WebDecoy_HTTP caps this to 3 seconds on VIP; retains the non-VIP caller budget.
             'timeout' => 10,
             'headers' => [
                 'Accept' => 'application/json',

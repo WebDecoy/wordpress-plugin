@@ -40,6 +40,9 @@ TestRunner::test('flags only forwarding headers the host has not resolved', func
         'host resolved v4:port' => [['REMOTE_ADDR' => '203.0.113.5', 'HTTP_FORWARDED' => 'for=203.0.113.5:443'], ''],
         'unresolved XFF' => [['REMOTE_ADDR' => '10.0.0.2', 'HTTP_X_FORWARDED_FOR' => '203.0.113.5'], 'X-Forwarded-For'],
         'unresolved CF' => [['REMOTE_ADDR' => '172.70.1.1', 'HTTP_CF_CONNECTING_IP' => '203.0.113.5', 'HTTP_X_FORWARDED_FOR' => '203.0.113.5'], 'CF-Connecting-IP'],
+        'invalid peer' => [['REMOTE_ADDR' => 'not-an-ip', 'HTTP_X_FORWARDED_FOR' => '203.0.113.5'], 'X-Forwarded-For'],
+        'array peer' => [['REMOTE_ADDR' => ['203.0.113.5'], 'HTTP_X_FORWARDED_FOR' => '203.0.113.5'], 'X-Forwarded-For'],
+        'peer with port' => [['REMOTE_ADDR' => '203.0.113.5:443', 'HTTP_X_FORWARDED_FOR' => '203.0.113.5'], 'X-Forwarded-For'],
         'garbage header' => [['REMOTE_ADDR' => '10.0.0.2', 'HTTP_X_FORWARDED_FOR' => 'unknown'], 'X-Forwarded-For'],
     ];
     try {

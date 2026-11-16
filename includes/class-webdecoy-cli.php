@@ -81,11 +81,13 @@ class WebDecoy_CLI_Command
         $blocked = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
         $now = gmdate('Y-m-d H:i:s');
 
-        $total = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$detections}"); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix
+        $total = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$detections}"); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Explicit WP-CLI status reads current plugin table state.
         $last24 = (int) $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$detections} WHERE created_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             gmdate('Y-m-d H:i:s', strtotime('-24 hours'))
         ));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Explicit WP-CLI operator status/maintenance of plugin tables; report current state rather than a stale cache.
         $active_blocks = (int) $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$blocked} WHERE expires_at IS NULL OR expires_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $now
@@ -288,7 +290,7 @@ class WebDecoy_CLI_Command
         \WP_CLI::confirm('Delete ALL recorded detections on this site?', $assoc_args);
 
         $detections = esc_sql($wpdb->prefix . 'webdecoy_detections');
-        $deleted = $wpdb->query("DELETE FROM {$detections}"); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix
+        $deleted = $wpdb->query("DELETE FROM {$detections}"); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix
         \WP_CLI::success(sprintf('Deleted %d detection%s.', (int) $deleted, (int) $deleted === 1 ? '' : 's'));
     }
 

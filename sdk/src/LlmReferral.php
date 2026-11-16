@@ -45,12 +45,14 @@ final class LlmReferral
         $platforms = self::platforms();
         $referer = trim($referer);
         if ($referer !== '') {
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url -- Bundled SDK also runs without WordPress; native PHP parsing/serialization preserves its cross-framework contract and has standalone tests.
             $host = parse_url($referer, PHP_URL_HOST);
             if (!is_string($host) || $host === '') {
                 return '';
             }
             return $platforms[strtolower($host)] ?? '';
         }
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url -- Bundled SDK also runs without WordPress; native PHP parsing/serialization preserves its cross-framework contract and has standalone tests.
         $query = parse_url($pageUrl, PHP_URL_QUERY);
         if (!is_string($query) || $query === '') {
             return '';
@@ -101,6 +103,7 @@ final class LlmReferral
             return '';
         }
         if (strpos($value, '://') !== false) {
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url -- Bundled SDK also runs without WordPress; native PHP parsing/serialization preserves its cross-framework contract and has standalone tests.
             $host = parse_url($value, PHP_URL_HOST);
             if (is_string($host) && $host !== '') {
                 $value = strtolower($host);

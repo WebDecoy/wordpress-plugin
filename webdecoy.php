@@ -50,6 +50,7 @@ define('WEBDECOY_PLUGIN_BASENAME', plugin_basename(__FILE__));
 // Code-level configuration (wp-config.php constants). Loaded before anything
 // reads options, because WEBDECOY_DEFAULT_MODE participates in load_options().
 require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-runtime-config.php';
+require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-diagnostics.php';
 
 // Load the SDK (bundled)
 $sdk_paths = [
@@ -1267,7 +1268,7 @@ final class WebDecoy_Plugin
             try {
                 $this->submit_detection($result, $ip);
             } catch (\Exception $e) {
-                error_log('WebDecoy API error: ' . $e->getMessage());
+                WebDecoy_Diagnostics::report('api_error');
             }
         }
 
@@ -1422,9 +1423,11 @@ final class WebDecoy_Plugin
     public function record_synthetic_tripwire(string $rule, string $path, string $trap_kind = ''): void
     {
         $ip = $this->get_client_ip();
+        // phpcs:ignore WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__ -- Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage.
         $ua = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
         $clearance = null;
         if ($rule === 'tripwire' && isset($_COOKIE['wd_clearance'])) {
+            // phpcs:ignore WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___COOKIE -- Sanitized clearance token is reported with this trap event; it is not rendered into cached content.
             $clearance = sanitize_text_field(wp_unslash($_COOKIE['wd_clearance']));
         }
 
@@ -1518,6 +1521,7 @@ final class WebDecoy_Plugin
             ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD']))
             : 'GET';
         $userAgent = isset($_SERVER['HTTP_USER_AGENT'])
+            // phpcs:ignore WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__ -- Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage.
             ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT']))
             : '';
 
@@ -1784,8 +1788,10 @@ final class WebDecoy_Plugin
             ],
         ];
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
         $wpdb->insert($wpdb->prefix . 'webdecoy_detections', [
             'ip_address' => $ip,
+            // phpcs:ignore WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__ -- Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage.
             'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '',
             'score' => 100,
             'threat_level' => \WebDecoy\DetectionResult::THREAT_HIGH,
@@ -1829,6 +1835,7 @@ final class WebDecoy_Plugin
                 ),
             ];
 
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
             $wpdb->insert($wpdb->prefix . 'webdecoy_detections', [
                 'ip_address' => $violation->ip,
                 'user_agent' => $violation->userAgent ?? '',
@@ -1905,13 +1912,19 @@ final class WebDecoy_Plugin
      */
     private function is_challenge_verified(string $ip): bool
     {
+        // phpcs:ignore WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___COOKIE -- HMAC-matched clearance affects only this request; successful verification calls nocache_headers before continuing.
         $cookie = isset($_COOKIE['webdecoy_verified']) ? sanitize_text_field(wp_unslash($_COOKIE['webdecoy_verified'])) : '';
         if (empty($cookie)) {
             return false;
         }
 
         $stored = get_transient('webdecoy_verified_' . md5($ip));
-        return $stored !== false && hash_equals($stored, $cookie);
+        $verified = $stored !== false && hash_equals($stored, $cookie);
+        if ($verified) {
+            // A clearance-dependent response must not be reused for another visitor.
+            nocache_headers();
+        }
+        return $verified;
     }
 
     /**
@@ -1956,6 +1969,8 @@ final class WebDecoy_Plugin
         header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
 
         if ($this->options['show_block_page']) {
+            // Display the same trusted-proxy-aware address used for enforcement.
+            $visitor_ip = $this->get_client_ip();
             status_header(403);
             include WEBDECOY_PLUGIN_DIR . 'templates/block-page.php';
             exit;
@@ -1982,13 +1997,15 @@ final class WebDecoy_Plugin
             'metadata' => $result->getMetadata(),
         ];
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
         $wpdb->insert($table, [
             'ip_address' => $ip,
+            // phpcs:ignore WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__ -- Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage.
             'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '',
             'score' => $result->getScore(),
             'threat_level' => $result->getThreatLevel(),
             'source' => 'wordpress_plugin',
-            'flags' => json_encode($flags_data),
+            'flags' => wp_json_encode($flags_data),
             'created_at' => gmdate('Y-m-d H:i:s'),
         ]);
 
@@ -2014,7 +2031,7 @@ final class WebDecoy_Plugin
         $detection = \WebDecoy\Detection::fromArray([
             'scanner_id' => $this->get_scanner_id(),
             'ip_address' => $ip,
-            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Used for logging only
+            // phpcs:ignore WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Used for logging only
             'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '',
             'url' => $this->get_current_url(),
             // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Used for logging only
@@ -2061,7 +2078,7 @@ final class WebDecoy_Plugin
                 'timeout' => 3,
             ]);
         } catch (\Exception $e) {
-            error_log('WebDecoy client error: ' . $e->getMessage());
+            WebDecoy_Diagnostics::report('client_error');
             return null;
         }
     }
@@ -2075,6 +2092,7 @@ final class WebDecoy_Plugin
         if (!isset($_SERVER['HTTP_USER_AGENT'])) {
             return false;
         }
+        // phpcs:ignore WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__ -- Reserved setup probe produces an explicit no-cache 403 receipt; does not personalize shared page content.
         $ua = ltrim(sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])));
         return stripos($ua, 'WebDecoy-Test/') === 0;
     }
@@ -2099,20 +2117,22 @@ final class WebDecoy_Plugin
         // Local log, inlined rather than via log_detection(): that path also
         // queues the critical-moment alert for CRITICAL rows, and a test must
         // not page anyone.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
         $wpdb->insert($wpdb->prefix . 'webdecoy_detections', [
             'ip_address' => $ip,
+            // phpcs:ignore WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__ -- Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage.
             'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '',
             'score' => $result->getScore(),
             'threat_level' => $result->getThreatLevel(),
             'source' => 'wordpress_plugin',
-            'flags' => json_encode(['flags' => $result->getFlags(), 'metadata' => ['test' => true]]),
+            'flags' => wp_json_encode(['flags' => $result->getFlags(), 'metadata' => ['test' => true]]),
             'created_at' => gmdate('Y-m-d H:i:s'),
         ]);
 
         try {
             $this->submit_detection($result, $ip);
         } catch (\Exception $e) {
-            error_log('WebDecoy API error: ' . $e->getMessage());
+            WebDecoy_Diagnostics::report('api_error');
         }
 
         nocache_headers();
@@ -2194,8 +2214,10 @@ final class WebDecoy_Plugin
             $ip = $this->get_client_ip();
 
             global $wpdb;
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
             $wpdb->insert($wpdb->prefix . 'webdecoy_detections', [
                 'ip_address' => $ip,
+                // phpcs:ignore WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__ -- Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage.
                 'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '',
                 'score' => 100,
                 'threat_level' => \WebDecoy\DetectionResult::THREAT_CRITICAL,
@@ -2814,7 +2836,7 @@ final class WebDecoy_Plugin
         $collector = new \WebDecoy\SignalCollector($this->get_trusted_proxies());
         $ip = $collector->getIP();
 
-        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        // phpcs:ignore WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
 
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -2959,6 +2981,7 @@ final class WebDecoy_Plugin
             $threat_level = 'LOW';
         }
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
         $wpdb->insert($table, [
             'ip_address' => $ip,
             'user_agent' => $user_agent,
@@ -2989,7 +3012,7 @@ final class WebDecoy_Plugin
         }
 
         if (empty($api_key)) {
-            error_log('WebDecoy: Cannot forward to ingest - API key not configured');
+            WebDecoy_Diagnostics::report('ingest_unconfigured');
             return;
         }
 
@@ -3032,7 +3055,7 @@ final class WebDecoy_Plugin
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer ' . $api_key,
             ],
-            'body' => json_encode($payload),
+            'body' => wp_json_encode($payload),
         ]);
     }
 
@@ -3273,6 +3296,7 @@ final class WebDecoy_Plugin
      */
     public function ajax_pow_verify(): void
     {
+        nocache_headers();
         check_ajax_referer('webdecoy_pow', '_wpnonce');
 
         $ip = $this->get_client_ip();
@@ -3325,7 +3349,14 @@ final class WebDecoy_Plugin
         set_transient('webdecoy_verified_' . md5($ip), $cookie_value, $duration);
 
         // Set cookie on client
-        setcookie('webdecoy_verified', $cookie_value, time() + $duration, '/', '', is_ssl(), true);
+        // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.cookies_setcookie -- Verified AJAX response is explicitly no-cache; this is an HttpOnly clearance cookie, never shared page content.
+        setcookie('webdecoy_verified', $cookie_value, [
+            'expires' => time() + $duration,
+            'path' => '/',
+            'secure' => is_ssl(),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
 
         wp_send_json_success(['message' => __('Verified successfully.', 'webdecoy')]);
     }
@@ -3343,7 +3374,7 @@ final class WebDecoy_Plugin
                     'api_key' => $this->options['api_key'],
                 ]);
             } catch (\Exception $e) {
-                error_log('WebDecoy client error: ' . $e->getMessage());
+                WebDecoy_Diagnostics::report('client_error');
                 return null;
             }
         }

@@ -26,6 +26,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/class-webdecoy-http.php';
+
 class WebDecoy_Cloud_Policy
 {
     /** The public config endpoint the edge sensor reads (nothing in it is secret). */
@@ -69,7 +71,8 @@ class WebDecoy_Cloud_Policy
             ['aid' => $organization_id, 'host' => $host],
             self::CONFIG_ENDPOINT
         );
-        $response = wp_remote_get($url, [
+        $response = WebDecoy_HTTP::get($url, [
+            // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- WebDecoy_HTTP caps this to 3 seconds on VIP; retains the non-VIP caller budget.
             'timeout' => 5,
             'headers' => ['Accept' => 'application/json'],
         ]);

@@ -6,6 +6,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/class-webdecoy-http.php';
+
 /**
  * Counts page visits that AI products (ChatGPT, Claude, Perplexity, Gemini,
  * Copilot and others) send to this site, for WebDecoy's AI Traffic page.
@@ -259,7 +261,7 @@ class WebDecoy_AI_Referrals
     /** The path of a request URI, cut to the width WebDecoy stores. */
     public static function landingPath(string $uri): string
     {
-        $path = (string) (parse_url($uri, PHP_URL_PATH) ?: '/');
+        $path = (string) (wp_parse_url($uri, PHP_URL_PATH) ?: '/');
         if ($path === '' || $path[0] !== '/') {
             $path = '/' . $path;
         }
@@ -351,7 +353,8 @@ class WebDecoy_AI_Referrals
      */
     private static function send(string $apiKey, string $batch, array $referrals): bool
     {
-        $response = wp_remote_post(self::ENDPOINT, [
+        $response = WebDecoy_HTTP::post(self::ENDPOINT, [
+            // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- WebDecoy_HTTP caps this to 3 seconds on VIP; retains the non-VIP caller budget.
             'timeout' => 5,
             'headers' => [
                 'Content-Type' => 'application/json',

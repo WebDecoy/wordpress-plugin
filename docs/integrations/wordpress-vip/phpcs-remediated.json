@@ -1,0 +1,345 @@
+{
+  "totals": {
+    "errors": 0,
+    "warnings": 0,
+    "fixable": 0
+  },
+  "files": {
+    "webdecoy.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "uninstall.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "admin/partials/settings-page.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "admin/partials/blocked-ips-page.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "admin/partials/detections-page.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "admin/partials/dashboard-widget.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "admin/partials/statistics-page.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-runtime-config.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-violation-reporter.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-blocker.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-diagnostics.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-detection-sender.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-cli.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-http.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-review-ask.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-critical-moment.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-actor-feed.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-ip-enrichment.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-detector.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-rate-limit-rule.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-robots-txt.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-updater.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-ai-referrals.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-behavioral-scorer.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-honeytoken.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-activator.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-cloud-policy.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-wp-traps.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-decoy-response.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-actor-intel.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-cloud-connect.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-pow.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-rate-limiter.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-request-counts.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-woocommerce.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-crawler-visits.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/DetectionResult.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/AgentRegistry.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/LlmReferral.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Detection.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/registry/hit-explanations.generated.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/registry/agents.generated.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/registry/llm-platforms.generated.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/RuleEngine.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/TripwireRule.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/RuleResult.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/RuleInterface.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/RuleContext.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/FilterRule.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/RuleEngineResult.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/Filter/Parser.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/Filter/FilterSyntaxException.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/Filter/Tokenizer.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/Filter/Evaluator.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/ViolationEvent.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/HitExplanation.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/RouteResolution.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/BotDetector.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/SignalCollector.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Exception/WebDecoyException.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/GoodBotList.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Client.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "templates/block-page.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "templates/challenge-page.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    }
+  },
+  "assessment": {
+    "date": "2026-11-15",
+    "standard": "WordPress-VIP-Go",
+    "vipcs": "3.1.0",
+    "php": "8.5.10",
+    "scope": [
+      "webdecoy.php",
+      "uninstall.php",
+      "admin",
+      "includes",
+      "public",
+      "sdk/src",
+      "templates"
+    ],
+    "note": "Includes line-specific reviewed exceptions. Static analysis only; not VIP approval."
+  }
+}

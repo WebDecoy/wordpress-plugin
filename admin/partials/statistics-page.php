@@ -20,107 +20,124 @@ $detections_table = esc_sql($wpdb->prefix . 'webdecoy_detections');
 $blocked_table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
 $checkout_table = esc_sql($wpdb->prefix . 'webdecoy_checkout_attempts');
 
-// 30-day detection trend
-$thirty_days_ago = gmdate('Y-m-d H:i:s', strtotime('-30 days'));
-$daily_counts = $wpdb->get_results($wpdb->prepare(
-    "SELECT DATE(created_at) as date, COUNT(*) as count FROM {$detections_table} WHERE created_at > %s GROUP BY DATE(created_at) ORDER BY date ASC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
-    $thirty_days_ago
-), ARRAY_A);
+// Read-only admin aggregates may lag writes by at most one minute. No enforcement uses them.
+$wd_stats_key = 'admin_statistics_' . gmdate('Y-m-d') . '_' . (int) class_exists('WooCommerce');
+$wd_stats_cached = wp_cache_get($wd_stats_key, 'webdecoy_analytics');
+if (is_array($wd_stats_cached)) {
+    [$daily_data, $threat_distribution, $top_signals, $top_ips, $source_distribution, $total_30d, $total_7d, $total_today, $active_blocks, $woo_stats] = $wd_stats_cached;
+} else {
+    // 30-day detection trend
+    $thirty_days_ago = gmdate('Y-m-d H:i:s', strtotime('-30 days'));
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query.
+    $daily_counts = $wpdb->get_results($wpdb->prepare(
+        "SELECT DATE(created_at) as date, COUNT(*) as count FROM {$detections_table} WHERE created_at > %s GROUP BY DATE(created_at) ORDER BY date ASC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
+        $thirty_days_ago
+    ), ARRAY_A);
 
-// Fill in missing days with 0
-$daily_data = [];
-for ($i = 29; $i >= 0; $i--) {
-    $date = gmdate('Y-m-d', strtotime("-{$i} days"));
-    $daily_data[$date] = 0;
-}
-foreach ($daily_counts as $row) {
-    if (isset($daily_data[$row['date']])) {
-        $daily_data[$row['date']] = (int) $row['count'];
+    // Fill in missing days with 0
+    $daily_data = [];
+    for ($i = 29; $i >= 0; $i--) {
+        $date = gmdate('Y-m-d', strtotime("-{$i} days"));
+        $daily_data[$date] = 0;
     }
-}
-
-// Threat level distribution
-$threat_distribution = $wpdb->get_results($wpdb->prepare(
-    "SELECT threat_level, COUNT(*) as count FROM {$detections_table} WHERE created_at > %s GROUP BY threat_level ORDER BY count DESC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
-    $thirty_days_ago
-), ARRAY_A);
-
-// Top flagged signals (parse from JSON flags)
-$recent_flags = $wpdb->get_results($wpdb->prepare(
-    "SELECT flags FROM {$detections_table} WHERE created_at > %s AND flags IS NOT NULL AND flags != '' LIMIT 500", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
-    $thirty_days_ago
-), ARRAY_A);
-
-$signal_counts = [];
-foreach ($recent_flags as $row) {
-    // flags is TEXT DEFAULT NULL; cast so a null row never reaches json_decode()
-    // (a deprecation on PHP 8.1+). '' decodes to null and is skipped just below.
-    $flags_data = json_decode((string) ($row['flags'] ?? ''), true);
-    if (!is_array($flags_data)) {
-        continue;
-    }
-    // Handle structured format
-    $flags_arr = [];
-    if (isset($flags_data['flags']) && is_array($flags_data['flags'])) {
-        $flags_arr = $flags_data['flags'];
-    } elseif (isset($flags_data['f']) && is_array($flags_data['f'])) {
-        $flags_arr = $flags_data['f'];
-    } elseif (!isset($flags_data['flags']) && !isset($flags_data['f']) && !isset($flags_data['metadata'])) {
-        // Plain array of flags
-        $flags_arr = array_filter($flags_data, 'is_string');
-    }
-    foreach ($flags_arr as $flag) {
-        if (is_string($flag)) {
-            $signal_counts[$flag] = ($signal_counts[$flag] ?? 0) + 1;
+    foreach ($daily_counts as $row) {
+        if (isset($daily_data[$row['date']])) {
+            $daily_data[$row['date']] = (int) $row['count'];
         }
     }
-}
-arsort($signal_counts);
-$top_signals = array_slice($signal_counts, 0, 10, true);
 
-// Top blocked IPs
-$top_ips = $wpdb->get_results($wpdb->prepare(
-    "SELECT ip_address, COUNT(*) as count, MAX(created_at) as last_seen FROM {$detections_table} WHERE created_at > %s GROUP BY ip_address ORDER BY count DESC LIMIT 10", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
-    $thirty_days_ago
-), ARRAY_A);
+    // Threat level distribution
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query.
+    $threat_distribution = $wpdb->get_results($wpdb->prepare(
+        "SELECT threat_level, COUNT(*) as count FROM {$detections_table} WHERE created_at > %s GROUP BY threat_level ORDER BY count DESC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
+        $thirty_days_ago
+    ), ARRAY_A);
 
-// Source distribution
-$source_distribution = $wpdb->get_results($wpdb->prepare(
-    "SELECT source, COUNT(*) as count FROM {$detections_table} WHERE created_at > %s GROUP BY source ORDER BY count DESC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
-    $thirty_days_ago
-), ARRAY_A);
+    // Top flagged signals (parse from JSON flags)
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query.
+    $recent_flags = $wpdb->get_results($wpdb->prepare(
+        "SELECT flags FROM {$detections_table} WHERE created_at > %s AND flags IS NOT NULL AND flags != '' LIMIT 500", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
+        $thirty_days_ago
+    ), ARRAY_A);
 
-// Overall stats
-$total_30d = array_sum($daily_data);
-$total_7d = $wpdb->get_var($wpdb->prepare(
-    "SELECT COUNT(*) FROM {$detections_table} WHERE created_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
-    gmdate('Y-m-d H:i:s', strtotime('-7 days'))
-));
-$total_today = $wpdb->get_var($wpdb->prepare(
-    "SELECT COUNT(*) FROM {$detections_table} WHERE created_at >= %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
-    gmdate('Y-m-d 00:00:00')
-));
-// expires_at is stored in UTC, so it must be compared against a UTC value. MySQL's
-// NOW() resolves in the database session time zone (SYSTEM by default, which
-// WordPress never sets), so it disagrees with the column on any DB host not on UTC.
-$active_blocks = $wpdb->get_var($wpdb->prepare(
-    "SELECT COUNT(*) FROM {$blocked_table} WHERE expires_at IS NULL OR expires_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
-    gmdate('Y-m-d H:i:s')
-));
+    $signal_counts = [];
+    foreach ($recent_flags as $row) {
+        // flags is TEXT DEFAULT NULL; cast so a null row never reaches json_decode()
+        // (a deprecation on PHP 8.1+). '' decodes to null and is skipped just below.
+        $flags_data = json_decode((string) ($row['flags'] ?? ''), true);
+        if (!is_array($flags_data)) {
+            continue;
+        }
+        // Handle structured format
+        $flags_arr = [];
+        if (isset($flags_data['flags']) && is_array($flags_data['flags'])) {
+            $flags_arr = $flags_data['flags'];
+        } elseif (isset($flags_data['f']) && is_array($flags_data['f'])) {
+            $flags_arr = $flags_data['f'];
+        } elseif (!isset($flags_data['flags']) && !isset($flags_data['f']) && !isset($flags_data['metadata'])) {
+            // Plain array of flags
+            $flags_arr = array_filter($flags_data, 'is_string');
+        }
+        foreach ($flags_arr as $flag) {
+            if (is_string($flag)) {
+                $signal_counts[$flag] = ($signal_counts[$flag] ?? 0) + 1;
+            }
+        }
+    }
+    arsort($signal_counts);
+    $top_signals = array_slice($signal_counts, 0, 10, true);
 
-// WooCommerce stats (if active)
-$woo_stats = null;
-if (class_exists('WooCommerce')) {
-    $woo_stats = [
-        'attempts' => (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$checkout_table} WHERE created_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
-            $thirty_days_ago
-        )),
-        'blocked' => (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$checkout_table} WHERE created_at > %s AND status = 'blocked'", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
-            $thirty_days_ago
-        )),
-    ];
+    // Top blocked IPs
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query.
+    $top_ips = $wpdb->get_results($wpdb->prepare(
+        "SELECT ip_address, COUNT(*) as count, MAX(created_at) as last_seen FROM {$detections_table} WHERE created_at > %s GROUP BY ip_address ORDER BY count DESC LIMIT 10", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
+        $thirty_days_ago
+    ), ARRAY_A);
+
+    // Source distribution
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query.
+    $source_distribution = $wpdb->get_results($wpdb->prepare(
+        "SELECT source, COUNT(*) as count FROM {$detections_table} WHERE created_at > %s GROUP BY source ORDER BY count DESC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
+        $thirty_days_ago
+    ), ARRAY_A);
+
+    // Overall stats
+    $total_30d = array_sum($daily_data);
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query.
+    $total_7d = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM {$detections_table} WHERE created_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
+        gmdate('Y-m-d H:i:s', strtotime('-7 days'))
+    ));
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query.
+    $total_today = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM {$detections_table} WHERE created_at >= %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
+        gmdate('Y-m-d 00:00:00')
+    ));
+    // expires_at is stored in UTC, so it must be compared against a UTC value. MySQL's
+    // NOW() resolves in the database session time zone (SYSTEM by default, which
+    // WordPress never sets), so it disagrees with the column on any DB host not on UTC.
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query.
+    $active_blocks = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM {$blocked_table} WHERE expires_at IS NULL OR expires_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
+        gmdate('Y-m-d H:i:s')
+    ));
+
+    // WooCommerce stats (if active)
+    $woo_stats = null;
+    if (class_exists('WooCommerce')) {
+        $woo_stats = [
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query.
+            'attempts' => (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$checkout_table} WHERE created_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
+                $thirty_days_ago
+            )),
+            'blocked' => (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$checkout_table} WHERE created_at > %s AND status = 'blocked'", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix, not user input
+                $thirty_days_ago
+            )),
+        ];
+    }
+    wp_cache_set($wd_stats_key, [$daily_data, $threat_distribution, $top_signals, $top_ips, $source_distribution, $total_30d, $total_7d, $total_today, $active_blocks, $woo_stats], 'webdecoy_analytics', 60);
 }
 
 // Known crawlers, AI agents and bot tools over 7 days (counters only).
@@ -135,6 +152,7 @@ $options = get_option('webdecoy_options', []);
 
 <div class="wrap">
     <h1><?php esc_html_e('WebDecoy Statistics', 'webdecoy'); ?></h1>
+    <p class="description"><?php esc_html_e('Summary statistics may take up to one minute to refresh. Protection checks remain live.', 'webdecoy'); ?></p>
 
     <!-- Summary Stats -->
     <div class="webdecoy-stats-summary">
