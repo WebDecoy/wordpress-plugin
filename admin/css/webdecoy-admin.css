@@ -1102,6 +1102,21 @@
     border-bottom: 0;
 }
 
+.webdecoy-widget-ai-referrals {
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.webdecoy-widget-ai-referrals h4 {
+    margin: 0 0 4px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.webdecoy-widget-ai-referrals .webdecoy-widget-agents {
+    margin-bottom: 0;
+}
+
 .webdecoy-widget-verification,
 .webdecoy-widget-footnote {
     margin: 0 0 8px;
