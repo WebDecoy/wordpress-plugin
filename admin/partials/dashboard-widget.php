@@ -27,6 +27,16 @@ if ($crawlers === false) {
     set_transient('webdecoy_dashboard_crawlers', $crawlers, 5 * MINUTE_IN_SECONDS);
 }
 
+// Page visits AI products (ChatGPT, Perplexity, Claude...) sent over 7 days.
+// Counted locally on every install (WebDecoy_AI_Referrals).
+$ai_referrals = get_transient('webdecoy_dashboard_ai_referrals');
+if ($ai_referrals === false) {
+    $ai_referrals = class_exists('WebDecoy_AI_Referrals')
+        ? WebDecoy_AI_Referrals::summary(7)
+        : ['total' => 0, 'platforms' => [], 'pages' => []];
+    set_transient('webdecoy_dashboard_ai_referrals', $ai_referrals, 5 * MINUTE_IN_SECONDS);
+}
+
 $request_counts_today = WebDecoy_Request_Counts::summary(1);
 
 // Checkout bot signals in the last 24 hours: velocity, card-testing patterns,
@@ -124,6 +134,24 @@ if (class_exists('WooCommerce')) {
             <?php esc_html_e('Counted on this server with no account. Pages served from a page cache are not counted, so these are minimums.', 'webdecoy'); ?>
             <a href="<?php echo esc_url(admin_url('admin.php?page=webdecoy-statistics')); ?>"><?php esc_html_e('See every bot', 'webdecoy'); ?></a>
         </p>
+    </div>
+
+    <div class="webdecoy-widget-ai-referrals">
+        <h4><?php esc_html_e('Visits sent by AI assistants (7 days)', 'webdecoy'); ?></h4>
+        <?php if ((int) $ai_referrals['total'] > 0) : ?>
+        <ul class="webdecoy-widget-agents">
+            <?php foreach (array_slice($ai_referrals['platforms'], 0, 5) as $webdecoy_dw_ref) : ?>
+            <li>
+                <span class="webdecoy-agent-name"><strong><?php echo esc_html($webdecoy_dw_ref['platform']); ?></strong></span>
+                <span class="webdecoy-count"><?php echo esc_html(number_format((int) $webdecoy_dw_ref['referrals'])); ?></span>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+        <?php else : ?>
+        <p class="webdecoy-widget-verification">
+            <?php esc_html_e('None yet. When someone clicks a link to this site in ChatGPT, Perplexity, Claude, Gemini or Copilot, the visit is counted here.', 'webdecoy'); ?>
+        </p>
+        <?php endif; ?>
     </div>
 
     <div class="webdecoy-widget-request-counts">

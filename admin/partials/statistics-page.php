@@ -126,6 +126,9 @@ if (class_exists('WooCommerce')) {
 // Known crawlers, AI agents and bot tools over 7 days (counters only).
 $crawler_summary = class_exists('WebDecoy_Crawler_Visits') ? WebDecoy_Crawler_Visits::summary(7 * 24) : null;
 
+// Page visits AI products sent over 30 days (counters only).
+$ai_referral_summary = class_exists('WebDecoy_AI_Referrals') ? WebDecoy_AI_Referrals::summary(WebDecoy_AI_Referrals::LOCAL_RETENTION_DAYS) : null;
+
 $request_windows = [1 => WebDecoy_Request_Counts::summary(1), 7 => WebDecoy_Request_Counts::summary(7), 30 => WebDecoy_Request_Counts::summary(30)];
 $options = get_option('webdecoy_options', []);
 ?>
@@ -244,6 +247,55 @@ $options = get_option('webdecoy_options', []);
             </table>
         <?php endif; ?>
     </div>
+
+    <!-- Visits AI assistants sent -->
+    <?php if ($ai_referral_summary !== null) : ?>
+    <div class="webdecoy-chart-card">
+        <h3><?php esc_html_e('Visits Sent by AI Assistants (30 Days)', 'webdecoy'); ?></h3>
+        <p class="description">
+            <?php esc_html_e('Page visits that arrived from a link in ChatGPT, Perplexity, Claude, Gemini, Copilot and other AI products, counted on this server with no account. Only a count per AI product and landing page per day is kept: nothing about the visitor. Pages served from a page cache are not counted, so these are minimums.', 'webdecoy'); ?>
+        </p>
+        <?php if ((int) $ai_referral_summary['total'] === 0) : ?>
+            <p class="description"><?php esc_html_e('No visits from AI assistants yet.', 'webdecoy'); ?></p>
+        <?php else : ?>
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e('AI product', 'webdecoy'); ?></th>
+                        <th><?php esc_html_e('Visits', 'webdecoy'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($ai_referral_summary['platforms'] as $ref_row) : ?>
+                    <tr>
+                        <td><strong><?php echo esc_html($ref_row['platform']); ?></strong></td>
+                        <td><?php echo esc_html(number_format((int) $ref_row['referrals'])); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <?php if (!empty($ai_referral_summary['pages'])) : ?>
+            <h4><?php esc_html_e('Pages AI assistants send people to', 'webdecoy'); ?></h4>
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e('Landing page', 'webdecoy'); ?></th>
+                        <th><?php esc_html_e('Visits', 'webdecoy'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach (array_slice($ai_referral_summary['pages'], 0, 20) as $ref_page) : ?>
+                    <tr>
+                        <td><a href="<?php echo esc_url(home_url($ref_page['path'])); ?>"><code><?php echo esc_html($ref_page['path']); ?></code></a></td>
+                        <td><?php echo esc_html(number_format((int) $ref_page['referrals'])); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
 
     <!-- Known bots and AI crawlers -->
     <?php if ($crawler_summary !== null) : ?>

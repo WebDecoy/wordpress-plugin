@@ -979,8 +979,9 @@ final class WebDecoy_Plugin
         // Safety-net cron drain of the violation-report spool.
         add_action('webdecoy_flush_violations', [$this, 'cron_flush_violations']);
 
-        // AI referral counting, when connected to WebDecoy Cloud: visits AI
-        // products send, as aggregate counts for the AI Traffic page. Wired on
+        // AI referral counting: visits AI products send, as aggregate counts,
+        // kept locally on every install and also sent to WebDecoy Cloud's AI
+        // Traffic page when connected. Wired on
         // plugins_loaded because its class is loaded there by load_includes().
         add_action('plugins_loaded', [$this, 'register_ai_referrals'], 20);
 
@@ -1380,7 +1381,7 @@ final class WebDecoy_Plugin
     }
 
     /**
-     * Register AI referral counting (a no-op unless connected to WebDecoy Cloud).
+     * Register AI referral counting: always local, and sent to WebDecoy Cloud when connected.
      */
     public function register_ai_referrals(): void
     {

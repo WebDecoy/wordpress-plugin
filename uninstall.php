@@ -35,6 +35,7 @@ if (file_exists($activator_file)) {
         $wpdb->prefix . 'webdecoy_ai_referrals',
         $wpdb->prefix . 'webdecoy_request_counts',
         $wpdb->prefix . 'webdecoy_crawler_visits',
+        $wpdb->prefix . 'webdecoy_ai_referral_days',
     ];
 
     foreach ($tables as $table) {
@@ -90,6 +91,8 @@ if (is_multisite()) {
             $wpdb->prefix . 'webdecoy_checkout_attempts',
             $wpdb->prefix . 'webdecoy_ai_referrals',
             $wpdb->prefix . 'webdecoy_request_counts',
+            $wpdb->prefix . 'webdecoy_crawler_visits',
+            $wpdb->prefix . 'webdecoy_ai_referral_days',
         ];
 
         foreach ($tables as $table) {

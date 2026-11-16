@@ -21,7 +21,7 @@ class WebDecoy_Activator
     /**
      * Database version for migrations
      */
-    private const DB_VERSION = '2.11.1';
+    private const DB_VERSION = '2.13.0';
 
     /**
      * Plugin activation
@@ -165,6 +165,19 @@ class WebDecoy_Activator
             PRIMARY KEY  (bucket, outcome)
         ) $charset_collate;";
 
+        // Local AI referral counts (2.13.0): page visits AI products sent, per
+        // UTC day, platform and landing path, kept 30 days for the widget and
+        // Statistics page with no account. Counts only; nothing about a
+        // visitor. path_key is sha1(landing_path) for index limits.
+        $sql_ai_referral_days = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}webdecoy_ai_referral_days (
+            day DATE NOT NULL,
+            platform VARCHAR(50) NOT NULL,
+            path_key CHAR(40) NOT NULL,
+            landing_path VARCHAR(500) NOT NULL,
+            referrals BIGINT UNSIGNED NOT NULL DEFAULT 0,
+            PRIMARY KEY  (day, platform, path_key)
+        ) $charset_collate;";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
         dbDelta($sql_blocked);
@@ -174,6 +187,7 @@ class WebDecoy_Activator
         dbDelta($sql_violation_queue);
         dbDelta($sql_ai_referrals);
         dbDelta($sql_crawler_visits);
+        dbDelta($sql_ai_referral_days);
         dbDelta($sql_request_counts);
         $table = $wpdb->prefix . 'webdecoy_request_counts';
         $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($table))) === $table;
@@ -303,6 +317,7 @@ class WebDecoy_Activator
             $wpdb->prefix . 'webdecoy_ai_referrals',
             $wpdb->prefix . 'webdecoy_crawler_visits',
             $wpdb->prefix . 'webdecoy_request_counts',
+            $wpdb->prefix . 'webdecoy_ai_referral_days',
         ];
 
         foreach ($tables as $table) {
@@ -357,6 +372,11 @@ add_action('webdecoy_cleanup_expired', function () {
     // Crawler visit counters keep 30 days of hourly rows.
     if (class_exists('WebDecoy_Crawler_Visits')) {
         WebDecoy_Crawler_Visits::prune();
+    }
+
+    // Local AI referral counts keep 30 days.
+    if (class_exists('WebDecoy_AI_Referrals')) {
+        WebDecoy_AI_Referrals::prune();
     }
 
     if (class_exists('WebDecoy_Request_Counts')) {
