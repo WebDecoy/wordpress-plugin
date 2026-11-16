@@ -1,0 +1,2494 @@
+{
+  "totals": {
+    "errors": 45,
+    "warnings": 191,
+    "fixable": 0
+  },
+  "files": {
+    "webdecoy.php": {
+      "errors": 17,
+      "warnings": 9,
+      "messages": [
+        {
+          "message": "error_log() found. Debug code should not normally be used in production.",
+          "source": "WordPress.PHP.DevelopmentFunctions.error_log_error_log",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 1270,
+          "column": 17
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+          "severity": 6,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 1425,
+          "column": 91
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___COOKIE",
+          "severity": 6,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 1428,
+          "column": 57
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+          "severity": 6,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 1521,
+          "column": 54
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 1787,
+          "column": 9
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+          "severity": 6,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 1789,
+          "column": 105
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 1832,
+          "column": 13
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___COOKIE",
+          "severity": 6,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 1908,
+          "column": 89
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 1985,
+          "column": 9
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+          "severity": 6,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 1987,
+          "column": 105
+        },
+        {
+          "message": "json_encode() is discouraged. Use wp_json_encode() instead.",
+          "source": "WordPress.WP.AlternativeFunctions.json_encode_json_encode",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 1991,
+          "column": 24
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+          "severity": 6,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 2018,
+          "column": 105
+        },
+        {
+          "message": "error_log() found. Debug code should not normally be used in production.",
+          "source": "WordPress.PHP.DevelopmentFunctions.error_log_error_log",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 2064,
+          "column": 13
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+          "severity": 6,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 2078,
+          "column": 60
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 2102,
+          "column": 9
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+          "severity": 6,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 2104,
+          "column": 105
+        },
+        {
+          "message": "json_encode() is discouraged. Use wp_json_encode() instead.",
+          "source": "WordPress.WP.AlternativeFunctions.json_encode_json_encode",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 2108,
+          "column": 24
+        },
+        {
+          "message": "error_log() found. Debug code should not normally be used in production.",
+          "source": "WordPress.PHP.DevelopmentFunctions.error_log_error_log",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 2115,
+          "column": 13
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 2197,
+          "column": 13
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+          "severity": 6,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 2199,
+          "column": 109
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+          "severity": 6,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 2818,
+          "column": 99
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 2962,
+          "column": 9
+        },
+        {
+          "message": "error_log() found. Debug code should not normally be used in production.",
+          "source": "WordPress.PHP.DevelopmentFunctions.error_log_error_log",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 2992,
+          "column": 13
+        },
+        {
+          "message": "json_encode() is discouraged. Use wp_json_encode() instead.",
+          "source": "WordPress.WP.AlternativeFunctions.json_encode_json_encode",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 3035,
+          "column": 23
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Functions.RestrictedFunctions.cookies_setcookie",
+          "severity": 6,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 3328,
+          "column": 9
+        },
+        {
+          "message": "error_log() found. Debug code should not normally be used in production.",
+          "source": "WordPress.PHP.DevelopmentFunctions.error_log_error_log",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 3346,
+          "column": 17
+        }
+      ]
+    },
+    "uninstall.php": {
+      "errors": 0,
+      "warnings": 13,
+      "messages": [
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 43,
+          "column": 9
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 43,
+          "column": 9
+        },
+        {
+          "message": "Redeclaration of global variable $wpdb as global variable.",
+          "source": "VariableAnalysis.CodeAnalysis.VariableAnalysis.VariableRedeclaration",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 68,
+          "column": 8
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 71,
+          "column": 1
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 71,
+          "column": 1
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 75,
+          "column": 1
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 75,
+          "column": 1
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 100,
+          "column": 13
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 100,
+          "column": 13
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 123,
+          "column": 9
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 123,
+          "column": 9
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 127,
+          "column": 9
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 127,
+          "column": 9
+        }
+      ]
+    },
+    "admin/partials/settings-page.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "admin/partials/blocked-ips-page.php": {
+      "errors": 2,
+      "warnings": 0,
+      "messages": [
+        {
+          "message": "Overriding WordPress globals is prohibited. Found assignment to $page",
+          "source": "WordPress.WP.GlobalVariablesOverride.Prohibited",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 48,
+          "column": 1
+        },
+        {
+          "message": "Overriding WordPress globals is prohibited. Found assignment to $per_page",
+          "source": "WordPress.WP.GlobalVariablesOverride.Prohibited",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 49,
+          "column": 1
+        }
+      ]
+    },
+    "admin/partials/detections-page.php": {
+      "errors": 2,
+      "warnings": 8,
+      "messages": [
+        {
+          "message": "Overriding WordPress globals is prohibited. Found assignment to $page",
+          "source": "WordPress.WP.GlobalVariablesOverride.Prohibited",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 22,
+          "column": 1
+        },
+        {
+          "message": "Overriding WordPress globals is prohibited. Found assignment to $per_page",
+          "source": "WordPress.WP.GlobalVariablesOverride.Prohibited",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 23,
+          "column": 1
+        },
+        {
+          "message": "File system operations only work on the `/tmp/` and `wp-content/uploads/` directories. To avoid unexpected results, please use helper functions like `get_temp_dir()`  or `wp_get_upload_dir()` to get the proper directory path when using functions such as fputcsv(). For more details, please see: https://docs.wpvip.com/technical-references/vip-go-files-system/local-file-operations/",
+          "source": "WordPressVIPMinimum.Functions.RestrictedFunctions.file_ops_fputcsv",
+          "severity": 6,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 89,
+          "column": 5
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 93,
+          "column": 23
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 93,
+          "column": 23
+        },
+        {
+          "message": "File system operations only work on the `/tmp/` and `wp-content/uploads/` directories. To avoid unexpected results, please use helper functions like `get_temp_dir()`  or `wp_get_upload_dir()` to get the proper directory path when using functions such as fputcsv(). For more details, please see: https://docs.wpvip.com/technical-references/vip-go-files-system/local-file-operations/",
+          "source": "WordPressVIPMinimum.Functions.RestrictedFunctions.file_ops_fputcsv",
+          "severity": 6,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 96,
+          "column": 9
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 114,
+          "column": 10
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 114,
+          "column": 10
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 121,
+          "column": 15
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 121,
+          "column": 15
+        }
+      ]
+    },
+    "admin/partials/dashboard-widget.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "admin/partials/statistics-page.php": {
+      "errors": 0,
+      "warnings": 18,
+      "messages": [
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 25,
+          "column": 17
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 25,
+          "column": 17
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 43,
+          "column": 24
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 43,
+          "column": 24
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 49,
+          "column": 17
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 49,
+          "column": 17
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 82,
+          "column": 12
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 82,
+          "column": 12
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 88,
+          "column": 24
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 88,
+          "column": 24
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 95,
+          "column": 13
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 95,
+          "column": 13
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 99,
+          "column": 16
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 99,
+          "column": 16
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 106,
+          "column": 18
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 106,
+          "column": 18
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 115,
+          "column": 29
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 115,
+          "column": 29
+        }
+      ]
+    },
+    "includes/class-webdecoy-runtime-config.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-violation-reporter.php": {
+      "errors": 0,
+      "warnings": 3,
+      "messages": [
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 108,
+          "column": 13
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 219,
+          "column": 17
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 219,
+          "column": 17
+        }
+      ]
+    },
+    "includes/class-webdecoy-blocker.php": {
+      "errors": 4,
+      "warnings": 28,
+      "messages": [
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 89,
+          "column": 21
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 89,
+          "column": 21
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 96,
+          "column": 23
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 107,
+          "column": 23
+        },
+        {
+          "message": "Header \"REMOTE_ADDR\" is user-controlled and should be properly validated before use.",
+          "source": "WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 156,
+          "column": 25
+        },
+        {
+          "message": "Header \"REMOTE_ADDR\" is user-controlled and should be properly validated before use.",
+          "source": "WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 157,
+          "column": 51
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__REMOTE_ADDR__",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 157,
+          "column": 59
+        },
+        {
+          "message": "Header \"REMOTE_ADDR\" is user-controlled and should be properly validated before use.",
+          "source": "WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 230,
+          "column": 25
+        },
+        {
+          "message": "Header \"REMOTE_ADDR\" is user-controlled and should be properly validated before use.",
+          "source": "WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 231,
+          "column": 65
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__REMOTE_ADDR__",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 231,
+          "column": 73
+        },
+        {
+          "message": "This comment is 50% valid code; is this commented out code?",
+          "source": "Squiz.PHP.CommentedOutCode.Found",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 266,
+          "column": 27
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 349,
+          "column": 19
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 381,
+          "column": 26
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 394,
+          "column": 24
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 442,
+          "column": 20
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 442,
+          "column": 20
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 468,
+          "column": 22
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 468,
+          "column": 22
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 483,
+          "column": 19
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 483,
+          "column": 19
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 515,
+          "column": 19
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 537,
+          "column": 18
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 558,
+          "column": 16
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 558,
+          "column": 16
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 828,
+          "column": 18
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 828,
+          "column": 18
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 829,
+          "column": 19
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 829,
+          "column": 19
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 834,
+          "column": 22
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 834,
+          "column": 22
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 837,
+          "column": 19
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 837,
+          "column": 19
+        }
+      ]
+    },
+    "includes/class-webdecoy-detection-sender.php": {
+      "errors": 1,
+      "warnings": 0,
+      "messages": [
+        {
+          "message": "error_log() found. Debug code should not normally be used in production.",
+          "source": "WordPress.PHP.DevelopmentFunctions.error_log_error_log",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 102,
+          "column": 17
+        }
+      ]
+    },
+    "includes/class-webdecoy-cli.php": {
+      "errors": 0,
+      "warnings": 8,
+      "messages": [
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 84,
+          "column": 24
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 84,
+          "column": 24
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 85,
+          "column": 25
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 85,
+          "column": 25
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 89,
+          "column": 32
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 89,
+          "column": 32
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 291,
+          "column": 20
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 291,
+          "column": 20
+        }
+      ]
+    },
+    "includes/class-webdecoy-review-ask.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-critical-moment.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-actor-feed.php": {
+      "errors": 1,
+      "warnings": 2,
+      "messages": [
+        {
+          "message": "This comment is 45% valid code; is this commented out code?",
+          "source": "Squiz.PHP.CommentedOutCode.Found",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 156,
+          "column": 25
+        },
+        {
+          "message": "wp_remote_get() is highly discouraged. Please use vip_safe_wp_remote_get() instead which is designed to more gracefully handle failure than wp_remote_get() does.",
+          "source": "WordPressVIPMinimum.Functions.RestrictedFunctions.wp_remote_get_wp_remote_get",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 233,
+          "column": 21
+        },
+        {
+          "message": "Detected high remote request timeout. `timeout` is set to `8`.",
+          "source": "WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 234,
+          "column": 13
+        }
+      ]
+    },
+    "includes/class-webdecoy-ip-enrichment.php": {
+      "errors": 0,
+      "warnings": 1,
+      "messages": [
+        {
+          "message": "wp_remote_get() is highly discouraged. Please use vip_safe_wp_remote_get() instead which is designed to more gracefully handle failure than wp_remote_get() does.",
+          "source": "WordPressVIPMinimum.Functions.RestrictedFunctions.wp_remote_get_wp_remote_get",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 115,
+          "column": 21
+        }
+      ]
+    },
+    "includes/class-webdecoy-detector.php": {
+      "errors": 1,
+      "warnings": 14,
+      "messages": [
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___COOKIE",
+          "severity": 6,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 145,
+          "column": 18
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 244,
+          "column": 9
+        },
+        {
+          "message": "json_encode() is discouraged. Use wp_json_encode() instead.",
+          "source": "WordPress.WP.AlternativeFunctions.json_encode_json_encode",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 250,
+          "column": 24
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 279,
+          "column": 16
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 279,
+          "column": 16
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 298,
+          "column": 18
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 298,
+          "column": 18
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 303,
+          "column": 21
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 303,
+          "column": 21
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 308,
+          "column": 19
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 308,
+          "column": 19
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 313,
+          "column": 22
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 313,
+          "column": 22
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 340,
+          "column": 22
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 340,
+          "column": 22
+        }
+      ]
+    },
+    "includes/class-webdecoy-rate-limit-rule.php": {
+      "errors": 0,
+      "warnings": 1,
+      "messages": [
+        {
+          "message": "Cache expiry time could not be determined. Please inspect that the fourth parameter passed to wp_cache_add() evaluates to 300 seconds or more. Found: \"$win * 2\"",
+          "source": "WordPressVIPMinimum.Performance.LowExpiryCacheTime.CacheTimeUndetermined",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 166,
+          "column": 58
+        }
+      ]
+    },
+    "includes/class-webdecoy-robots-txt.php": {
+      "errors": 0,
+      "warnings": 1,
+      "messages": [
+        {
+          "message": "Don't forget to flush the robots.txt cache by going to Settings > Reading and toggling the privacy settings.",
+          "source": "WordPressVIPMinimum.Hooks.RestrictedHooks.robots_txt",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 72,
+          "column": 9
+        }
+      ]
+    },
+    "includes/class-webdecoy-updater.php": {
+      "errors": 2,
+      "warnings": 2,
+      "messages": [
+        {
+          "message": "wp_remote_get() is highly discouraged. Please use vip_safe_wp_remote_get() instead which is designed to more gracefully handle failure than wp_remote_get() does.",
+          "source": "WordPressVIPMinimum.Functions.RestrictedFunctions.wp_remote_get_wp_remote_get",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 58,
+          "column": 25
+        },
+        {
+          "message": "Detected high remote request timeout. `timeout` is set to `10`.",
+          "source": "WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 59,
+          "column": 17
+        },
+        {
+          "message": "wp_remote_get() is highly discouraged. Please use vip_safe_wp_remote_get() instead which is designed to more gracefully handle failure than wp_remote_get() does.",
+          "source": "WordPressVIPMinimum.Functions.RestrictedFunctions.wp_remote_get_wp_remote_get",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 183,
+          "column": 21
+        },
+        {
+          "message": "Detected high remote request timeout. `timeout` is set to `10`.",
+          "source": "WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 184,
+          "column": 13
+        }
+      ]
+    },
+    "includes/class-webdecoy-ai-referrals.php": {
+      "errors": 1,
+      "warnings": 1,
+      "messages": [
+        {
+          "message": "parse_url() is discouraged because of inconsistency in the output across PHP versions; use wp_parse_url() instead.",
+          "source": "WordPress.WP.AlternativeFunctions.parse_url_parse_url",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 262,
+          "column": 27
+        },
+        {
+          "message": "Detected high remote request timeout. `timeout` is set to `5`.",
+          "source": "WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 355,
+          "column": 13
+        }
+      ]
+    },
+    "includes/class-webdecoy-behavioral-scorer.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-honeytoken.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-activator.php": {
+      "errors": 2,
+      "warnings": 13,
+      "messages": [
+        {
+          "message": "`flush_rewrite_rules` should not be used in any normal circumstances in the theme code.",
+          "source": "WordPressVIPMinimum.Functions.RestrictedFunctions.flush_rewrite_rules_flush_rewrite_rules",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 41,
+          "column": 9
+        },
+        {
+          "message": "`flush_rewrite_rules` should not be used in any normal circumstances in the theme code.",
+          "source": "WordPressVIPMinimum.Functions.RestrictedFunctions.flush_rewrite_rules_flush_rewrite_rules",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 56,
+          "column": 9
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 193,
+          "column": 19
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 193,
+          "column": 19
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 326,
+          "column": 13
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 326,
+          "column": 13
+        },
+        {
+          "message": "Attempting a database schema change is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.SchemaChange",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 326,
+          "column": 26
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 352,
+          "column": 5
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 352,
+          "column": 5
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 358,
+          "column": 5
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 358,
+          "column": 5
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 368,
+          "column": 5
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 368,
+          "column": 5
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 388,
+          "column": 5
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 388,
+          "column": 5
+        }
+      ]
+    },
+    "includes/class-webdecoy-cloud-policy.php": {
+      "errors": 1,
+      "warnings": 1,
+      "messages": [
+        {
+          "message": "wp_remote_get() is highly discouraged. Please use vip_safe_wp_remote_get() instead which is designed to more gracefully handle failure than wp_remote_get() does.",
+          "source": "WordPressVIPMinimum.Functions.RestrictedFunctions.wp_remote_get_wp_remote_get",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 72,
+          "column": 21
+        },
+        {
+          "message": "Detected high remote request timeout. `timeout` is set to `5`.",
+          "source": "WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 73,
+          "column": 13
+        }
+      ]
+    },
+    "includes/class-webdecoy-wp-traps.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-decoy-response.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-actor-intel.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "includes/class-webdecoy-cloud-connect.php": {
+      "errors": 2,
+      "warnings": 3,
+      "messages": [
+        {
+          "message": "parse_url() is discouraged because of inconsistency in the output across PHP versions; use wp_parse_url() instead.",
+          "source": "WordPress.WP.AlternativeFunctions.parse_url_parse_url",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 248,
+          "column": 18
+        },
+        {
+          "message": "parse_url() is discouraged because of inconsistency in the output across PHP versions; use wp_parse_url() instead.",
+          "source": "WordPress.WP.AlternativeFunctions.parse_url_parse_url",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 249,
+          "column": 18
+        },
+        {
+          "message": "Detected high remote request timeout. `timeout` is set to `10`.",
+          "source": "WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 294,
+          "column": 13
+        },
+        {
+          "message": "wp_remote_get() is highly discouraged. Please use vip_safe_wp_remote_get() instead which is designed to more gracefully handle failure than wp_remote_get() does.",
+          "source": "WordPressVIPMinimum.Functions.RestrictedFunctions.wp_remote_get_wp_remote_get",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 355,
+          "column": 21
+        },
+        {
+          "message": "Detected high remote request timeout. `timeout` is set to `5`.",
+          "source": "WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 356,
+          "column": 13
+        }
+      ]
+    },
+    "includes/class-webdecoy-pow.php": {
+      "errors": 1,
+      "warnings": 0,
+      "messages": [
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+          "severity": 6,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 149,
+          "column": 95
+        }
+      ]
+    },
+    "includes/class-webdecoy-rate-limiter.php": {
+      "errors": 0,
+      "warnings": 28,
+      "messages": [
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 91,
+          "column": 21
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 91,
+          "column": 21
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 99,
+          "column": 13
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 99,
+          "column": 13
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 102,
+          "column": 13
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 102,
+          "column": 13
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 103,
+          "column": 13
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 134,
+          "column": 21
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 134,
+          "column": 21
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 143,
+          "column": 13
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 143,
+          "column": 13
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 151,
+          "column": 13
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 151,
+          "column": 13
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 152,
+          "column": 13
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 174,
+          "column": 18
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 174,
+          "column": 18
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 208,
+          "column": 25
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 208,
+          "column": 25
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 236,
+          "column": 16
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 236,
+          "column": 16
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 251,
+          "column": 16
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 251,
+          "column": 16
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 344,
+          "column": 23
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 344,
+          "column": 23
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 349,
+          "column": 27
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 349,
+          "column": 27
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 354,
+          "column": 21
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 354,
+          "column": 21
+        }
+      ]
+    },
+    "includes/class-webdecoy-request-counts.php": {
+      "errors": 4,
+      "warnings": 8,
+      "messages": [
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+          "severity": 6,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 28,
+          "column": 91
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 101,
+          "column": 13
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 101,
+          "column": 13
+        },
+        {
+          "message": "Use placeholders and $wpdb->prepare(); found interpolated variable {$table} at \"INSERT INTO {$table} (bucket, outcome, hits) VALUES (%s, %s, 1) ON DUPLICATE KEY UPDATE hits = hits + 1\"",
+          "source": "WordPress.DB.PreparedSQL.InterpolatedNotPrepared",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 102,
+          "column": 17
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 166,
+          "column": 17
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 166,
+          "column": 17
+        },
+        {
+          "message": "Use placeholders and $wpdb->prepare(); found interpolated variable {$table} at \"SELECT outcome, SUM(hits) AS hits FROM {$table} WHERE bucket >= %s AND bucket < %s GROUP BY outcome\"",
+          "source": "WordPress.DB.PreparedSQL.InterpolatedNotPrepared",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 167,
+          "column": 13
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 171,
+          "column": 18
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 171,
+          "column": 18
+        },
+        {
+          "message": "Use placeholders and $wpdb->prepare(); found interpolated variable {$detections} at \"SELECT COUNT(*) FROM {$detections} WHERE created_at >= %s AND created_at < %s\"",
+          "source": "WordPress.DB.PreparedSQL.InterpolatedNotPrepared",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 172,
+          "column": 13
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 190,
+          "column": 9
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 190,
+          "column": 9
+        }
+      ]
+    },
+    "includes/class-webdecoy-woocommerce.php": {
+      "errors": 1,
+      "warnings": 19,
+      "messages": [
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 238,
+          "column": 9
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 296,
+          "column": 9
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 296,
+          "column": 9
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 375,
+          "column": 20
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 375,
+          "column": 20
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 384,
+          "column": 16
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 384,
+          "column": 16
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 433,
+          "column": 9
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+          "severity": 6,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 435,
+          "column": 105
+        },
+        {
+          "message": "json_encode() is discouraged. Use wp_json_encode() instead.",
+          "source": "WordPress.WP.AlternativeFunctions.json_encode_json_encode",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 492,
+          "column": 23
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 582,
+          "column": 18
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 582,
+          "column": 18
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 587,
+          "column": 22
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 587,
+          "column": 22
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 592,
+          "column": 23
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 592,
+          "column": 23
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 597,
+          "column": 20
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 597,
+          "column": 20
+        },
+        {
+          "message": "Use of a direct database call is discouraged.",
+          "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 628,
+          "column": 16
+        },
+        {
+          "message": "Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().",
+          "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 628,
+          "column": 16
+        }
+      ]
+    },
+    "includes/class-webdecoy-crawler-visits.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/DetectionResult.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/AgentRegistry.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/LlmReferral.php": {
+      "errors": 0,
+      "warnings": 3,
+      "messages": [
+        {
+          "message": "parse_url() is discouraged because of inconsistency in the output across PHP versions; use wp_parse_url() instead.",
+          "source": "WordPress.WP.AlternativeFunctions.parse_url_parse_url",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 48,
+          "column": 21
+        },
+        {
+          "message": "parse_url() is discouraged because of inconsistency in the output across PHP versions; use wp_parse_url() instead.",
+          "source": "WordPress.WP.AlternativeFunctions.parse_url_parse_url",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 54,
+          "column": 18
+        },
+        {
+          "message": "parse_url() is discouraged because of inconsistency in the output across PHP versions; use wp_parse_url() instead.",
+          "source": "WordPress.WP.AlternativeFunctions.parse_url_parse_url",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 104,
+          "column": 21
+        }
+      ]
+    },
+    "sdk/src/Detection.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/registry/hit-explanations.generated.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/registry/agents.generated.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/registry/llm-platforms.generated.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/RuleEngine.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/TripwireRule.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/RuleResult.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/RuleInterface.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/RuleContext.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/FilterRule.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/RuleEngineResult.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/Filter/Parser.php": {
+      "errors": 0,
+      "warnings": 1,
+      "messages": [
+        {
+          "message": "This comment is 40% valid code; is this commented out code?",
+          "source": "Squiz.PHP.CommentedOutCode.Found",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 186,
+          "column": 13
+        }
+      ]
+    },
+    "sdk/src/Rules/Filter/FilterSyntaxException.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/Filter/Tokenizer.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/Filter/Evaluator.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Rules/ViolationEvent.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/HitExplanation.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/RouteResolution.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/BotDetector.php": {
+      "errors": 0,
+      "warnings": 1,
+      "messages": [
+        {
+          "message": "parse_url() is discouraged because of inconsistency in the output across PHP versions; use wp_parse_url() instead.",
+          "source": "WordPress.WP.AlternativeFunctions.parse_url_parse_url",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 589,
+          "column": 27
+        }
+      ]
+    },
+    "sdk/src/SignalCollector.php": {
+      "errors": 0,
+      "warnings": 1,
+      "messages": [
+        {
+          "message": "`strip_tags()` does not strip CSS and JS in between the script and style tags. Use `wp_strip_all_tags()` to strip all tags.",
+          "source": "WordPressVIPMinimum.Functions.StripTags.StripTagsOneParameter",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 68,
+          "column": 94
+        }
+      ]
+    },
+    "sdk/src/Exception/WebDecoyException.php": {
+      "errors": 0,
+      "warnings": 1,
+      "messages": [
+        {
+          "message": "json_encode() is discouraged. Use wp_json_encode() instead.",
+          "source": "WordPress.WP.AlternativeFunctions.json_encode_json_encode",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 224,
+          "column": 38
+        }
+      ]
+    },
+    "sdk/src/GoodBotList.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "sdk/src/Client.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    },
+    "templates/block-page.php": {
+      "errors": 3,
+      "warnings": 3,
+      "messages": [
+        {
+          "message": "Header \"REMOTE_ADDR\" is user-controlled and should be properly validated before use.",
+          "source": "WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 68,
+          "column": 87
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__REMOTE_ADDR__",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 68,
+          "column": 95
+        },
+        {
+          "message": "Header \"REMOTE_ADDR\" is user-controlled and should be properly validated before use.",
+          "source": "WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 83,
+          "column": 118
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__REMOTE_ADDR__",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 83,
+          "column": 126
+        },
+        {
+          "message": "Header \"REMOTE_ADDR\" is user-controlled and should be properly validated before use.",
+          "source": "WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders",
+          "severity": 5,
+          "fixable": false,
+          "type": "ERROR",
+          "line": 91,
+          "column": 97
+        },
+        {
+          "message": "Due to server-side caching, server-side based client related logic might not work. We recommend implementing client side logic in JavaScript instead.",
+          "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__REMOTE_ADDR__",
+          "severity": 5,
+          "fixable": false,
+          "type": "WARNING",
+          "line": 91,
+          "column": 105
+        }
+      ]
+    },
+    "templates/challenge-page.php": {
+      "errors": 0,
+      "warnings": 0,
+      "messages": []
+    }
+  },
+  "assessment": {
+    "commit": "e8f8041072cb9975436012d59a2f0a1454b3cd06",
+    "standard": "WordPress-VIP-Go",
+    "vipwpcs": "3.1.0",
+    "php": "8.5.10",
+    "scope": "webdecoy.php uninstall.php admin includes public sdk/src templates; PHP files only; tests/dev/vendor excluded; self-hosted updater included even though gated at runtime",
+    "top_sources": {
+      "WordPress.DB.DirectDatabaseQuery.DirectQuery": 88,
+      "WordPress.DB.DirectDatabaseQuery.NoCaching": 69,
+      "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__": 12,
+      "WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders": 7,
+      "WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout": 7,
+      "WordPress.WP.AlternativeFunctions.parse_url_parse_url": 7,
+      "WordPress.PHP.DevelopmentFunctions.error_log_error_log": 6,
+      "WordPress.WP.AlternativeFunctions.json_encode_json_encode": 6,
+      "WordPressVIPMinimum.Functions.RestrictedFunctions.wp_remote_get_wp_remote_get": 6,
+      "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__REMOTE_ADDR__": 5,
+      "WordPress.WP.GlobalVariablesOverride.Prohibited": 4,
+      "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___COOKIE": 3
+    },
+    "caveat": "Static scanner findings need contextual triage. Not an exploitation finding, performance benchmark or VIP certification."
+  }
+}
