@@ -1,5 +1,13 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.13.1 - 2026-11-16 =
+* Added: 10 more crawlers and tools are recognised (245 in total), including TalarionSearchBot, UnfragileBot, Aranet-SearchBot, CrolBot, SperidLabsResearchCrawler, AbliterantBot, TokenFoundryBot, TernCrawler and the ARTEX penetration-testing probe. With automatic robots.txt on, the new crawlers in your chosen categories are added to it.
+* Fixed: block pages and challenge responses now tell page caches not to store them, and the clearance cookie is sent with SameSite=Lax.
+* Changed: dashboard and Statistics figures can be up to a minute old. Protection decisions still use live counts.
+* Changed: on WordPress VIP, calls to WebDecoy use VIP's request helpers, and changing automatic robots.txt categories clears VIP's cached robots.txt.
+* Changed: WebDecoy writes to the PHP error log only when WP_DEBUG is on, and then only a short event code.
+* Fixed: spacing of the AI assistant visits section in the dashboard widget.
+
 = 2.13.0 - 2026-11-16 =
 * New: see which AI assistants send you visitors. Page visits from a link in ChatGPT, Perplexity, Claude, Gemini, Copilot and other AI products are counted by AI product and landing page, on the dashboard (7 days) and the Statistics page (30 days), with no account. Only counts are kept, nothing about the visitor.
 * New: automatic robots.txt. Under Settings > Good Bots, choose categories of bots to keep out (AI training crawlers, SEO tools, scrapers and more) and WebDecoy adds a rule for every known crawler in them to the robots.txt WordPress serves. The list updates with each plugin release. Off until you choose categories.
