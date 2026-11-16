@@ -1,49 +1,52 @@
-=== WebDecoy - AI Traffic Analytics & Bot Protection ===
+=== WebDecoy - AI Crawler Analytics, Robots.txt & Bot Protection ===
 Contributors: webdecoy1
 Donate link: https://webdecoy.com
-Tags: ai crawlers, bot analytics, bot detection, woocommerce, card testing
+Tags: ai crawlers, robots.txt, bot analytics, geo, bot detection
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.12.0
+Stable tag: 2.13.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Understand your AI bot traffic: see crawler counts and identity evidence, then choose protection. Free local analytics. No account needed.
+See which AI crawlers and bots visit your site, which AI assistants send you visitors, and control them with automatic robots.txt. Free, no account.
 
 == Description ==
 
-**Understand the AI traffic reaching your WordPress site.** WebDecoy shows which known bots and AI crawlers visit, how often they appear, and whether a supported crawler's identity is verified, claimed or failed. See local counts in your WordPress dashboard and the per-bot breakdown in Statistics, without creating an account.
+**See the AI side of your traffic.** Analytics tools built for people do not show you bots. WebDecoy does: which AI crawlers, AI agents and other bots read your site, whether they are who they say they are, and which AI assistants send people to your pages. Then choose what they may access.
 
-Use that visibility to choose what should be allowed. WebDecoy also protects against spam submissions, fake registrations, login abuse and WooCommerce card testing. Monitor mode is the default, so you can review activity before enabling blocking.
+Everything below works on your own server, free, with no account or API key.
 
-**Free and local.** No account or API key is needed for local detection and crawler counts. WebDecoy Cloud is optional. Local crawler counts include requests that reach WordPress PHP; cached pages served before PHP are outside that view.
+= 1. See every AI crawler and bot =
 
-= Watch the local AI traffic test (24 seconds) =
+* **Dashboard widget**: known bot visits in the last 24 hours, with AI crawlers and agents counted separately and the busiest bots by name
+* **Statistics page**: every known bot from the last 7 days, with its operator and type (AI training crawler, AI search crawler, AI agent, AI assistant, search engine, SEO tool, scraper and more)
+* **Real or fake**: Googlebot, Bingbot, Applebot, DuckDuckBot, Yandex, Baidu and the major social crawlers are checked with reverse and forward DNS. A visitor using one of those names from someone else's address is flagged as an impersonator. Other bots are labelled as identified by name only, so you know how far to trust it.
+* **Named from a shared registry** of more than 230 crawlers, AI agents and bot tools, updated with each plugin release
 
-https://www.youtube.com/watch?v=tmRfJkZnuSA
+= 2. See which AI assistants send you visitors =
 
-In this controlled localhost test, two requests claim GPTBot and one claims ClaudeBot. WebDecoy counts all three and keeps their identities marked as User-Agent claims, with zero verified identities. A normal-browser control adds no crawler count. These are synthetic requests, not visits from AI vendors.
+When someone clicks a link to your site in ChatGPT, Perplexity, Claude, Gemini, Copilot, Meta AI, DeepSeek, Grok or another AI product, WebDecoy counts the visit.
 
-See screenshot 8 for the actual dashboard. Local crawler counts are free, with no account or API key. Open Dashboard for 24 hours or Statistics for 7 days. Cached responses that never reach PHP are outside this view. Start in monitor mode while checking your normal site flows.
+* **By AI product**: which assistants send you the most visitors, on the dashboard (7 days) and the Statistics page (30 days)
+* **By landing page**: the pages AI assistants send people to, so you can see what content they recommend
 
-= See which bots and AI crawlers read your site =
+Only a count per AI product and landing page per day is kept. Nothing about the visitor is stored.
 
-Most site owners have no idea how much of their traffic is GPTBot, ClaudeBot, Bytespider, or something pretending to be Googlebot. WebDecoy tells you, with no account:
+= 3. Automatic robots.txt =
 
-* **Dashboard widget**: known bot visits in the last 24 hours, with AI crawlers and agents counted separately, and the busiest bots by name
-* **Verified or just claimed**: Googlebot, Bingbot, Applebot, DuckDuckBot, Yandex, Baidu and the major social crawlers are checked with reverse and forward DNS. A visitor that claims to be one of them from someone else's address is flagged as an impersonator. Every other bot is labelled as identified by its User-Agent only, so you know how far to trust the name.
-* **Statistics page**: every known bot from the last 7 days, with its operator, its type (AI training crawler, AI search crawler, AI agent, search engine, SEO tool, scraper and more) and its verified, claimed and failed counts
-* **Named from a shared registry** of more than 180 crawlers, AI agents and bot tools, the same one the WebDecoy dashboard uses
-* **One switch to refuse AI crawlers** (Settings > Good Bots), with search engines unaffected
+Choose whole categories of bots to keep out, such as AI training crawlers, SEO tools or commercial scrapers, and WebDecoy adds a rule for every known crawler in them to your robots.txt. One click covers the 32 AI training crawlers we know by name, including GPTBot, ClaudeBot, CCBot and Google-Extended.
 
-Only a count per bot per hour is kept: no IP addresses, no pages, and nothing about human visitors. Pages served from a page cache never reach WordPress, so the counts are minimums.
+* Works with the robots.txt WordPress already serves: your sitemap lines and other plugins' rules stay as they are
+* The list is kept current with each plugin update, so newly named crawlers are added without editing anything
+* See the exact rules in your settings, with a clear notice if a robots.txt file on your server would override them
+* Off until you choose categories
 
-= See detections and actual blocked requests separately =
+robots.txt is a request: well-behaved crawlers follow it, and others ignore it. For those, turn on **Block AI crawlers** to refuse them outright, with search engines unaffected.
 
-A saved detection is a finding, not a count of every blocked request. Dashboard and Statistics now separate detection rows from WebDecoy HTTP blocks, throttles, challenges and decisions withheld by monitor mode or safety checks. Repeated requests from a blocked address increase the request counter without creating duplicate findings.
+= 4. Stop spam, fake signups and checkout bots =
 
-Compare Today, 7 days and 30 days in UTC calendar windows. Tracking starts after upgrading to 2.12.0, with no historical backfill. Only requests reaching WordPress PHP and handled by WebDecoy count; another firewall's blocks and cached responses are outside this view. Local counters need no account.
+The same plugin protects your forms and WooCommerce checkout from automation: invisible honeypot fields and proof-of-work instead of CAPTCHAs, hidden traps that only bots touch, and card-testing protection at checkout. Monitor mode is on by default, so you can see what it would block before it blocks anything.
 
 = Stop WooCommerce card testing and fake orders =
 
@@ -265,9 +268,17 @@ WebDecoy automatically recognizes and allows more than 130 legitimate bots inclu
 
 Yes. The WebDecoy widget on your WordPress dashboard shows known bot visits from the last 24 hours, with AI crawlers and agents counted separately, and the Statistics page lists every known bot from the last 7 days. Search engine crawlers are checked with reverse DNS, so you can tell a real Googlebot from an impersonator. It is counted on your own server; no account is needed and nothing is sent anywhere.
 
+= Can I see how many visitors ChatGPT and other AI assistants send me? =
+
+Yes, with no account. WebDecoy counts page visits that arrive from a link in ChatGPT, Perplexity, Claude, Gemini, Copilot and other AI products, and shows them by AI product and landing page on your dashboard and Statistics page. Only counts are kept, nothing about the visitor. Pages served from a page cache never reach WordPress, so the numbers are minimums.
+
+= Does WebDecoy change my robots.txt? =
+
+Only if you choose categories under Settings > Good Bots > Automatic robots.txt. WebDecoy then adds one clearly marked group of rules after what WordPress and other plugins already write. If your server has a physical robots.txt file, WordPress cannot add to it; the settings page tells you and shows the rules to copy into it.
+
 = Can I block AI training crawlers like GPTBot and ClaudeBot? =
 
-Yes. WebDecoy identifies AI training crawlers and AI agents (GPTBot, ClaudeBot, Bytespider, CCBot, and others) and lets you block them with one setting, without touching robots.txt and without affecting search engine crawlers. AI search crawlers such as PerplexityBot and OAI-SearchBot are treated like search engines and stay allowed. Enable this in Settings > Good Bots.
+Yes, two ways. Automatic robots.txt (Settings > Good Bots) asks every known AI training crawler to stay away, and stays current as new ones are named. Block AI crawlers refuses AI training crawlers and AI agents (GPTBot, ClaudeBot, Bytespider, CCBot, and others) outright, including ones that ignore robots.txt, without affecting search engine crawlers. AI search crawlers such as PerplexityBot and OAI-SearchBot are treated like search engines and stay allowed. Enable this in Settings > Good Bots.
 
 = Does it work with WooCommerce? =
 
@@ -317,9 +328,15 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 5. Dashboard widget: threat overview at a glance
 6. WebDecoy Cloud: optional premium features
 7. WooCommerce checkout protection settings
-8. Local AI traffic dashboard: controlled test with 3 synthetic crawler claims, 0 verified identities and no cloud account. GPTBot 2; ClaudeBot 1. Counts cover requests reaching PHP.
+8. AI crawler and bot counts on the dashboard, with no account
 
 == Changelog ==
+
+= 2.13.0 =
+* New: see which AI assistants send you visitors. Page visits from a link in ChatGPT, Perplexity, Claude, Gemini, Copilot and other AI products are counted by AI product and landing page, on the dashboard (7 days) and the Statistics page (30 days), with no account. Only counts are kept, nothing about the visitor.
+* New: automatic robots.txt. Under Settings > Good Bots, choose categories of bots to keep out (AI training crawlers, SEO tools, scrapers and more) and WebDecoy adds a rule for every known crawler in them to the robots.txt WordPress serves. The list updates with each plugin release. Off until you choose categories.
+* Changed: the plugin description now leads with AI crawler analytics, AI assistant visits and robots.txt.
+* Fixed: uninstalling on multisite now also removes the crawler visit counters.
 
 = 2.12.0 =
 * Added: separate request counters on Dashboard and Statistics for WebDecoy blocks (HTTP 403), throttles (429), challenges and decisions withheld by monitor mode or safety checks. Repeated blocks count even when no new detection row is saved.

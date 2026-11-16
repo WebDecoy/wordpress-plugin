@@ -1,5 +1,11 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.13.0 - 2026-11-16 =
+* New: see which AI assistants send you visitors. Page visits from a link in ChatGPT, Perplexity, Claude, Gemini, Copilot and other AI products are counted by AI product and landing page, on the dashboard (7 days) and the Statistics page (30 days), with no account. Only counts are kept, nothing about the visitor.
+* New: automatic robots.txt. Under Settings > Good Bots, choose categories of bots to keep out (AI training crawlers, SEO tools, scrapers and more) and WebDecoy adds a rule for every known crawler in them to the robots.txt WordPress serves. The list updates with each plugin release. Off until you choose categories.
+* Changed: the plugin description now leads with AI crawler analytics, AI assistant visits and robots.txt.
+* Fixed: uninstalling on multisite now also removes the crawler visit counters.
+
 = 2.12.0 - 2026-11-13 =
 * Added: separate request counters on Dashboard and Statistics for WebDecoy blocks (HTTP 403), throttles (429), challenges and decisions withheld by monitor mode or safety checks. Repeated blocks count even when no new detection row is saved.
 * Added: Today, 7-day and 30-day UTC calendar comparisons, with the tracking start time shown. Counts start after upgrade; historical requests are not reconstructed.
