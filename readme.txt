@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: ai crawlers, robots.txt, bot analytics, geo, bot detection
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.13.0
+Stable tag: 2.13.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -331,6 +331,14 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 8. AI crawler and bot counts on the dashboard, with no account
 
 == Changelog ==
+
+= 2.13.1 =
+* Added: 10 more crawlers and tools are recognised (245 in total), including TalarionSearchBot, UnfragileBot, Aranet-SearchBot, CrolBot, SperidLabsResearchCrawler, AbliterantBot, TokenFoundryBot, TernCrawler and the ARTEX penetration-testing probe. With automatic robots.txt on, the new crawlers in your chosen categories are added to it.
+* Fixed: block pages and challenge responses now tell page caches not to store them, and the clearance cookie is sent with SameSite=Lax.
+* Changed: dashboard and Statistics figures can be up to a minute old. Protection decisions still use live counts.
+* Changed: on WordPress VIP, calls to WebDecoy use VIP's request helpers, and changing automatic robots.txt categories clears VIP's cached robots.txt.
+* Changed: WebDecoy writes to the PHP error log only when WP_DEBUG is on, and then only a short event code.
+* Fixed: spacing of the AI assistant visits section in the dashboard widget.
 
 = 2.13.0 =
 * New: see which AI assistants send you visitors. Page visits from a link in ChatGPT, Perplexity, Claude, Gemini, Copilot and other AI products are counted by AI product and landing page, on the dashboard (7 days) and the Statistics page (30 days), with no account. Only counts are kept, nothing about the visitor.
