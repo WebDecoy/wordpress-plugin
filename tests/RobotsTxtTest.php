@@ -129,8 +129,7 @@ $t('with the bundled registry, AI training crawlers include GPTBot and ClaudeBot
 echo "\nAutomatic robots.txt: joining WordPress's output\n";
 
 $t('the block is appended after the existing output, which is kept byte for byte', function () use ($same, $true) {
-    $same(true, strpos(WebDecoy_Robots_Txt::append(ROBOTS_WP_DEFAULT, true, ['training_crawler'], '9.9.9', robots_fixture()), 'User-agent: GPTBot') !== false, 'a public site (bool true) gets the block');
-    $out = WebDecoy_Robots_Txt::append(ROBOTS_WP_DEFAULT, '1', ['training_crawler'], '9.9.9', robots_fixture());
+    $out = WebDecoy_Robots_Txt::append(ROBOTS_WP_DEFAULT, ['training_crawler'], '9.9.9', robots_fixture());
     $same(0, strpos($out, ROBOTS_WP_DEFAULT), 'existing rules and sitemap line come first, unchanged');
     $same(
         ROBOTS_WP_DEFAULT . "\n" . WebDecoy_Robots_Txt::block(['training_crawler'], '9.9.9', robots_fixture()),
@@ -139,24 +138,17 @@ $t('the block is appended after the existing output, which is kept byte for byte
 });
 
 $t('output without a trailing newline still gets a blank line before the block', function () use ($true) {
-    $out = WebDecoy_Robots_Txt::append("User-agent: *\nDisallow:", '1', ['training_crawler'], '9.9.9', robots_fixture());
+    $out = WebDecoy_Robots_Txt::append("User-agent: *\nDisallow:", ['training_crawler'], '9.9.9', robots_fixture());
     $true(strpos($out, "Disallow:\n\n# WebDecoy: AI and bot rules") !== false, $out);
 });
 
-$t('nothing is added when the site discourages search engines', function () use ($same) {
-    // WordPress 5.7+ passes a bool; older versions passed the option string.
-    foreach ([false, '0', 0] as $public) {
-        $same(ROBOTS_WP_DEFAULT, WebDecoy_Robots_Txt::append(ROBOTS_WP_DEFAULT, $public, ['training_crawler'], '9.9.9', robots_fixture()), var_export($public, true));
-    }
-});
-
 $t('nothing is added with no selection', function () use ($same) {
-    $same(ROBOTS_WP_DEFAULT, WebDecoy_Robots_Txt::append(ROBOTS_WP_DEFAULT, '1', [], '9.9.9', robots_fixture()));
+    $same(ROBOTS_WP_DEFAULT, WebDecoy_Robots_Txt::append(ROBOTS_WP_DEFAULT, [], '9.9.9', robots_fixture()));
 });
 
 $t('running the filter twice adds the block once', function () use ($same) {
-    $once = WebDecoy_Robots_Txt::append(ROBOTS_WP_DEFAULT, '1', ['training_crawler'], '9.9.9', robots_fixture());
-    $same($once, WebDecoy_Robots_Txt::append($once, '1', ['training_crawler'], '9.9.9', robots_fixture()));
+    $once = WebDecoy_Robots_Txt::append(ROBOTS_WP_DEFAULT, ['training_crawler'], '9.9.9', robots_fixture());
+    $same($once, WebDecoy_Robots_Txt::append($once, ['training_crawler'], '9.9.9', robots_fixture()));
 });
 
 $t('register() hooks robots_txt late only when a category is chosen, and the hook appends', function () use ($same, $true) {
@@ -170,12 +162,22 @@ $t('register() hooks robots_txt late only when a category is chosen, and the hoo
     $hooks = $GLOBALS['__wd_filters']['robots_txt'] ?? [];
     $same(1, count($hooks));
     $true($hooks[0]['priority'] > 10, 'runs after sitemaps and other plugins');
-    $same(2, $hooks[0]['args']);
+    $same(1, $hooks[0]['args'], 'only the output is taken: the public flag must not decide this');
 
-    $served = ($hooks[0]['cb'])(ROBOTS_WP_DEFAULT, '1');
+    $served = ($hooks[0]['cb'])(ROBOTS_WP_DEFAULT);
     $same(0, strpos($served, ROBOTS_WP_DEFAULT));
     $true(strpos($served, "User-agent: GPTBot\n") !== false, $served);
-    $same(ROBOTS_WP_DEFAULT, ($hooks[0]['cb'])(ROBOTS_WP_DEFAULT, false));
+    $GLOBALS['__wd_filters'] = [];
+});
+
+$t('a site that discourages search engines still gets the chosen rules', function () use ($true) {
+    $GLOBALS['__wd_filters'] = [];
+    WebDecoy_Robots_Txt::register(['training_crawler']);
+    $cb = $GLOBALS['__wd_filters']['robots_txt'][0]['cb'];
+    // As if a caller passed WordPress's flag anyway, in every shape it has had.
+    foreach ([false, '0', 0] as $public) {
+        $true(strpos($cb(ROBOTS_WP_DEFAULT, $public), "User-agent: GPTBot\n") !== false, var_export($public, true));
+    }
     $GLOBALS['__wd_filters'] = [];
 });
 

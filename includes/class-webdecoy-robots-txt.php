@@ -65,15 +65,17 @@ class WebDecoy_Robots_Txt
         if ($selected === []) {
             return;
         }
-        // Late, so sitemap lines and other plugins' rules come first.
-        add_filter('robots_txt', static function ($output, $public) use ($selected) {
+        // Late, so sitemap lines and other plugins' rules come first. Takes
+        // only the output: the site's "discourage search engines" flag does
+        // not decide this, because the owner chose these categories and the
+        // noindex tag that setting adds does not keep training crawlers away.
+        add_filter('robots_txt', static function ($output) use ($selected) {
             return self::append(
                 (string) $output,
-                $public,
                 $selected,
                 defined('WEBDECOY_VERSION') ? (string) WEBDECOY_VERSION : ''
             );
-        }, 100, 2);
+        }, 100, 1);
     }
 
     /**
@@ -203,21 +205,14 @@ class WebDecoy_Robots_Txt
     /**
      * Append the block to robots.txt output from WordPress and other plugins.
      *
-     * The existing output is kept as it is. Nothing is added when the site is
-     * set to discourage search engines (Settings, Reading), when the block
-     * would be empty, or when it is already there.
+     * The existing output is kept as it is. Nothing is added when the block
+     * would be empty or is already there.
      *
-     * @param mixed $public Whether the site is public. WordPress 5.7+ passes a
-     *                      bool; older versions passed the option string.
      * @param list<string> $categories
      * @param list<array<string,mixed>>|null $agents
      */
-    public static function append(string $output, $public, array $categories, string $version, ?array $agents = null): string
+    public static function append(string $output, array $categories, string $version, ?array $agents = null): string
     {
-        // false (WordPress 5.7+), '0' or 0 (older): "discourage search engines".
-        if (empty($public)) {
-            return $output;
-        }
         if (strpos($output, self::BEGIN_MARKER) !== false) {
             return $output;
         }

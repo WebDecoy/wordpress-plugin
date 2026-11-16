@@ -527,7 +527,6 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                 $wd_robots_block = WebDecoy_Robots_Txt::block($wd_robots_selected, WEBDECOY_VERSION);
                 $wd_robots_file = WebDecoy_Robots_Txt::physical_file();
                 $wd_robots_subdir = WebDecoy_Robots_Txt::home_is_subdirectory(home_url('/'));
-                $wd_robots_private = !get_option('blog_public');
                 ?>
                 <h3 id="webdecoy-robots-txt"><?php esc_html_e('Automatic robots.txt', 'webdecoy'); ?></h3>
                 <p class="description">
@@ -552,11 +551,6 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                 <?php elseif ($wd_robots_subdir) : ?>
                     <div class="notice notice-warning inline">
                         <p><?php esc_html_e('This site lives in a subfolder of its domain. Crawlers only read robots.txt at the root of the domain, which WordPress does not serve here, so copy the rules from the preview below into the robots.txt at your domain root.', 'webdecoy'); ?></p>
-                    </div>
-                <?php endif; ?>
-                <?php if ($wd_robots_private) : ?>
-                    <div class="notice notice-info inline">
-                        <p><?php esc_html_e('This site is set to discourage search engines (Settings, Reading). These rules are not added to robots.txt while that is on.', 'webdecoy'); ?></p>
                     </div>
                 <?php endif; ?>
 
