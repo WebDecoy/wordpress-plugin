@@ -520,6 +520,89 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                         </td>
                     </tr>
                 </table>
+
+                <?php
+                $wd_robots_choices = WebDecoy_Robots_Txt::choices();
+                $wd_robots_selected = WebDecoy_Robots_Txt::sanitize_categories($options['robots_disallow_categories'] ?? []);
+                $wd_robots_block = WebDecoy_Robots_Txt::block($wd_robots_selected, WEBDECOY_VERSION);
+                $wd_robots_file = WebDecoy_Robots_Txt::physical_file();
+                $wd_robots_subdir = WebDecoy_Robots_Txt::home_is_subdirectory(home_url('/'));
+                $wd_robots_private = !get_option('blog_public');
+                ?>
+                <h3 id="webdecoy-robots-txt"><?php esc_html_e('Automatic robots.txt', 'webdecoy'); ?></h3>
+                <p class="description">
+                    <?php esc_html_e('Ask whole categories of bots not to crawl this site. WebDecoy adds a rule to your robots.txt naming every known agent in the categories you pick. The list is kept current with each plugin update. No account needed.', 'webdecoy'); ?>
+                </p>
+                <p class="description">
+                    <?php esc_html_e('robots.txt is a request: well-behaved crawlers follow it, and bots that ignore it are not stopped by it. To refuse them, use the AI Crawlers option above and the Blocking tab.', 'webdecoy'); ?>
+                </p>
+
+                <?php if ($wd_robots_file !== null) : ?>
+                    <div class="notice notice-warning inline">
+                        <p>
+                            <?php
+                            printf(
+                                /* translators: %s: path to the robots.txt file on the server */
+                                esc_html__('A robots.txt file exists on the server (%s). Your web server sends that file instead of the one WordPress builds, so these rules cannot be added automatically. To use them, delete or rename that file, or copy the rules from the preview below into it. WebDecoy never changes that file.', 'webdecoy'),
+                                '<code>' . esc_html($wd_robots_file) . '</code>'
+                            );
+                            ?>
+                        </p>
+                    </div>
+                <?php elseif ($wd_robots_subdir) : ?>
+                    <div class="notice notice-warning inline">
+                        <p><?php esc_html_e('This site lives in a subfolder of its domain. Crawlers only read robots.txt at the root of the domain, which WordPress does not serve here, so copy the rules from the preview below into the robots.txt at your domain root.', 'webdecoy'); ?></p>
+                    </div>
+                <?php endif; ?>
+                <?php if ($wd_robots_private) : ?>
+                    <div class="notice notice-info inline">
+                        <p><?php esc_html_e('This site is set to discourage search engines (Settings, Reading). These rules are not added to robots.txt while that is on.', 'webdecoy'); ?></p>
+                    </div>
+                <?php endif; ?>
+
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Ask these bots not to crawl', 'webdecoy'); ?></th>
+                        <td>
+                            <fieldset>
+                                <legend class="screen-reader-text"><?php esc_html_e('Bot categories to disallow in robots.txt', 'webdecoy'); ?></legend>
+                                <?php foreach ($wd_robots_choices as $wd_category => $wd_count) : ?>
+                                    <label style="display:block;margin-bottom:6px;">
+                                        <input type="checkbox" name="webdecoy_options[robots_disallow_categories][]"
+                                               value="<?php echo esc_attr($wd_category); ?>"
+                                               <?php checked(in_array($wd_category, $wd_robots_selected, true)); ?> />
+                                        <?php
+                                        printf(
+                                            /* translators: 1: bot category name, 2: number of agents in it */
+                                            esc_html(_n('%1$s (%2$d agent)', '%1$s (%2$d agents)', $wd_count, 'webdecoy')),
+                                            esc_html(WebDecoy_Crawler_Visits::category_label($wd_category)),
+                                            (int) $wd_count
+                                        );
+                                        ?>
+                                        <?php if ($wd_category === 'search_crawler') : ?>
+                                            <br /><span class="description" style="margin-left:24px;"><?php esc_html_e('Warning: this asks Google, Bing and other search engines to stop crawling, which removes the site from search results.', 'webdecoy'); ?></span>
+                                        <?php endif; ?>
+                                    </label>
+                                <?php endforeach; ?>
+                            </fieldset>
+                            <p class="description"><?php esc_html_e('Nothing is selected by default. Your existing robots.txt rules, including sitemap lines and other plugins\' rules, are kept. Bots in the custom allowlist above are still named here if their category is selected.', 'webdecoy'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Rules added', 'webdecoy'); ?></th>
+                        <td>
+                            <?php if ($wd_robots_block === '') : ?>
+                                <p class="description"><?php esc_html_e('None. Pick a category and save to add rules.', 'webdecoy'); ?></p>
+                            <?php else : ?>
+                                <pre class="code" style="max-height:240px;overflow:auto;background:#f6f7f7;padding:8px;"><?php echo esc_html($wd_robots_block); ?></pre>
+                                <p class="description"><?php esc_html_e('Shows the saved selection. Save changes to update it.', 'webdecoy'); ?></p>
+                            <?php endif; ?>
+                            <p>
+                                <a href="<?php echo esc_url(home_url('/robots.txt')); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('View your live robots.txt', 'webdecoy'); ?></a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
             </div>
 
             <!-- Blocking Tab -->

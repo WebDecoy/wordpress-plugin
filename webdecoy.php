@@ -237,6 +237,11 @@ final class WebDecoy_Plugin
             'block_ai_crawlers' => false,
             'custom_allowlist' => [],
 
+            // Automatic robots.txt: bot categories asked not to crawl, as a
+            // list of registry category ids. Empty (off) by default, so an
+            // upgrade never changes a site's robots.txt on its own.
+            'robots_disallow_categories' => [],
+
             // Blocking Settings
             // Monitor mode is the safe default: everything is detected, logged and
             // reported, and nothing is ever blocked, throttled or 403'd. Turn it off
@@ -1070,6 +1075,7 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-detection-sender.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ai-referrals.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-crawler-visits.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-robots-txt.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-request-counts.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-honeytoken.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ip-enrichment.php';
@@ -1112,6 +1118,10 @@ final class WebDecoy_Plugin
 
         // One wordpress.org review ask, after a week with bots counted. Admin only.
         (new WebDecoy_Review_Ask())->register();
+
+        // Automatic robots.txt: appends the chosen categories' agents to the
+        // virtual robots.txt. Adds nothing until the owner picks a category.
+        WebDecoy_Robots_Txt::register($this->options['robots_disallow_categories'] ?? []);
 
         if (class_exists('WooCommerce')) {
             require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-woocommerce.php';
@@ -2488,6 +2498,9 @@ final class WebDecoy_Plugin
         $sanitized['allow_social_bots'] = !empty($input['allow_social_bots']);
         $sanitized['block_ai_crawlers'] = !empty($input['block_ai_crawlers']);
         $sanitized['custom_allowlist'] = array_filter(array_map('sanitize_text_field', explode("\n", $input['custom_allowlist'] ?? '')));
+
+        // Automatic robots.txt: only categories the bundled registry offers.
+        $sanitized['robots_disallow_categories'] = WebDecoy_Robots_Txt::sanitize_categories($input['robots_disallow_categories'] ?? []);
 
         // Blocking Settings
         // Allowlist: validate as IPs/CIDRs (reuses the trusted-proxy validator),
