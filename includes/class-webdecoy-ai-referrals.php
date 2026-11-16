@@ -16,10 +16,13 @@ if (!defined('ABSPATH')) {
  * metadata says it is a document navigation. Pages served from a full-page
  * cache never reach PHP and are not counted, so the figure is a floor.
  *
- * Counts accumulate in one small table and are sent every fifteen minutes when
- * the site is connected to WebDecoy Cloud. Each send claims the open counts
- * under a batch id; a failed send keeps that id and is retried with it, and
- * WebDecoy counts a batch id once.
+ * Every install keeps its own daily counts (platform, landing path, number)
+ * for {@see self::LOCAL_RETENTION_DAYS} days, shown on the dashboard widget and
+ * the Statistics page with no account. When the site is also connected to
+ * WebDecoy Cloud, counts accumulate in a second small table and are sent every
+ * fifteen minutes. Each send claims the open counts under a batch id; a failed
+ * send keeps that id and is retried with it, and WebDecoy counts a batch id
+ * once.
  */
 class WebDecoy_AI_Referrals
 {
@@ -31,6 +34,21 @@ class WebDecoy_AI_Referrals
     /** Distinct platform and path pairs kept before new ones are dropped. */
     private const MAX_ROWS = 5000;
 
+    /** The schema version that created the local daily table. Recording waits for it. */
+    public const SINCE_DB_VERSION = '2.13.0';
+    /** Days of local daily counts kept. */
+    public const LOCAL_RETENTION_DAYS = 30;
+    /**
+     * Distinct landing paths kept per day. Past it a referral still counts for
+     * its platform, under an empty path, so platform totals stay exact.
+     */
+    private const MAX_PATHS_PER_DAY = 1000;
+
+    /** True once register() has turned counting on. */
+    private static bool $counting = false;
+    /** True when counts are also queued for WebDecoy Cloud. */
+    private static bool $cloud = false;
+
     /**
      * The ai_referrals table name, prefixed and escaped for interpolation.
      */
@@ -40,22 +58,39 @@ class WebDecoy_AI_Referrals
         return esc_sql($wpdb->prefix . 'webdecoy_ai_referrals');
     }
 
-    /**
-     * Whether counting runs: connected to WebDecoy Cloud, and not turned off
-     * with the webdecoy_count_ai_referrals filter.
-     */
-    public static function enabled(string $apiKey): bool
+    /** The local daily counts table name, prefixed and escaped for interpolation. */
+    public static function days_table(): string
     {
-        return $apiKey !== '' && (bool) apply_filters('webdecoy_count_ai_referrals', true);
+        global $wpdb;
+        return esc_sql($wpdb->prefix . 'webdecoy_ai_referral_days');
     }
 
-    /** Wire the counter and its flush, scheduling the flush if it is not. */
+    /**
+     * Whether counting runs at all: on unless turned off with the
+     * webdecoy_count_ai_referrals filter. Needs no account.
+     */
+    public static function enabled(): bool
+    {
+        return (bool) apply_filters('webdecoy_count_ai_referrals', true);
+    }
+
+    /**
+     * Wire the counter. Counts are always kept locally; with an API key they
+     * are also sent to WebDecoy Cloud, and the flush is scheduled.
+     */
     public static function register(string $apiKey): void
     {
-        if (!self::enabled($apiKey)) {
+        self::$counting = false;
+        self::$cloud = false;
+        if (!self::enabled()) {
             return;
         }
+        self::$counting = true;
         add_action('template_redirect', [self::class, 'observe'], 1);
+        self::$cloud = $apiKey !== '';
+        if (!self::$cloud) {
+            return;
+        }
         add_action(self::CRON_HOOK, static function () use ($apiKey): void {
             self::flush($apiKey);
         });
@@ -67,6 +102,9 @@ class WebDecoy_AI_Referrals
     /** Count the current request if it is a page visit an AI product sent. */
     public static function observe(): void
     {
+        if (!self::$counting) {
+            return;
+        }
         // phpcs:disable WordPress.Security.ValidatedSanitizedInput -- compared and classified, never stored or echoed
         $method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? ''));
         $mode = (string) ($_SERVER['HTTP_SEC_FETCH_MODE'] ?? '');
@@ -78,7 +116,132 @@ class WebDecoy_AI_Referrals
         if ($platform === '') {
             return;
         }
-        self::increment($platform, self::landingPath($uri));
+        $path = self::landingPath($uri);
+        self::recordDay($platform, $path);
+        if (self::$cloud) {
+            self::increment($platform, $path);
+        }
+    }
+
+    /** The UTC day a timestamp counts against. Pure, for tests. */
+    public static function day(int $timestamp): string
+    {
+        return gmdate('Y-m-d', $timestamp);
+    }
+
+    /**
+     * Count one referral in the local daily table, bounded to
+     * {@see self::MAX_PATHS_PER_DAY} landing paths a day.
+     */
+    private static function recordDay(string $platform, string $path): void
+    {
+        if (!self::localReady()) {
+            return;
+        }
+        global $wpdb;
+        $table = self::days_table();
+        $day = self::day(time());
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix
+        $known = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$table} WHERE day = %s AND platform = %s AND path_key = %s",
+            $day,
+            $platform,
+            sha1($path)
+        ));
+        if ($known === 0) {
+            $paths = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE day = %s", $day));
+            if ($paths >= self::MAX_PATHS_PER_DAY) {
+                $path = '';
+            }
+        }
+        $wpdb->query($wpdb->prepare(
+            "INSERT INTO {$table} (day, platform, path_key, landing_path, referrals) VALUES (%s, %s, %s, %s, 1)
+             ON DUPLICATE KEY UPDATE referrals = referrals + 1",
+            $day,
+            $platform,
+            sha1($path),
+            $path
+        ));
+        // phpcs:enable
+    }
+
+    /**
+     * Referrals over the last N days (today included), for the dashboard
+     * widget and the Statistics page.
+     *
+     * @return array{total:int,platforms:list<array{platform:string,referrals:int}>,pages:list<array{path:string,referrals:int}>}
+     */
+    public static function summary(int $days): array
+    {
+        if (!self::localReady()) {
+            return self::summarize([]);
+        }
+        global $wpdb;
+        $table = self::days_table();
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT platform, landing_path, SUM(referrals) AS referrals FROM {$table} WHERE day >= %s GROUP BY platform, landing_path",
+            self::day(time() - (max(1, $days) - 1) * DAY_IN_SECONDS)
+        ), ARRAY_A);
+        // phpcs:enable
+        return self::summarize(is_array($rows) ? $rows : []);
+    }
+
+    /**
+     * Fold daily rows into a total, per-platform counts and per-page counts,
+     * busiest first. Rows past the daily path bound have an empty path: they
+     * count for their platform but name no page. Pure, for tests.
+     *
+     * @param list<array{platform:string,landing_path:string,referrals:int|string}> $rows
+     * @return array{total:int,platforms:list<array{platform:string,referrals:int}>,pages:list<array{path:string,referrals:int}>}
+     */
+    public static function summarize(array $rows): array
+    {
+        $total = 0;
+        $platforms = [];
+        $pages = [];
+        foreach ($rows as $row) {
+            $platform = (string) ($row['platform'] ?? '');
+            $path = (string) ($row['landing_path'] ?? '');
+            $n = (int) ($row['referrals'] ?? 0);
+            if ($platform === '' || $n <= 0) {
+                continue;
+            }
+            $total += $n;
+            $platforms[$platform] = ($platforms[$platform] ?? 0) + $n;
+            if ($path !== '') {
+                $pages[$path] = ($pages[$path] ?? 0) + $n;
+            }
+        }
+        $byCount = static function (array $counts, string $key): array {
+            $list = [];
+            foreach ($counts as $name => $n) {
+                $list[] = [$key => (string) $name, 'referrals' => $n];
+            }
+            usort($list, static function (array $a, array $b) use ($key): int {
+                return $b['referrals'] <=> $a['referrals'] ?: strcmp($a[$key], $b[$key]);
+            });
+            return $list;
+        };
+        return ['total' => $total, 'platforms' => $byCount($platforms, 'platform'), 'pages' => $byCount($pages, 'path')];
+    }
+
+    /** Delete local daily counts older than the retention window. */
+    public static function prune(): void
+    {
+        if (!self::localReady()) {
+            return;
+        }
+        global $wpdb;
+        $table = self::days_table();
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix
+        $wpdb->query($wpdb->prepare("DELETE FROM {$table} WHERE day < %s", self::day(time() - self::LOCAL_RETENTION_DAYS * DAY_IN_SECONDS)));
+    }
+
+    /** Whether the local daily table exists yet (the schema upgrade has run). */
+    private static function localReady(): bool
+    {
+        return version_compare((string) get_option('webdecoy_db_version', '0'), self::SINCE_DB_VERSION, '>=');
     }
 
     /**
