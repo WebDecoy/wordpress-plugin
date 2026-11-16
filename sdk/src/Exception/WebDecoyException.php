@@ -221,6 +221,7 @@ class WebDecoyException extends Exception
         $str = "WebDecoyException: [{$this->code}] {$this->message}";
 
         if (!empty($this->context)) {
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode -- Bundled SDK also runs without WordPress; native PHP parsing/serialization preserves its cross-framework contract and has standalone tests.
             $str .= ' | Context: ' . json_encode($this->context);
         }
 

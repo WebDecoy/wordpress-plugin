@@ -1,0 +1,1061 @@
+{
+  "description": "Line-scoped review decisions, not VIP approval or runtime evidence. See remediation.md for operational limitations.",
+  "findings": [
+    {
+      "file": "webdecoy.php",
+      "function": "record_synthetic_tripwire",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+      "reason": "Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage."
+    },
+    {
+      "file": "webdecoy.php",
+      "function": "record_synthetic_tripwire",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___COOKIE",
+      "reason": "Sanitized clearance token is reported with this trap event; it is not rendered into cached content."
+    },
+    {
+      "file": "webdecoy.php",
+      "function": "build_rule_context",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+      "reason": "Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage."
+    },
+    {
+      "file": "webdecoy.php",
+      "function": "log_decoy_served",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "webdecoy.php",
+      "function": "log_decoy_served",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+      "reason": "Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage."
+    },
+    {
+      "file": "webdecoy.php",
+      "function": "log_rule_violations",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "webdecoy.php",
+      "function": "is_challenge_verified",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___COOKIE",
+      "reason": "HMAC-matched clearance affects only this request; successful verification calls nocache_headers before continuing."
+    },
+    {
+      "file": "webdecoy.php",
+      "function": "log_detection",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "webdecoy.php",
+      "function": "log_detection",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+      "reason": "Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage."
+    },
+    {
+      "file": "webdecoy.php",
+      "function": "submit_detection",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+      "reason": "Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage."
+    },
+    {
+      "file": "webdecoy.php",
+      "function": "is_test_trigger_request",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+      "reason": "Reserved setup probe produces an explicit no-cache 403 receipt; does not personalize shared page content."
+    },
+    {
+      "file": "webdecoy.php",
+      "function": "handle_test_trigger",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "webdecoy.php",
+      "function": "handle_test_trigger",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+      "reason": "Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage."
+    },
+    {
+      "file": "webdecoy.php",
+      "function": "check_canary_login",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "webdecoy.php",
+      "function": "check_canary_login",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+      "reason": "Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage."
+    },
+    {
+      "file": "webdecoy.php",
+      "function": "inject_js_verification_token",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+      "reason": "Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage."
+    },
+    {
+      "file": "webdecoy.php",
+      "function": "log_client_detection",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "uninstall.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Explicit uninstall cleanup of plugin-owned tables/transients; mutation cannot use a cached result."
+    },
+    {
+      "file": "uninstall.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Explicit uninstall cleanup of plugin-owned tables/transients; mutation cannot use a cached result."
+    },
+    {
+      "file": "uninstall.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Explicit uninstall cleanup of plugin-owned tables/transients; mutation cannot use a cached result."
+    },
+    {
+      "file": "uninstall.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Explicit uninstall cleanup of plugin-owned tables/transients; mutation cannot use a cached result."
+    },
+    {
+      "file": "uninstall.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Explicit uninstall cleanup of plugin-owned tables/transients; mutation cannot use a cached result."
+    },
+    {
+      "file": "uninstall.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Explicit uninstall cleanup of plugin-owned tables/transients; mutation cannot use a cached result."
+    },
+    {
+      "file": "uninstall.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Explicit uninstall cleanup of plugin-owned tables/transients; mutation cannot use a cached result."
+    },
+    {
+      "file": "uninstall.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Explicit uninstall cleanup of plugin-owned tables/transients; mutation cannot use a cached result."
+    },
+    {
+      "file": "uninstall.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Explicit uninstall cleanup of plugin-owned tables/transients; mutation cannot use a cached result."
+    },
+    {
+      "file": "uninstall.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Explicit uninstall cleanup of plugin-owned tables/transients; mutation cannot use a cached result."
+    },
+    {
+      "file": "uninstall.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Explicit uninstall cleanup of plugin-owned tables/transients; mutation cannot use a cached result."
+    },
+    {
+      "file": "uninstall.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Explicit uninstall cleanup of plugin-owned tables/transients; mutation cannot use a cached result."
+    },
+    {
+      "file": "admin/partials/detections-page.php",
+      "function": "file scope",
+      "source": "WordPressVIPMinimum.Functions.RestrictedFunctions.file_ops_fputcsv",
+      "reason": "Writes exclusively to the already-open php://output CSV download stream; no local filesystem path is used."
+    },
+    {
+      "file": "admin/partials/detections-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Capability-gated filtered audit list/export needs current records; paginated view and export do not feed enforcement."
+    },
+    {
+      "file": "admin/partials/detections-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Capability-gated filtered audit list/export needs current records; paginated view and export do not feed enforcement."
+    },
+    {
+      "file": "admin/partials/detections-page.php",
+      "function": "file scope",
+      "source": "WordPressVIPMinimum.Functions.RestrictedFunctions.file_ops_fputcsv",
+      "reason": "Writes exclusively to the already-open php://output CSV download stream; no local filesystem path is used."
+    },
+    {
+      "file": "admin/partials/detections-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Capability-gated filtered audit list/export needs current records; paginated view and export do not feed enforcement."
+    },
+    {
+      "file": "admin/partials/detections-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Capability-gated filtered audit list/export needs current records; paginated view and export do not feed enforcement."
+    },
+    {
+      "file": "admin/partials/detections-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Capability-gated filtered audit list/export needs current records; paginated view and export do not feed enforcement."
+    },
+    {
+      "file": "admin/partials/detections-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Capability-gated filtered audit list/export needs current records; paginated view and export do not feed enforcement."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "admin/partials/statistics-page.php",
+      "function": "file scope",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Custom-table admin aggregates are cached together in webdecoy_analytics for 60 seconds above/below this query."
+    },
+    {
+      "file": "includes/class-webdecoy-violation-reporter.php",
+      "function": "report",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-violation-reporter.php",
+      "function": "drain_locked",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-violation-reporter.php",
+      "function": "drain_locked",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "block",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Read-before-upsert needs current plugin block row; successful mutation invalidates the IP decision cache."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "block",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Read-before-upsert needs current plugin block row; successful mutation invalidates the IP decision cache."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "block",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "block",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "guard",
+      "source": "WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders",
+      "reason": "FILTER_VALIDATE_IP rejects invalid direct-peer addresses before canonicalization/comparison/display; never trust forwarded headers here."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "guard",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__REMOTE_ADDR__",
+      "reason": "Address is validated with FILTER_VALIDATE_IP; used only for proxy safety checks or an explicitly no-cache block response."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "unresolved_forwarding_header",
+      "source": "WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders",
+      "reason": "FILTER_VALIDATE_IP rejects invalid direct-peer addresses before canonicalization/comparison/display; never trust forwarded headers here."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "unresolved_forwarding_header",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__REMOTE_ADDR__",
+      "reason": "Address is validated with FILTER_VALIDATE_IP; used only for proxy safety checks or an explicitly no-cache block response."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "unblock",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "is_blocked",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned block lookup on object-cache miss; result is cached and block mutations invalidate the IP cache."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "is_blocked",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned block lookup on object-cache miss; result is cached and block mutations invalidate the IP cache."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "get_blocked_ips",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Filtered, paginated operator block list needs current entries after block/unblock actions."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "get_blocked_ips",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Filtered, paginated operator block list needs current entries after block/unblock actions."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "get_blocked_count",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Operator list pagination uses current plugin block counts, including time-dependent expirations."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "get_blocked_count",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Operator list pagination uses current plugin block counts, including time-dependent expirations."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "get_block_info",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Live block reason/expiration lookup for the no-cache security response; do not serve stale block details."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "get_block_info",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Live block reason/expiration lookup for the no-cache security response; do not serve stale block details."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "extend_block",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "clear_all",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Explicit operator mutation clears plugin blocks; no cached result can execute deletion."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "cleanup_expired",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Scheduled deletion of expired plugin blocks; no cached result can execute retention."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "cleanup_expired",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Scheduled deletion of expired plugin blocks; no cached result can execute retention."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement."
+    },
+    {
+      "file": "includes/class-webdecoy-blocker.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement."
+    },
+    {
+      "file": "includes/class-webdecoy-cli.php",
+      "function": "status",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Explicit WP-CLI operator status/maintenance of plugin tables; report current state rather than a stale cache."
+    },
+    {
+      "file": "includes/class-webdecoy-cli.php",
+      "function": "status",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Explicit WP-CLI operator status/maintenance of plugin tables; report current state rather than a stale cache."
+    },
+    {
+      "file": "includes/class-webdecoy-cli.php",
+      "function": "status",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Explicit WP-CLI operator status/maintenance of plugin tables; report current state rather than a stale cache."
+    },
+    {
+      "file": "includes/class-webdecoy-cli.php",
+      "function": "status",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Explicit WP-CLI operator status/maintenance of plugin tables; report current state rather than a stale cache."
+    },
+    {
+      "file": "includes/class-webdecoy-cli.php",
+      "function": "status",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Explicit WP-CLI operator status/maintenance of plugin tables; report current state rather than a stale cache."
+    },
+    {
+      "file": "includes/class-webdecoy-cli.php",
+      "function": "status",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Explicit WP-CLI operator status/maintenance of plugin tables; report current state rather than a stale cache."
+    },
+    {
+      "file": "includes/class-webdecoy-cli.php",
+      "function": "logs",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Explicit WP-CLI operator status/maintenance of plugin tables; report current state rather than a stale cache."
+    },
+    {
+      "file": "includes/class-webdecoy-cli.php",
+      "function": "logs",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Explicit WP-CLI operator status/maintenance of plugin tables; report current state rather than a stale cache."
+    },
+    {
+      "file": "includes/class-webdecoy-detector.php",
+      "function": "has_wordpress_cookies",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___COOKIE",
+      "reason": "Cookie presence is only a request-local detection signal, never authentication; cached page hits remain outside PHP coverage."
+    },
+    {
+      "file": "includes/class-webdecoy-detector.php",
+      "function": "log_detection",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-detector.php",
+      "function": "get_recent_detections",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Current operator audit rows are deliberately uncached so a setup test appears immediately; row limit is prepared."
+    },
+    {
+      "file": "includes/class-webdecoy-detector.php",
+      "function": "get_recent_detections",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Current operator audit rows are deliberately uncached so a setup test appears immediately; row limit is prepared."
+    },
+    {
+      "file": "includes/class-webdecoy-detector.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement."
+    },
+    {
+      "file": "includes/class-webdecoy-detector.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement."
+    },
+    {
+      "file": "includes/class-webdecoy-detector.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement."
+    },
+    {
+      "file": "includes/class-webdecoy-detector.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement."
+    },
+    {
+      "file": "includes/class-webdecoy-detector.php",
+      "function": "get_unique_ips",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Current operator distinct-IP total from the plugin detection table; not used on public enforcement paths."
+    },
+    {
+      "file": "includes/class-webdecoy-detector.php",
+      "function": "get_unique_ips",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Current operator distinct-IP total from the plugin detection table; not used on public enforcement paths."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limit-rule.php",
+      "function": "checkSliding",
+      "source": "WordPressVIPMinimum.Performance.LowExpiryCacheTime.CacheTimeUndetermined",
+      "reason": "Security sliding-window bucket TTL is intentionally twice the configured window; raising it to 300 seconds changes counter lifetime."
+    },
+    {
+      "file": "includes/class-webdecoy-activator.php",
+      "function": "create_tables",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state."
+    },
+    {
+      "file": "includes/class-webdecoy-activator.php",
+      "function": "create_tables",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state."
+    },
+    {
+      "file": "includes/class-webdecoy-activator.php",
+      "function": "uninstall",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state."
+    },
+    {
+      "file": "includes/class-webdecoy-activator.php",
+      "function": "uninstall",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state."
+    },
+    {
+      "file": "includes/class-webdecoy-activator.php",
+      "function": "uninstall",
+      "source": "WordPress.DB.DirectDatabaseQuery.SchemaChange",
+      "reason": "Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state."
+    },
+    {
+      "file": "includes/class-webdecoy-activator.php",
+      "function": "uninstall",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state."
+    },
+    {
+      "file": "includes/class-webdecoy-activator.php",
+      "function": "uninstall",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state."
+    },
+    {
+      "file": "includes/class-webdecoy-activator.php",
+      "function": "uninstall",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state."
+    },
+    {
+      "file": "includes/class-webdecoy-activator.php",
+      "function": "uninstall",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state."
+    },
+    {
+      "file": "includes/class-webdecoy-activator.php",
+      "function": "uninstall",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state."
+    },
+    {
+      "file": "includes/class-webdecoy-activator.php",
+      "function": "uninstall",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state."
+    },
+    {
+      "file": "includes/class-webdecoy-activator.php",
+      "function": "uninstall",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state."
+    },
+    {
+      "file": "includes/class-webdecoy-activator.php",
+      "function": "uninstall",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Lifecycle schema verification or scheduled retention cleanup on plugin-owned tables; requires actual database state."
+    },
+    {
+      "file": "includes/class-webdecoy-pow.php",
+      "function": "get_difficulty_for_ip",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+      "reason": "UA changes only PoW challenge difficulty; the challenge response is sent no-cache."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "check_and_increment",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "check_and_increment",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "check_and_increment",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "check_and_increment",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "check_and_increment",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "check_and_increment",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "check_and_increment",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "increment",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "increment",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "increment",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "increment",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "increment",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "increment",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "increment",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "get_count",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "get_count",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "get_reset_time",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "get_reset_time",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "reset",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "reset",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "cleanup",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "cleanup",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions."
+    },
+    {
+      "file": "includes/class-webdecoy-rate-limiter.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Live plugin rate-limit state/maintenance; stale cached counts or reset times must not control security decisions."
+    },
+    {
+      "file": "includes/class-webdecoy-request-counts.php",
+      "function": "mark",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+      "reason": "Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage."
+    },
+    {
+      "file": "includes/class-webdecoy-request-counts.php",
+      "function": "flush",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned outcome counters; writes/retention must persist and setup/status summaries deliberately read current receipt totals."
+    },
+    {
+      "file": "includes/class-webdecoy-request-counts.php",
+      "function": "flush",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Plugin-owned outcome counters; writes/retention must persist and setup/status summaries deliberately read current receipt totals."
+    },
+    {
+      "file": "includes/class-webdecoy-request-counts.php",
+      "function": "summary",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned outcome counters; writes/retention must persist and setup/status summaries deliberately read current receipt totals."
+    },
+    {
+      "file": "includes/class-webdecoy-request-counts.php",
+      "function": "summary",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Plugin-owned outcome counters; writes/retention must persist and setup/status summaries deliberately read current receipt totals."
+    },
+    {
+      "file": "includes/class-webdecoy-request-counts.php",
+      "function": "summary",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned outcome counters; writes/retention must persist and setup/status summaries deliberately read current receipt totals."
+    },
+    {
+      "file": "includes/class-webdecoy-request-counts.php",
+      "function": "summary",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Plugin-owned outcome counters; writes/retention must persist and setup/status summaries deliberately read current receipt totals."
+    },
+    {
+      "file": "includes/class-webdecoy-request-counts.php",
+      "function": "prune",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned outcome counters; writes/retention must persist and setup/status summaries deliberately read current receipt totals."
+    },
+    {
+      "file": "includes/class-webdecoy-request-counts.php",
+      "function": "prune",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Plugin-owned outcome counters; writes/retention must persist and setup/status summaries deliberately read current receipt totals."
+    },
+    {
+      "file": "includes/class-webdecoy-woocommerce.php",
+      "function": "track_attempt",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-woocommerce.php",
+      "function": "resolve_attempt",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist checkout status transition on the plugin attempt row; no cached result can apply this update."
+    },
+    {
+      "file": "includes/class-webdecoy-woocommerce.php",
+      "function": "resolve_attempt",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Persist checkout status transition on the plugin attempt row; no cached result can apply this update."
+    },
+    {
+      "file": "includes/class-webdecoy-woocommerce.php",
+      "function": "get_recent_attempts",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Live checkout velocity query on plugin attempts; cached failures would change the fraud decision window."
+    },
+    {
+      "file": "includes/class-webdecoy-woocommerce.php",
+      "function": "get_recent_attempts",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Live checkout velocity query on plugin attempts; cached failures would change the fraud decision window."
+    },
+    {
+      "file": "includes/class-webdecoy-woocommerce.php",
+      "function": "get_recent_attempts",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Live checkout velocity query on plugin attempts; cached failures would change the fraud decision window."
+    },
+    {
+      "file": "includes/class-webdecoy-woocommerce.php",
+      "function": "get_recent_attempts",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Live checkout velocity query on plugin attempts; cached failures would change the fraud decision window."
+    },
+    {
+      "file": "includes/class-webdecoy-woocommerce.php",
+      "function": "log_detection",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write."
+    },
+    {
+      "file": "includes/class-webdecoy-woocommerce.php",
+      "function": "log_detection",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__",
+      "reason": "Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage."
+    },
+    {
+      "file": "includes/class-webdecoy-woocommerce.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement."
+    },
+    {
+      "file": "includes/class-webdecoy-woocommerce.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement."
+    },
+    {
+      "file": "includes/class-webdecoy-woocommerce.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement."
+    },
+    {
+      "file": "includes/class-webdecoy-woocommerce.php",
+      "function": "get_stats",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement."
+    },
+    {
+      "file": "includes/class-webdecoy-woocommerce.php",
+      "function": "get_suspicious_ips",
+      "source": "WordPress.DB.DirectDatabaseQuery.DirectQuery",
+      "reason": "Current suspicious-checkout IP list based on the moving 24-hour failure window; not a cached enforcement substitute."
+    },
+    {
+      "file": "includes/class-webdecoy-woocommerce.php",
+      "function": "get_suspicious_ips",
+      "source": "WordPress.DB.DirectDatabaseQuery.NoCaching",
+      "reason": "Current suspicious-checkout IP list based on the moving 24-hour failure window; not a cached enforcement substitute."
+    },
+    {
+      "file": "sdk/src/LlmReferral.php",
+      "function": "classify",
+      "source": "WordPress.WP.AlternativeFunctions.parse_url_parse_url",
+      "reason": "Bundled SDK also runs without WordPress; native PHP parsing/serialization preserves its cross-framework contract and has standalone tests."
+    },
+    {
+      "file": "sdk/src/LlmReferral.php",
+      "function": "classify",
+      "source": "WordPress.WP.AlternativeFunctions.parse_url_parse_url",
+      "reason": "Bundled SDK also runs without WordPress; native PHP parsing/serialization preserves its cross-framework contract and has standalone tests."
+    },
+    {
+      "file": "sdk/src/LlmReferral.php",
+      "function": "platformForTag",
+      "source": "WordPress.WP.AlternativeFunctions.parse_url_parse_url",
+      "reason": "Bundled SDK also runs without WordPress; native PHP parsing/serialization preserves its cross-framework contract and has standalone tests."
+    },
+    {
+      "file": "sdk/src/BotDetector.php",
+      "function": "cloudRefusal",
+      "source": "WordPress.WP.AlternativeFunctions.parse_url_parse_url",
+      "reason": "Bundled SDK also runs without WordPress; native PHP parsing/serialization preserves its cross-framework contract and has standalone tests."
+    },
+    {
+      "file": "sdk/src/SignalCollector.php",
+      "function": "sanitizeString",
+      "source": "WordPressVIPMinimum.Functions.StripTags.StripTagsOneParameter",
+      "reason": "Framework-independent SDK fallback only; WordPress sanitizer/wp_strip_all_tags is preferred when available; output remains HTML-escaped."
+    },
+    {
+      "file": "sdk/src/Exception/WebDecoyException.php",
+      "function": "__toString",
+      "source": "WordPress.WP.AlternativeFunctions.json_encode_json_encode",
+      "reason": "Bundled SDK also runs without WordPress; native PHP parsing/serialization preserves its cross-framework contract and has standalone tests."
+    },
+    {
+      "file": "templates/block-page.php",
+      "function": "file scope",
+      "source": "WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders",
+      "reason": "FILTER_VALIDATE_IP rejects invalid direct-peer addresses before canonicalization/comparison/display; never trust forwarded headers here."
+    },
+    {
+      "file": "templates/block-page.php",
+      "function": "file scope",
+      "source": "WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__REMOTE_ADDR__",
+      "reason": "Address is validated with FILTER_VALIDATE_IP; used only for proxy safety checks or an explicitly no-cache block response."
+    }
+  ]
+}

@@ -6,6 +6,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/class-webdecoy-http.php';
+
 /**
  * IP enrichment client — fetches VPN/proxy/Tor, geo, ASN, and abuse-score data
  * for an IP from the ingest service, for use by `ip.*` filter-rule fields.
@@ -112,7 +114,7 @@ class WebDecoy_IP_Enrichment
 
         $url = self::ENDPOINT_BASE . rawurlencode($ip) . '/enrichment';
 
-        $response = wp_remote_get($url, [
+        $response = WebDecoy_HTTP::get($url, [
             'timeout' => $this->timeout,
             'headers' => [
                 'Authorization' => 'Bearer ' . $this->apiKey,

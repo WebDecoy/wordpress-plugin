@@ -235,6 +235,7 @@ class WebDecoy_WooCommerce
 
         $table = esc_sql($wpdb->prefix . 'webdecoy_checkout_attempts');
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
         $wpdb->insert($table, [
             'ip_address' => $this->get_client_ip(),
             'order_id' => $order_id,
@@ -292,7 +293,7 @@ class WebDecoy_WooCommerce
         // address or empty — so an IP-scoped UPDATE matched nothing and silently left
         // the row open. The row was inserted with the customer's IP by track_attempt();
         // order_id already identifies it.
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, built from $wpdb->prefix
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, built from $wpdb->prefix
         $wpdb->query($wpdb->prepare(
             "UPDATE {$table} SET status = %s WHERE order_id = %d AND status = 'attempt'",
             $status,
@@ -372,6 +373,7 @@ class WebDecoy_WooCommerce
         $since = gmdate('Y-m-d H:i:s', strtotime("-{$window} seconds"));
 
         if ($include_successful) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Live checkout velocity query on plugin attempts; cached failures would change the fraud decision window.
             return $wpdb->get_results($wpdb->prepare(
                 "SELECT * FROM {$table} WHERE ip_address = %s AND created_at > %s ORDER BY created_at DESC",
                 $ip,
@@ -381,6 +383,7 @@ class WebDecoy_WooCommerce
 
         // NULL-safe: in MySQL `NULL <> 'success'` is NULL, not TRUE, so a bare
         // inequality would silently drop any row with no status rather than counting it.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Live checkout velocity query on plugin attempts; cached failures would change the fraud decision window.
         return $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$table} WHERE ip_address = %s AND created_at > %s AND (status IS NULL OR status <> 'success') ORDER BY created_at DESC",
             $ip,
@@ -430,8 +433,10 @@ class WebDecoy_WooCommerce
         $source = 'woocommerce_' . $reason;
 
         // Log locally
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
         $wpdb->insert($table, [
             'ip_address' => $ip,
+            // phpcs:ignore WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__ -- Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage.
             'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '',
             'score' => $final_score,
             'threat_level' => 'HIGH',
@@ -489,7 +494,7 @@ class WebDecoy_WooCommerce
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer ' . $this->options['api_key'],
             ],
-            'body' => json_encode($payload),
+            'body' => wp_json_encode($payload),
         ]);
     }
 
@@ -574,26 +579,38 @@ class WebDecoy_WooCommerce
      */
     public function get_stats(int $days = 7): array
     {
+        // Presentation only: enforcement and velocity checks never read this cache.
+        $days = max(1, min(3650, $days));
+        $cache_key = 'checkout_stats' . '_' . $days;
+        $cached = wp_cache_get($cache_key, 'webdecoy_analytics');
+        if (is_array($cached)) {
+            return $cached;
+        }
+
         global $wpdb;
 
         $table = esc_sql($wpdb->prefix . 'webdecoy_checkout_attempts');
         $since = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement.
         $total = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$table} WHERE created_at > %s",
             $since
         ));
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement.
         $by_status = $wpdb->get_results($wpdb->prepare(
             "SELECT status, COUNT(*) as count FROM {$table} WHERE created_at > %s GROUP BY status",
             $since
         ), OBJECT_K);
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement.
         $unique_ips = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(DISTINCT ip_address) FROM {$table} WHERE created_at > %s",
             $since
         ));
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement.
         $blocked = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM (
                 SELECT ip_address FROM {$table}
@@ -603,13 +620,15 @@ class WebDecoy_WooCommerce
             $since
         ));
 
-        return [
+        $stats = [
             'total_attempts' => (int) $total,
             'by_status' => $by_status,
             'unique_ips' => (int) $unique_ips,
             'blocked_ips' => (int) $blocked,
             'period_days' => $days,
         ];
+        wp_cache_set($cache_key, $stats, 'webdecoy_analytics', 60);
+        return $stats;
     }
 
     /**
@@ -625,6 +644,7 @@ class WebDecoy_WooCommerce
         $table = esc_sql($wpdb->prefix . 'webdecoy_checkout_attempts');
         $since = gmdate('Y-m-d H:i:s', strtotime('-24 hours'));
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Current suspicious-checkout IP list based on the moving 24-hour failure window; not a cached enforcement substitute.
         return $wpdb->get_results($wpdb->prepare(
             "SELECT ip_address, COUNT(*) as attempts,
                     SUM(CASE WHEN status = 'declined' THEN 1 ELSE 0 END) as declined,

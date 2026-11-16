@@ -105,6 +105,7 @@ class WebDecoy_Violation_Reporter
         $now = current_time('mysql');
 
         foreach ($events as $event) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
             $wpdb->insert($table, [
                 'payload' => wp_json_encode($event->toApiPayload()),
                 'attempts' => 0,
@@ -216,6 +217,7 @@ class WebDecoy_Violation_Reporter
                 $ids[] = (int) $row->id;
             } else {
                 // Unparseable row — drop it immediately.
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
                 $wpdb->delete($table, ['id' => (int) $row->id]);
             }
         }

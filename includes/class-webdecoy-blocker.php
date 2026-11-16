@@ -86,6 +86,7 @@ class WebDecoy_Blocker
         }
 
         // Check if already blocked
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Read-before-upsert needs current plugin block row; successful mutation invalidates the IP decision cache.
         $existing = $wpdb->get_var($wpdb->prepare(
             "SELECT id FROM {$table} WHERE ip_address = %s",
             $ip
@@ -93,6 +94,7 @@ class WebDecoy_Blocker
 
         if ($existing) {
             // Update existing block
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
             $result = $wpdb->update(
                 $table,
                 [
@@ -104,6 +106,7 @@ class WebDecoy_Blocker
             );
         } else {
             // Insert new block
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
             $result = $wpdb->insert(
                 $table,
                 [
@@ -153,9 +156,8 @@ class WebDecoy_Blocker
         // The "behind a proxy" signal is the stored flag, NOT this request's headers:
         // keying off the headers would let an attacker who reaches the origin directly
         // send X-Forwarded-For and make guard() refuse to block them.
-        $remote = isset($_SERVER['REMOTE_ADDR'])
-            ? trim(sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])))
-            : '';
+        // phpcs:ignore WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders, WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__REMOTE_ADDR__ -- FILTER_VALIDATE_IP rejects invalid direct-peer addresses before canonicalization/comparison/display; never trust forwarded headers here. Address is validated with FILTER_VALIDATE_IP; used only for proxy safety checks or an explicitly no-cache block response.
+        $remote = filter_var(wp_unslash($_SERVER['REMOTE_ADDR'] ?? ''), FILTER_VALIDATE_IP) ?: '';
         if ($remote !== '' && $addr === $remote && get_option('webdecoy_proxy_detected', false)) {
             return 'address is this site\'s proxy front door (proxy detected, no trusted proxy configured)';
         }
@@ -227,9 +229,8 @@ class WebDecoy_Blocker
             return '';
         }
 
-        $remote = isset($_SERVER['REMOTE_ADDR'])
-            ? self::canonical_ip(sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])))
-            : '';
+        // phpcs:ignore WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders, WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__REMOTE_ADDR__ -- FILTER_VALIDATE_IP rejects invalid direct-peer addresses before canonicalization/comparison/display; never trust forwarded headers here. Address is validated with FILTER_VALIDATE_IP; used only for proxy safety checks or an explicitly no-cache block response.
+        $remote = self::canonical_ip(filter_var(wp_unslash($_SERVER['REMOTE_ADDR'] ?? ''), FILTER_VALIDATE_IP) ?: '');
         if ($remote === '') {
             return $seen;
         }
@@ -263,7 +264,7 @@ class WebDecoy_Blocker
             if (stripos($part, 'for=') === 0) {
                 $part = substr($part, 4);
             } elseif (strpos($part, '=') !== false) {
-                continue; // by=, proto=, host=
+                continue; // Ignore the Forwarded header by, proto, and host attributes.
             }
             $ip = self::canonical_ip($part);
             if ($ip !== '') {
@@ -346,6 +347,7 @@ class WebDecoy_Blocker
 
         $table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
         $result = $wpdb->delete($table, ['ip_address' => $ip]);
 
         // Clear cache
@@ -378,6 +380,7 @@ class WebDecoy_Blocker
         $table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
 
         // First check for exact IP match (fastest)
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Plugin-owned block lookup on object-cache miss; result is cached and block mutations invalidate the IP cache.
         $exact_blocked = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$table} WHERE ip_address = %s AND (expires_at IS NULL OR expires_at > %s)",
             $ip,
@@ -390,7 +393,7 @@ class WebDecoy_Blocker
         }
 
         // Check CIDR ranges
-        // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.LikeWildcardsInQuery -- Searching for CIDR notation IPs containing /
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQLPlaceholders.LikeWildcardsInQuery -- Searching for CIDR notation IPs containing /
         $cidr_blocks = $wpdb->get_col($wpdb->prepare(
             "SELECT ip_address FROM {$table} WHERE ip_address LIKE '%%/%%' AND (expires_at IS NULL OR expires_at > %s)",
             gmdate('Y-m-d H:i:s')
@@ -439,6 +442,7 @@ class WebDecoy_Blocker
 
         $offset = ($args['page'] - 1) * $args['per_page'];
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Filtered, paginated operator block list needs current entries after block/unblock actions.
         $results = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$table} WHERE {$where} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d",
             $args['per_page'],
@@ -465,6 +469,7 @@ class WebDecoy_Blocker
             $where .= $wpdb->prepare(" AND (expires_at IS NULL OR expires_at > %s)", gmdate('Y-m-d H:i:s'));
         }
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Operator list pagination uses current plugin block counts, including time-dependent expirations.
         return (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE {$where}");
     }
 
@@ -480,6 +485,7 @@ class WebDecoy_Blocker
 
         $table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Live block reason/expiration lookup for the no-cache security response; do not serve stale block details.
         $result = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$table} WHERE ip_address = %s AND (expires_at IS NULL OR expires_at > %s)",
             $ip,
@@ -512,6 +518,7 @@ class WebDecoy_Blocker
             $new_expires = gmdate('Y-m-d H:i:s', strtotime($info['expires_at'] . " +{$hours} hours"));
         }
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
         $result = $wpdb->update(
             $table,
             ['expires_at' => $new_expires],
@@ -534,6 +541,7 @@ class WebDecoy_Blocker
 
         $table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Explicit operator mutation clears plugin blocks; no cached result can execute deletion.
         $count = $wpdb->query("DELETE FROM {$table}");
 
         // Clear all cache (wp_cache_flush_group() requires WP 6.1+)
@@ -555,6 +563,7 @@ class WebDecoy_Blocker
 
         $table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Scheduled deletion of expired plugin blocks; no cached result can execute retention.
         return $wpdb->query($wpdb->prepare(
             "DELETE FROM {$table} WHERE expires_at IS NOT NULL AND expires_at < %s",
             gmdate('Y-m-d H:i:s')
@@ -821,30 +830,43 @@ class WebDecoy_Blocker
      */
     public function get_stats(): array
     {
+        // Presentation only: enforcement and velocity checks never read this cache.
+        $cache_key = 'blocked_stats';
+        $cached = wp_cache_get($cache_key, 'webdecoy_analytics');
+        if (is_array($cached)) {
+            return $cached;
+        }
+
         global $wpdb;
 
         $table = esc_sql($wpdb->prefix . 'webdecoy_blocked_ips');
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement.
         $total = $wpdb->get_var("SELECT COUNT(*) FROM {$table}");
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement.
         $active = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$table} WHERE expires_at IS NULL OR expires_at > %s",
             gmdate('Y-m-d H:i:s')
         ));
         $expired = $total - $active;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement.
         $permanent = $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE expires_at IS NULL");
 
         // Blocks in last 24 hours
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Plugin-owned table aggregate; get_stats caches its complete presentation result for 60 seconds, separately from enforcement.
         $recent = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$table} WHERE blocked_at > %s",
             gmdate('Y-m-d H:i:s', strtotime('-24 hours'))
         ));
 
-        return [
+        $stats = [
             'total' => (int) $total,
             'active' => (int) $active,
             'expired' => (int) $expired,
             'permanent' => (int) $permanent,
             'last_24h' => (int) $recent,
         ];
+        wp_cache_set($cache_key, $stats, 'webdecoy_analytics', 60);
+        return $stats;
     }
 }

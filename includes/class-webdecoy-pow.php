@@ -146,6 +146,7 @@ class WebDecoy_PoW {
         }
 
         // Check for known bot UA patterns
+        // phpcs:ignore WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__ -- UA changes only PoW challenge difficulty; the challenge response is sent no-cache.
         $ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
         if ( $this->is_suspicious_ua( $ua ) ) {
             $difficulty++;

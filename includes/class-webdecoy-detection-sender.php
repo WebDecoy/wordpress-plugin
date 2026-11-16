@@ -6,6 +6,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/class-webdecoy-diagnostics.php';
+
 /**
  * Sends detections to WebDecoy Cloud after the visitor has their page
  * (WebDecoy/app#1245).
@@ -99,7 +101,7 @@ class WebDecoy_Detection_Sender
                 if (self::is_refusal($e)) {
                     self::note_refusal();
                 }
-                error_log('WebDecoy API error: ' . $e->getMessage());
+                WebDecoy_Diagnostics::report('api_error');
             }
         }
     }

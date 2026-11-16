@@ -13,6 +13,8 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
     exit;
 }
 
+global $wpdb;
+
 // Load the activator class if not already loaded
 $activator_file = __DIR__ . '/includes/class-webdecoy-activator.php';
 if (file_exists($activator_file)) {
@@ -24,7 +26,6 @@ if (file_exists($activator_file)) {
     }
 } else {
     // Fallback: manually clean up if activator not available
-    global $wpdb;
 
     // Drop custom tables
     $tables = [
@@ -39,7 +40,7 @@ if (file_exists($activator_file)) {
     ];
 
     foreach ($tables as $table) {
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Table name is safe, built from $wpdb->prefix
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Table name is safe, built from $wpdb->prefix
         $wpdb->query("DROP TABLE IF EXISTS {$table}");
     }
 
@@ -65,15 +66,16 @@ if (file_exists($activator_file)) {
 }
 
 // Delete all transients with webdecoy_ prefix
-global $wpdb;
 
 // Delete transients from options table
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Explicit uninstall cleanup of plugin-owned tables/transients; mutation cannot use a cached result.
 $wpdb->query(
-    "DELETE FROM {$wpdb->options} WHERE option_name LIKE '%_transient_webdecoy_%'"
+    $wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like('_transient_webdecoy_') . '%')
 ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Explicit uninstall cleanup of plugin-owned tables/transients; mutation cannot use a cached result.
 $wpdb->query(
-    "DELETE FROM {$wpdb->options} WHERE option_name LIKE '%_transient_timeout_webdecoy_%'"
+    $wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like('_transient_timeout_webdecoy_') . '%')
 ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 
 // For multisite, clean up each site
@@ -96,7 +98,7 @@ if (is_multisite()) {
         ];
 
         foreach ($tables as $table) {
-            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Table name is safe, built from $wpdb->prefix
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Table name is safe, built from $wpdb->prefix
             $wpdb->query("DROP TABLE IF EXISTS {$table}");
         }
 
@@ -117,15 +119,17 @@ if (is_multisite()) {
         wp_clear_scheduled_hook('webdecoy_sync_blocked_ips');
         wp_clear_scheduled_hook('webdecoy_sync_entitlements');
         wp_clear_scheduled_hook('webdecoy_sync_actor_feed');
-    wp_clear_scheduled_hook('webdecoy_flush_ai_referrals');
+        wp_clear_scheduled_hook('webdecoy_flush_ai_referrals');
 
         // Delete transients for this site
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Explicit uninstall cleanup of plugin-owned tables/transients; mutation cannot use a cached result.
         $wpdb->query(
-            "DELETE FROM {$wpdb->options} WHERE option_name LIKE '%_transient_webdecoy_%'"
+            $wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like('_transient_webdecoy_') . '%')
         ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Explicit uninstall cleanup of plugin-owned tables/transients; mutation cannot use a cached result.
         $wpdb->query(
-            "DELETE FROM {$wpdb->options} WHERE option_name LIKE '%_transient_timeout_webdecoy_%'"
+            $wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like('_transient_timeout_webdecoy_') . '%')
         ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 
         restore_current_blog();

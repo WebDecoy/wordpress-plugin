@@ -183,7 +183,7 @@ final class Parser
                 $path[] = $this->advance()['value'];
             }
 
-            // Function call: req.header("x-api-key")
+            // Parse a request-header accessor function call.
             if ($this->match(TokenType::LPAREN)) {
                 $method = array_pop($path);
                 $args = [];

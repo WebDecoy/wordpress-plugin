@@ -25,6 +25,7 @@ class WebDecoy_Request_Counts
         if (PHP_SAPI === 'cli' || self::$flushed || (defined('WEBDECOY_DISABLE') && WEBDECOY_DISABLE)) {
             return;
         }
+        // phpcs:ignore WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__ -- Sanitized UA is PHP-request detection/audit context, not proof of identity; cache hits that bypass PHP are explicitly outside coverage.
         $ua = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
         if (self::is_setup_test($ua)) {
             return;
@@ -97,8 +98,9 @@ class WebDecoy_Request_Counts
                 return;
             }
             $table = self::table();
-            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- trusted table prefix; outcome is a closed enum
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Plugin-owned outcome counters; writes/retention must persist and setup/status summaries deliberately read current receipt totals.
             $wpdb->query($wpdb->prepare(
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Identifier derives only from the trusted WordPress table prefix; values remain prepared.
                 "INSERT INTO {$table} (bucket, outcome, hits) VALUES (%s, %s, 1) ON DUPLICATE KEY UPDATE hits = hits + 1",
                 gmdate('Y-m-d H:00:00'),
                 self::$pending
@@ -162,13 +164,15 @@ class WebDecoy_Request_Counts
         global $wpdb;
         $table = self::table();
         $detections = esc_sql($wpdb->prefix . 'webdecoy_detections');
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- trusted table prefix
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Plugin-owned outcome counters; writes/retention must persist and setup/status summaries deliberately read current receipt totals.
         $rows = $wpdb->get_results($wpdb->prepare(
+            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Identifier derives only from the trusted WordPress table prefix; values remain prepared.
             "SELECT outcome, SUM(hits) AS hits FROM {$table} WHERE bucket >= %s AND bucket < %s GROUP BY outcome",
             $window['from'], $window['until']
         ), ARRAY_A);
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- trusted table prefix
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Plugin-owned outcome counters; writes/retention must persist and setup/status summaries deliberately read current receipt totals.
         $count = $wpdb->get_var($wpdb->prepare(
+            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Identifier derives only from the trusted WordPress table prefix; values remain prepared.
             "SELECT COUNT(*) FROM {$detections} WHERE created_at >= %s AND created_at < %s",
             $window['from'], $window['until']
         ));
@@ -186,7 +190,7 @@ class WebDecoy_Request_Counts
         global $wpdb;
         $table = self::table();
         $window = self::window(self::RETENTION_DAYS);
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- trusted table prefix
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table identifier comes only from the trusted WordPress prefix; cutoff is prepared.
         $wpdb->query($wpdb->prepare("DELETE FROM {$table} WHERE bucket < %s", $window['from']));
     }
 

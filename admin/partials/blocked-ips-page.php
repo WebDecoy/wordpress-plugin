@@ -45,14 +45,14 @@ if (isset($_GET['unblock']) && isset($_GET['_wpnonce']) && wp_verify_nonce(sanit
 }
 
 // Get blocked IPs
-$page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
-$per_page = 20;
+$wd_current_page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+$wd_per_page = 20;
 $blocked_ips = $blocker->get_blocked_ips([
-    'page' => $page,
-    'per_page' => $per_page,
+    'page' => $wd_current_page,
+    'per_page' => $wd_per_page,
 ]);
 $total = $blocker->get_blocked_count();
-$total_pages = ceil($total / $per_page);
+$total_pages = ceil($total / $wd_per_page);
 
 $stats = $blocker->get_stats();
 ?>
@@ -168,7 +168,7 @@ $stats = $blocker->get_stats();
                     'prev_text' => '&laquo;',
                     'next_text' => '&raquo;',
                     'total' => $total_pages,
-                    'current' => $page,
+                    'current' => $wd_current_page,
                 ]);
                 ?>
             </div>

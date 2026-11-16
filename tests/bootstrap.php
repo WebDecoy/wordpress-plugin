@@ -43,6 +43,11 @@ if (!function_exists('__')) {
     }
 }
 
+// Emulate the WordPress URL helper for WP adapter tests; SDK tests still run without WordPress.
+if (!function_exists('wp_parse_url')) {
+    function wp_parse_url($url, $component = -1) { return parse_url($url, $component); }
+}
+
 final class TestRunner
 {
     /** @var int */

@@ -13,6 +13,14 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// This response is specific to a visitor and must never enter a shared cache.
+nocache_headers();
+$wd_display_ip = filter_var($visitor_ip ?? '', FILTER_VALIDATE_IP) ?: '';
+if ($wd_display_ip === '') {
+    // phpcs:ignore WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders, WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__REMOTE_ADDR__ -- FILTER_VALIDATE_IP rejects invalid direct-peer addresses before canonicalization/comparison/display; never trust forwarded headers here. Address is validated with FILTER_VALIDATE_IP; used only for proxy safety checks or an explicitly no-cache block response.
+    $wd_display_ip = filter_var(wp_unslash($_SERVER['REMOTE_ADDR'] ?? ''), FILTER_VALIDATE_IP) ?: '';
+}
+
 // Get options
 $options = get_option('webdecoy_options', []);
 // Saved setting key is 'block_page_message' (fall back to legacy 'block_message').
@@ -65,7 +73,7 @@ wp_register_style(
         <div class="block-details">
             <dl>
                 <dt><?php esc_html_e('Your IP:', 'webdecoy'); ?></dt>
-                <dd><?php echo esc_html($visitor_ip ?? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'] ?? ''))); ?></dd>
+                <dd><?php echo esc_html($wd_display_ip); ?></dd>
             </dl>
             <?php if ($expires_at) : ?>
             <dl>
@@ -80,7 +88,7 @@ wp_register_style(
             <p><?php esc_html_e('If you believe this is a mistake, please contact us:', 'webdecoy'); ?></p>
             <a href="mailto:<?php echo esc_attr($contact_email); ?>?subject=<?php
             /* translators: %s: visitor IP address */
-            echo esc_attr(sprintf(__('Block Appeal - %s', 'webdecoy'), $visitor_ip ?? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'] ?? '')))); ?>" class="contact-link">
+            echo esc_attr(sprintf(__('Block Appeal - %s', 'webdecoy'), $wd_display_ip)); ?>" class="contact-link">
                 <?php esc_html_e('Contact Support', 'webdecoy'); ?>
             </a>
         </div>
@@ -88,7 +96,7 @@ wp_register_style(
 
         <p class="reference-id">
             <?php esc_html_e('Reference ID:', 'webdecoy'); ?>
-            <code><?php echo esc_html(substr(md5(($visitor_ip ?? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'] ?? ''))) . gmdate('Ymd')), 0, 12)); ?></code>
+            <code><?php echo esc_html(substr(md5(($wd_display_ip) . gmdate('Ymd')), 0, 12)); ?></code>
         </p>
     </div>
 </body>

@@ -29,6 +29,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/class-webdecoy-http.php';
+
 /**
  * WebDecoy Cloud Connect controller.
  */
@@ -245,8 +247,8 @@ class WebDecoy_Cloud_Connect
         if ($candidate === '') {
             return self::SETUP_URL;
         }
-        $parts = parse_url($candidate);
-        $base  = parse_url(self::SETUP_URL);
+        $parts = wp_parse_url($candidate);
+        $base  = wp_parse_url(self::SETUP_URL);
         if (
             !is_array($parts) || !is_array($base)
             || ($parts['scheme'] ?? '') !== 'https'
@@ -290,7 +292,8 @@ class WebDecoy_Cloud_Connect
      */
     private function exchange_token(string $token, string $nonce): ?array
     {
-        $response = wp_remote_post(self::EXCHANGE_ENDPOINT, [
+        $response = WebDecoy_HTTP::post(self::EXCHANGE_ENDPOINT, [
+            // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- WebDecoy_HTTP caps this to 3 seconds on VIP; retains the non-VIP caller budget.
             'timeout' => 10,
             'headers' => [
                 'Content-Type' => 'application/json',
@@ -352,7 +355,8 @@ class WebDecoy_Cloud_Connect
 
         // Same auth scheme as WebDecoy_Violation_Reporter::send(): the API key
         // as a Bearer token in the Authorization header.
-        $response = wp_remote_get(self::ENTITLEMENTS_ENDPOINT, [
+        $response = WebDecoy_HTTP::get(self::ENTITLEMENTS_ENDPOINT, [
+            // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- WebDecoy_HTTP caps this to 3 seconds on VIP; retains the non-VIP caller budget.
             'timeout' => 5,
             'headers' => [
                 'Accept'        => 'application/json',

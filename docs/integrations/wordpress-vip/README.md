@@ -57,3 +57,7 @@ No cron workflow, network client or live deployment is included. Do not describe
 - [Git-based plugin installation](https://docs.wpvip.com/plugins/installing-plugins/)
 - [Log Shipping](https://docs.wpvip.com/logs/log-shipping/)
 - [Technology partner intake](https://wpvip.com/partners/technology-partners/become-a-partner/)
+
+## Runtime standards follow-up
+
+See [remediation](remediation.md) for code changes, reproducible scan commands, reviewed exceptions, and remaining VIP pilot requirements. The original baseline is preserved. A passing static check is not VIP certification.

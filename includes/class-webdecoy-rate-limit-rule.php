@@ -163,6 +163,7 @@ class WebDecoy_Rate_Limit_Rule implements RuleInterface
 
         $curr = wp_cache_incr($currKey, 1, self::CACHE_GROUP);
         if ($curr === false) {
+            // phpcs:ignore WordPressVIPMinimum.Performance.LowExpiryCacheTime.CacheTimeUndetermined -- Security sliding-window bucket TTL is intentionally twice the configured window; raising it to 300 seconds changes counter lifetime.
             wp_cache_add($currKey, 1, self::CACHE_GROUP, $win * 2);
             $curr = 1;
         }
