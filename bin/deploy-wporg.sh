@@ -17,7 +17,7 @@
 #   bin/deploy-wporg.sh <version> --commit   # stage AND commit/publish
 #
 # What it does: builds the .org variant, syncs it into SVN trunk/, refreshes the
-# directory assets (icon/banner) in assets/, tags tags/<version>/, and either
+# directory assets (icon/banner/screenshots) in assets/, tags tags/<version>/, and either
 # prints or runs the commit.
 #
 set -euo pipefail
@@ -58,6 +58,13 @@ if command -v rsvg-convert >/dev/null 2>&1; then
 else
     echo "    ! rsvg-convert not found — add PNGs to ${SVN_DIR}/assets/ manually"
 fi
+
+echo "==> Staging reviewed listing screenshots"
+# These are directory assets only; the build excludes .wordpress-org/ from trunk.
+for screenshot in "${PLUGIN_DIR}"/.wordpress-org/screenshot-*.png; do
+    [ -f "${screenshot}" ] || continue
+    cp "${screenshot}" "${SVN_DIR}/assets/$(basename "${screenshot}")"
+done
 
 echo "==> Asserting trunk carries nothing WordPress.org forbids"
 # Two failure modes this has already caught in practice:

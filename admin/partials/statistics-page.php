@@ -140,19 +140,135 @@ if (is_array($wd_stats_cached)) {
     wp_cache_set($wd_stats_key, [$daily_data, $threat_distribution, $top_signals, $top_ips, $source_distribution, $total_30d, $total_7d, $total_today, $active_blocks, $woo_stats], 'webdecoy_analytics', 60);
 }
 
-// Known crawlers, AI agents and bot tools over 7 days (counters only).
-$crawler_summary = class_exists('WebDecoy_Crawler_Visits') ? WebDecoy_Crawler_Visits::summary(7 * 24) : null;
-
-// Page visits AI products sent over 30 days (counters only).
-$ai_referral_summary = class_exists('WebDecoy_AI_Referrals') ? WebDecoy_AI_Referrals::summary(WebDecoy_AI_Referrals::LOCAL_RETENTION_DAYS) : null;
+require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-traffic-report.php';
+// Read-only reporting selector; it never changes site settings.
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$traffic_days = WebDecoy_Traffic_Report::days(isset($_GET['traffic_days']) && is_scalar($_GET['traffic_days']) ? sanitize_text_field(wp_unslash($_GET['traffic_days'])) : '7');
+$traffic_report = WebDecoy_Traffic_Report::read($traffic_days);
+$crawler_summary = $traffic_report['crawler_ready'] ? $traffic_report['crawlers'] : null;
+$ai_referral_summary = $traffic_report['referral_ready'] ? $traffic_report['referrals'] : null;
 
 $request_windows = [1 => WebDecoy_Request_Counts::summary(1), 7 => WebDecoy_Request_Counts::summary(7), 30 => WebDecoy_Request_Counts::summary(30)];
 $options = get_option('webdecoy_options', []);
 ?>
 
-<div class="wrap">
-    <h1><?php esc_html_e('WebDecoy Statistics', 'webdecoy'); ?></h1>
-    <p class="description"><?php esc_html_e('Summary statistics may take up to one minute to refresh. Protection checks remain live.', 'webdecoy'); ?></p>
+<div class="wrap wd-analytics">
+    <h1 class="screen-reader-text"><?php esc_html_e('AI Traffic & Bot Analytics', 'webdecoy'); ?></h1>
+    <?php include WEBDECOY_PLUGIN_DIR . 'admin/partials/traffic-overview.php'; ?>
+
+    <details class="wd-detail-panel">
+        <summary><?php esc_html_e('Explore crawler and referral details', 'webdecoy'); ?></summary>
+    <h2><?php esc_html_e('Daily Traffic Counts', 'webdecoy'); ?></h2>
+    <div class="wd-table-scroll"><table class="wp-list-table widefat striped">
+        <thead><tr><th scope="col"><?php esc_html_e('Date (UTC)', 'webdecoy'); ?></th><th scope="col"><?php esc_html_e('AI crawler visits', 'webdecoy'); ?></th><th scope="col"><?php esc_html_e('Search engine visits', 'webdecoy'); ?></th><th scope="col"><?php esc_html_e('Other known bots', 'webdecoy'); ?></th><th scope="col"><?php esc_html_e('AI-referred visits', 'webdecoy'); ?></th></tr></thead>
+        <tbody><?php foreach ($traffic_report['labels'] as $wd_day_index => $wd_day) : ?>
+            <tr><th scope="row"><?php echo esc_html($wd_day); ?></th><?php foreach (['ai', 'search', 'other', 'referrals'] as $wd_series_key) : ?><td><?php echo ($wd_series_key === 'referrals' ? $traffic_report['referral_ready'] : $traffic_report['crawler_ready']) ? esc_html(number_format((int) $traffic_report['series'][$wd_series_key][$wd_day_index])) : '&mdash;'; ?></td><?php endforeach; ?></tr>
+        <?php endforeach; ?></tbody>
+    </table></div>
+
+    <!-- Known bots and AI crawlers -->
+    <?php if ($crawler_summary !== null) : ?>
+    <div class="webdecoy-chart-card">
+        <h2><?php esc_html_e('Crawler Details', 'webdecoy'); ?></h2>
+        <p class="description">
+            <?php esc_html_e('Known crawlers and agents observed by WordPress. Verified means reverse and forward DNS matched the crawler; User-Agent only is an unverified claim.', 'webdecoy'); ?>
+        </p>
+        <?php if (empty($crawler_summary['agents'])) : ?>
+            <p class="description"><?php esc_html_e('No known crawler requests recorded in this period. Counting starts automatically as requests reach WordPress.', 'webdecoy'); ?></p>
+        <?php else : ?>
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e('Bot', 'webdecoy'); ?></th>
+                        <th><?php esc_html_e('Type', 'webdecoy'); ?></th>
+                        <th><?php esc_html_e('Visits', 'webdecoy'); ?></th>
+                        <th><?php esc_html_e('Verified', 'webdecoy'); ?></th>
+                        <th><?php esc_html_e('User-Agent only', 'webdecoy'); ?></th>
+                        <th><?php esc_html_e('Failed verification', 'webdecoy'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach (array_slice($crawler_summary['agents'], 0, 50) as $agent_row) : ?>
+                    <tr>
+                        <td>
+                            <strong><?php echo esc_html($agent_row['name']); ?></strong>
+                            <?php if ($agent_row['organization'] !== '') : ?>
+                                <br><span class="description"><?php echo esc_html($agent_row['organization']); ?></span>
+                            <?php endif; ?>
+                        </td>
+                        <td><?php echo esc_html(WebDecoy_Crawler_Visits::category_label((string) $agent_row['category'])); ?></td>
+                        <td><strong><?php echo esc_html(number_format((int) $agent_row['hits'])); ?></strong></td>
+                        <td><?php echo esc_html(number_format((int) $agent_row['verified'])); ?></td>
+                        <td><?php echo esc_html(number_format((int) $agent_row['claimed'])); ?></td>
+                        <td><?php echo esc_html(number_format((int) $agent_row['failed'])); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <p class="description">
+                <?php esc_html_e('To refuse AI crawlers, turn on Block AI crawlers under Settings, Good Bots. Pages served from a page cache are not counted, so these are minimums.', 'webdecoy'); ?>
+            </p>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
+
+    <!-- Visits AI assistants sent -->
+    <?php if ($ai_referral_summary !== null) : ?>
+    <div class="webdecoy-chart-card">
+        <h2><?php esc_html_e('AI Referral Details', 'webdecoy'); ?></h2>
+        <p class="description">
+            <?php esc_html_e('Visits with a recognized AI referrer, such as ChatGPT, Perplexity or Claude. These are visits sent to your site, separate from bots crawling it.', 'webdecoy'); ?>
+        </p>
+        <?php if ((int) $ai_referral_summary['total'] === 0) : ?>
+            <p class="description"><?php esc_html_e('No AI-referred visits recorded yet. A visitor must follow an AI link that sends a recognizable referrer; a crawler visit alone does not create a referral.', 'webdecoy'); ?></p>
+        <?php else : ?>
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e('AI product', 'webdecoy'); ?></th>
+                        <th><?php esc_html_e('Visits', 'webdecoy'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($ai_referral_summary['platforms'] as $ref_row) : ?>
+                    <tr>
+                        <td><strong><?php echo esc_html($ref_row['platform']); ?></strong></td>
+                        <td><?php echo esc_html(number_format((int) $ref_row['referrals'])); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <?php if (!empty($ai_referral_summary['pages'])) : ?>
+            <h4><?php esc_html_e('Pages AI assistants send people to', 'webdecoy'); ?></h4>
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e('Landing page', 'webdecoy'); ?></th>
+                        <th><?php esc_html_e('Visits', 'webdecoy'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach (array_slice($ai_referral_summary['pages'], 0, 20) as $ref_page) : ?>
+                    <tr>
+                        <td><a href="<?php echo esc_url(home_url($ref_page['path'])); ?>"><code><?php echo esc_html($ref_page['path']); ?></code></a></td>
+                        <td><?php echo esc_html(number_format((int) $ref_page['referrals'])); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
+
+    </details>
+    <details class="wd-detail-panel wd-protection-details">
+        <summary><?php esc_html_e('Detection & Protection Analytics', 'webdecoy'); ?></summary>
+    <h2><?php esc_html_e('Detections & Responses', 'webdecoy'); ?></h2>
+    <p>
+        <a class="button" href="<?php echo esc_url(admin_url('admin.php?page=webdecoy-detections')); ?>"><?php esc_html_e('Inspect Detections', 'webdecoy'); ?></a>
+        <a class="button" href="<?php echo esc_url(admin_url('admin.php?page=webdecoy')); ?>"><?php esc_html_e('Protection Settings', 'webdecoy'); ?></a>
+    </p>
 
     <!-- Summary Stats -->
     <div class="webdecoy-stats-summary">
@@ -266,101 +382,6 @@ $options = get_option('webdecoy_options', []);
         <?php endif; ?>
     </div>
 
-    <!-- Visits AI assistants sent -->
-    <?php if ($ai_referral_summary !== null) : ?>
-    <div class="webdecoy-chart-card">
-        <h3><?php esc_html_e('Visits Sent by AI Assistants (30 Days)', 'webdecoy'); ?></h3>
-        <p class="description">
-            <?php esc_html_e('Page visits that arrived from a link in ChatGPT, Perplexity, Claude, Gemini, Copilot and other AI products, counted on this server with no account. Only a count per AI product and landing page per day is kept: nothing about the visitor. Pages served from a page cache are not counted, so these are minimums.', 'webdecoy'); ?>
-        </p>
-        <?php if ((int) $ai_referral_summary['total'] === 0) : ?>
-            <p class="description"><?php esc_html_e('No visits from AI assistants yet.', 'webdecoy'); ?></p>
-        <?php else : ?>
-            <table class="wp-list-table widefat fixed striped">
-                <thead>
-                    <tr>
-                        <th><?php esc_html_e('AI product', 'webdecoy'); ?></th>
-                        <th><?php esc_html_e('Visits', 'webdecoy'); ?></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($ai_referral_summary['platforms'] as $ref_row) : ?>
-                    <tr>
-                        <td><strong><?php echo esc_html($ref_row['platform']); ?></strong></td>
-                        <td><?php echo esc_html(number_format((int) $ref_row['referrals'])); ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-            <?php if (!empty($ai_referral_summary['pages'])) : ?>
-            <h4><?php esc_html_e('Pages AI assistants send people to', 'webdecoy'); ?></h4>
-            <table class="wp-list-table widefat fixed striped">
-                <thead>
-                    <tr>
-                        <th><?php esc_html_e('Landing page', 'webdecoy'); ?></th>
-                        <th><?php esc_html_e('Visits', 'webdecoy'); ?></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach (array_slice($ai_referral_summary['pages'], 0, 20) as $ref_page) : ?>
-                    <tr>
-                        <td><a href="<?php echo esc_url(home_url($ref_page['path'])); ?>"><code><?php echo esc_html($ref_page['path']); ?></code></a></td>
-                        <td><?php echo esc_html(number_format((int) $ref_page['referrals'])); ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-            <?php endif; ?>
-        <?php endif; ?>
-    </div>
-    <?php endif; ?>
-
-    <!-- Known bots and AI crawlers -->
-    <?php if ($crawler_summary !== null) : ?>
-    <div class="webdecoy-chart-card">
-        <h3><?php esc_html_e('Bots and AI Crawlers (7 Days)', 'webdecoy'); ?></h3>
-        <p class="description">
-            <?php esc_html_e('Every visit from a known crawler, AI agent or bot tool, counted on this server. Only a count per bot per hour is kept: no addresses, no pages, and nothing about human visitors. Verified means the address passed reverse and forward DNS for that crawler; failed means it claimed to be a crawler it is not.', 'webdecoy'); ?>
-        </p>
-        <?php if (empty($crawler_summary['agents'])) : ?>
-            <p class="description"><?php esc_html_e('No known bot has visited in the last 7 days.', 'webdecoy'); ?></p>
-        <?php else : ?>
-            <table class="wp-list-table widefat fixed striped">
-                <thead>
-                    <tr>
-                        <th><?php esc_html_e('Bot', 'webdecoy'); ?></th>
-                        <th><?php esc_html_e('Type', 'webdecoy'); ?></th>
-                        <th><?php esc_html_e('Visits', 'webdecoy'); ?></th>
-                        <th><?php esc_html_e('Verified', 'webdecoy'); ?></th>
-                        <th><?php esc_html_e('User-Agent only', 'webdecoy'); ?></th>
-                        <th><?php esc_html_e('Failed verification', 'webdecoy'); ?></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach (array_slice($crawler_summary['agents'], 0, 50) as $agent_row) : ?>
-                    <tr>
-                        <td>
-                            <strong><?php echo esc_html($agent_row['name']); ?></strong>
-                            <?php if ($agent_row['organization'] !== '') : ?>
-                                <br><span class="description"><?php echo esc_html($agent_row['organization']); ?></span>
-                            <?php endif; ?>
-                        </td>
-                        <td><?php echo esc_html(WebDecoy_Crawler_Visits::category_label((string) $agent_row['category'])); ?></td>
-                        <td><strong><?php echo esc_html(number_format((int) $agent_row['hits'])); ?></strong></td>
-                        <td><?php echo esc_html(number_format((int) $agent_row['verified'])); ?></td>
-                        <td><?php echo esc_html(number_format((int) $agent_row['claimed'])); ?></td>
-                        <td><?php echo esc_html(number_format((int) $agent_row['failed'])); ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-            <p class="description">
-                <?php esc_html_e('To refuse AI crawlers, turn on Block AI crawlers under Settings, Good Bots. Pages served from a page cache are not counted, so these are minimums.', 'webdecoy'); ?>
-            </p>
-        <?php endif; ?>
-    </div>
-    <?php endif; ?>
-
     <!-- Source Distribution -->
     <?php if (!empty($source_distribution)) : ?>
     <div class="webdecoy-chart-card">
@@ -401,6 +422,8 @@ $options = get_option('webdecoy_options', []);
     </div>
     <?php endif; ?>
 
+    </details>
+
     <!-- Cloud Upsell -->
     <?php if (empty($options['api_key'])) : ?>
     <div class="webdecoy-cloud-upsell">
@@ -421,6 +444,15 @@ $options = get_option('webdecoy_options', []);
 wp_add_inline_script(
     'webdecoy-charts',
     'window.webdecoyChartData = ' . wp_json_encode([
+        'traffic' => [
+            'labels' => $traffic_report['labels'],
+            'series' => $traffic_report['series'],
+            'groups' => $crawler_summary['groups'] ?? [],
+            'agents' => array_slice($crawler_summary['agents'] ?? [], 0, 6),
+            'crawlerReady' => $traffic_report['crawler_ready'],
+            'referralReady' => $traffic_report['referral_ready'],
+            'names' => [__('AI crawlers & agents', 'webdecoy'), __('Search engines', 'webdecoy'), __('Other known bots', 'webdecoy'), __('AI-referred visits', 'webdecoy'), __('Known bot visits', 'webdecoy')],
+        ],
         'trend' => [
             'labels' => array_keys($daily_data),
             'data'   => array_values($daily_data),

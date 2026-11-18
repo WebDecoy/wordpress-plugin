@@ -2411,51 +2411,33 @@ final class WebDecoy_Plugin
      */
     public function admin_menu(): void
     {
+        // Keep the existing settings slug for saved links and Cloud callbacks.
+        // The top-level menu opens the reporting surface instead of configuration.
         add_menu_page(
-            __('WebDecoy', 'webdecoy'),
+            __('AI Traffic & Analytics', 'webdecoy'),
             __('WebDecoy', 'webdecoy'),
             'manage_options',
-            'webdecoy',
-            [$this, 'settings_page'],
+            'webdecoy-statistics',
+            [$this, 'statistics_page'],
             'dashicons-shield',
             80
         );
 
-        add_submenu_page(
-            'webdecoy',
-            __('Settings', 'webdecoy'),
-            __('Settings', 'webdecoy'),
-            'manage_options',
-            'webdecoy',
-            [$this, 'settings_page']
-        );
-
-        add_submenu_page(
-            'webdecoy',
-            __('Statistics', 'webdecoy'),
-            __('Statistics', 'webdecoy'),
-            'manage_options',
-            'webdecoy-statistics',
-            [$this, 'statistics_page']
-        );
-
-        add_submenu_page(
-            'webdecoy',
-            __('Blocked IPs', 'webdecoy'),
-            __('Blocked IPs', 'webdecoy'),
-            'manage_options',
-            'webdecoy-blocked',
-            [$this, 'blocked_ips_page']
-        );
-
-        add_submenu_page(
-            'webdecoy',
-            __('Detections', 'webdecoy'),
-            __('Detections', 'webdecoy'),
-            'manage_options',
-            'webdecoy-detections',
-            [$this, 'detections_page']
-        );
+        foreach ([
+            'webdecoy-statistics' => [__('AI Traffic & Analytics', 'webdecoy'), 'statistics_page'],
+            'webdecoy-detections' => [__('Detections', 'webdecoy'), 'detections_page'],
+            'webdecoy-blocked' => [__('Blocked IPs', 'webdecoy'), 'blocked_ips_page'],
+            'webdecoy' => [__('Settings', 'webdecoy'), 'settings_page'],
+        ] as $slug => $page) {
+            add_submenu_page(
+                'webdecoy-statistics',
+                $page[0],
+                $page[0],
+                'manage_options',
+                $slug,
+                [$this, $page[1]]
+            );
+        }
     }
 
     /**
@@ -2660,7 +2642,7 @@ final class WebDecoy_Plugin
     {
         wp_add_dashboard_widget(
             'webdecoy_dashboard_widget',
-            __('WebDecoy - Threat Overview', 'webdecoy'),
+            __('WebDecoy - AI Traffic & Bot Analytics', 'webdecoy'),
             [$this, 'render_dashboard_widget']
         );
     }
@@ -2719,7 +2701,7 @@ final class WebDecoy_Plugin
         ]);
 
         // Load Chart.js and charts script on statistics page
-        if ($hook === 'webdecoy_page_webdecoy-statistics') {
+        if ($hook === 'toplevel_page_webdecoy-statistics' || $hook === 'webdecoy_page_webdecoy-statistics') {
             // Chart.js is bundled locally (admin/js/vendor/) rather than loaded
             // from a CDN, so the plugin makes no external requests.
             wp_enqueue_script(
@@ -2734,6 +2716,13 @@ final class WebDecoy_Plugin
                 'webdecoy-charts',
                 WEBDECOY_PLUGIN_URL . 'admin/js/webdecoy-charts.js',
                 ['chartjs'],
+                WEBDECOY_VERSION,
+                true
+            );
+            wp_enqueue_script(
+                'webdecoy-traffic-charts',
+                WEBDECOY_PLUGIN_URL . 'admin/js/webdecoy-traffic-charts.js',
+                ['webdecoy-charts'],
                 WEBDECOY_VERSION,
                 true
             );
