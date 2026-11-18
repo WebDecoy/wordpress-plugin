@@ -61,6 +61,11 @@ if (class_exists('WooCommerce')) {
 ?>
 
 <div class="webdecoy-widget">
+    <div class="wd-widget-brand">
+        <img src="<?php echo esc_url(WEBDECOY_PLUGIN_URL . 'assets/duck.png'); ?>" width="32" height="32" alt="" />
+        <strong><?php esc_html_e('Your AI & bot traffic', 'webdecoy'); ?></strong>
+        <a href="<?php echo esc_url(admin_url('admin.php?page=webdecoy-statistics')); ?>"><?php esc_html_e('Open analytics →', 'webdecoy'); ?></a>
+    </div>
     <?php
     // Trip-it-yourself prompt (app#679): shown only while the widget has
     // nothing to report — once real detections exist, the numbers speak.
@@ -116,7 +121,8 @@ if (class_exists('WooCommerce')) {
         </p>
         <ul class="webdecoy-widget-agents">
             <?php foreach (array_slice($crawlers['agents'], 0, 5) as $webdecoy_dw_agent) : ?>
-            <li>
+            <li class="wd-widget-bar-row">
+                <span class="wd-widget-bar" aria-hidden="true" style="width: <?php echo esc_attr((string) min(100, 100 * (int) $webdecoy_dw_agent['hits'] / max(1, (int) $crawlers['agents'][0]['hits']))); ?>%"></span>
                 <span class="webdecoy-agent-name">
                     <strong><?php echo esc_html($webdecoy_dw_agent['name']); ?></strong>
                     <span class="webdecoy-agent-category"><?php echo esc_html(WebDecoy_Crawler_Visits::category_label((string) $webdecoy_dw_agent['category'])); ?></span>
@@ -141,7 +147,8 @@ if (class_exists('WooCommerce')) {
         <?php if ((int) $ai_referrals['total'] > 0) : ?>
         <ul class="webdecoy-widget-agents">
             <?php foreach (array_slice($ai_referrals['platforms'], 0, 5) as $webdecoy_dw_ref) : ?>
-            <li>
+            <li class="wd-widget-bar-row">
+                <span class="wd-widget-bar" aria-hidden="true" style="width: <?php echo esc_attr((string) min(100, 100 * (int) $webdecoy_dw_ref['referrals'] / max(1, (int) $ai_referrals['platforms'][0]['referrals']))); ?>%"></span>
                 <span class="webdecoy-agent-name"><strong><?php echo esc_html($webdecoy_dw_ref['platform']); ?></strong></span>
                 <span class="webdecoy-count"><?php echo esc_html(number_format((int) $webdecoy_dw_ref['referrals'])); ?></span>
             </li>
@@ -154,6 +161,8 @@ if (class_exists('WooCommerce')) {
         <?php endif; ?>
     </div>
 
+    <details class="wd-widget-details">
+        <summary><?php esc_html_e('Protection & request counts', 'webdecoy'); ?></summary>
     <div class="webdecoy-widget-request-counts">
         <h4><?php esc_html_e('Detection rows and requests today (UTC)', 'webdecoy'); ?></h4>
         <?php if ($request_counts_today['available']) : ?>
@@ -226,6 +235,8 @@ if (class_exists('WooCommerce')) {
         </a>
     </div>
 
+    </details>
+
     <?php
     $options = get_option('webdecoy_options', []);
     if (empty($options['api_key'])) :
@@ -233,7 +244,7 @@ if (class_exists('WooCommerce')) {
     <div class="webdecoy-widget-upsell">
         <p>
             <strong><?php esc_html_e('Everything above works without an account.', 'webdecoy'); ?></strong>
-            <?php esc_html_e('Connect for free to see these detections in the WebDecoy dashboard and get a monthly report. Paid plans add whether an address has been seen attacking other sites, and webhook alerts.', 'webdecoy'); ?>
+
             <a href="<?php echo esc_url(admin_url('admin.php?page=webdecoy&tab=cloud')); ?>">
                 <?php esc_html_e('Connect this site', 'webdecoy'); ?>
             </a>
