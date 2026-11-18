@@ -14,8 +14,8 @@
 
     // Color palette
     var colors = {
-        primary: '#2271b1',
-        primaryLight: 'rgba(34, 113, 177, 0.1)',
+        primary: '#f90289',
+        primaryLight: 'rgba(249, 2, 137, 0.1)',
         danger: '#dc3232',
         warning: '#f0b849',
         success: '#46b450',

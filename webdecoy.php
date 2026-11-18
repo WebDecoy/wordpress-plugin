@@ -2719,6 +2719,13 @@ final class WebDecoy_Plugin
                 WEBDECOY_VERSION,
                 true
             );
+            wp_enqueue_script(
+                'webdecoy-traffic-charts',
+                WEBDECOY_PLUGIN_URL . 'admin/js/webdecoy-traffic-charts.js',
+                ['webdecoy-charts'],
+                WEBDECOY_VERSION,
+                true
+            );
         }
     }
 

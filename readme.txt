@@ -20,7 +20,7 @@ Everything below works on your own server, free, with no account or API key.
 = 1. See every AI crawler and bot =
 
 * **Dashboard widget**: known bot visits in the last 24 hours, with AI crawlers and agents counted separately and the busiest bots by name
-* **AI Traffic & Analytics page**: every known bot from the last 7 days, with its operator and type (AI training crawler, AI search crawler, AI agent, AI assistant, search engine, SEO tool, scraper and more)
+* **AI Traffic & Analytics page**: crawler timelines, bot-type breakdowns, ranked agents and AI-referral charts, with a 7- or 30-day UTC calendar view. Expand the details to see each bot, its operator and type (AI training crawler, AI search crawler, AI agent, AI assistant, search engine, SEO tool, scraper and more)
 * **Real or fake**: Googlebot, Bingbot, Applebot, DuckDuckBot, Yandex, Baidu and the major social crawlers are checked with reverse and forward DNS. A visitor using one of those names from someone else's address is flagged as an impersonator. Other bots are labelled as identified by name only, so you know how far to trust it.
 * **Named from a shared registry** of more than 230 crawlers, AI agents and bot tools, updated with each plugin release
 
@@ -321,14 +321,14 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 
 == Screenshots ==
 
-1. Protection settings: configure detection and blocking
-2. AI Traffic & Analytics page: 30-day detection trends and threat distribution
-3. Detections log: view threats with scores and MITRE tactics
-4. Blocked IPs: manage blocked addresses with expiration
-5. Dashboard widget: threat overview at a glance
-6. WebDecoy Cloud: optional premium features
-7. WooCommerce checkout protection settings
-8. AI crawler and bot counts on the dashboard, with no account
+1. AI Traffic & Analytics: crawler timelines, bot mix and AI referrals in the branded dashboard (demo data)
+2. Crawler details: named bots, categories and verified versus claimed identity evidence (demo data)
+3. AI referral details: referring AI products and landing pages, separate from crawler activity (demo data)
+4. Detections: inspect labeled setup-test findings and their evidence (demo data)
+5. Protection settings: configure detection and monitor mode
+6. Blocked IPs: manage addresses and expirations (documentation-only demo addresses)
+7. WooCommerce settings: configure checkout protection
+8. Dashboard widget: local crawler counts, AI referrals and detection activity (demo data)
 
 == Changelog ==
 
