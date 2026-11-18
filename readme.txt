@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: ai crawlers, robots.txt, bot analytics, geo, bot detection
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.13.1
+Stable tag: 2.14.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -331,6 +331,14 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 8. Dashboard widget: local crawler counts, AI referrals and detection activity (demo data)
 
 == Changelog ==
+
+= 2.14.0 =
+* New: a branded AI Traffic & Analytics dashboard is now the WebDecoy landing page, with crawler timelines, bot-type breakdowns, ranked crawler charts and AI-referral trends.
+* New: switch between 7-day and 30-day UTC calendar windows. Traffic cards, charts and detail tables use the same counter data and date range.
+* Changed: detailed crawler/referral tables and protection analytics are expandable, with accessible daily counts, reduced motion and responsive mobile layouts.
+* Changed: Settings is secondary in the menu. Existing settings, Cloud connection, detections and blocked-IP links continue to work.
+* Changed: refreshed all eight WordPress.org screenshots, with analytics first and synthetic demo data clearly labeled.
+* No changes to detection, blocking, request recording or database schema.
 
 = 2.13.1 =
 * Added: 10 more crawlers and tools are recognised (245 in total), including TalarionSearchBot, UnfragileBot, Aranet-SearchBot, CrolBot, SperidLabsResearchCrawler, AbliterantBot, TokenFoundryBot, TernCrawler and the ARTEX penetration-testing probe. With automatic robots.txt on, the new crawlers in your chosen categories are added to it.

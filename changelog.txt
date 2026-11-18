@@ -1,5 +1,13 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.14.0 - 2026-11-17 =
+* New: a branded AI Traffic & Analytics dashboard is now the WebDecoy landing page, with crawler timelines, bot-type breakdowns, ranked crawler charts and AI-referral trends.
+* New: switch between 7-day and 30-day UTC calendar windows. Traffic cards, charts and detail tables use the same counter data and date range.
+* Changed: detailed crawler/referral tables and protection analytics are expandable, with accessible daily counts, reduced motion and responsive mobile layouts.
+* Changed: Settings is secondary in the menu. Existing settings, Cloud connection, detections and blocked-IP links continue to work.
+* Changed: refreshed all eight WordPress.org screenshots, with analytics first and synthetic demo data clearly labeled.
+* No changes to detection, blocking, request recording or database schema.
+
 = 2.13.1 - 2026-11-16 =
 * Added: 10 more crawlers and tools are recognised (245 in total), including TalarionSearchBot, UnfragileBot, Aranet-SearchBot, CrolBot, SperidLabsResearchCrawler, AbliterantBot, TokenFoundryBot, TernCrawler and the ARTEX penetration-testing probe. With automatic robots.txt on, the new crawlers in your chosen categories are added to it.
 * Fixed: block pages and challenge responses now tell page caches not to store them, and the clearance cookie is sent with SameSite=Lax.
