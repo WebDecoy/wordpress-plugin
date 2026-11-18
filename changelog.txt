@@ -1,5 +1,11 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.14.1 - 2026-11-17 =
+* Fixed: readable User Agent and other detection columns, with horizontal table scrolling on smaller screens.
+* Fixed: detection summary cards and filters fit mobile screens.
+* Changed: compact dashboard widget with WebDecoy branding, proportional crawler and AI-referral bars, and expandable protection details.
+* Changed: replaced the Detections and dashboard-widget listing screenshots with reviewed, labeled demo captures.
+
 = 2.14.0 - 2026-11-17 =
 * New: a branded AI Traffic & Analytics dashboard is now the WebDecoy landing page, with crawler timelines, bot-type breakdowns, ranked crawler charts and AI-referral trends.
 * New: switch between 7-day and 30-day UTC calendar windows. Traffic cards, charts and detail tables use the same counter data and date range.
