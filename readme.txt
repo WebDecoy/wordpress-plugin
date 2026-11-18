@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: ai crawlers, robots.txt, bot analytics, geo, bot detection
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.14.0
+Stable tag: 2.14.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -331,6 +331,12 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 8. Dashboard widget: local crawler counts, AI referrals and detection activity (demo data)
 
 == Changelog ==
+
+= 2.14.1 =
+* Fixed: readable User Agent and other detection columns, with horizontal table scrolling on smaller screens.
+* Fixed: detection summary cards and filters fit mobile screens.
+* Changed: compact dashboard widget with WebDecoy branding, proportional crawler and AI-referral bars, and expandable protection details.
+* Changed: replaced the Detections and dashboard-widget listing screenshots with reviewed, labeled demo captures.
 
 = 2.14.0 =
 * New: a branded AI Traffic & Analytics dashboard is now the WebDecoy landing page, with crawler timelines, bot-type breakdowns, ranked crawler charts and AI-referral trends.
