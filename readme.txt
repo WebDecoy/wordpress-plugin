@@ -20,7 +20,7 @@ Everything below works on your own server, free, with no account or API key.
 = 1. See every AI crawler and bot =
 
 * **Dashboard widget**: known bot visits in the last 24 hours, with AI crawlers and agents counted separately and the busiest bots by name
-* **Statistics page**: every known bot from the last 7 days, with its operator and type (AI training crawler, AI search crawler, AI agent, AI assistant, search engine, SEO tool, scraper and more)
+* **AI Traffic & Analytics page**: every known bot from the last 7 days, with its operator and type (AI training crawler, AI search crawler, AI agent, AI assistant, search engine, SEO tool, scraper and more)
 * **Real or fake**: Googlebot, Bingbot, Applebot, DuckDuckBot, Yandex, Baidu and the major social crawlers are checked with reverse and forward DNS. A visitor using one of those names from someone else's address is flagged as an impersonator. Other bots are labelled as identified by name only, so you know how far to trust it.
 * **Named from a shared registry** of more than 230 crawlers, AI agents and bot tools, updated with each plugin release
 
@@ -28,7 +28,7 @@ Everything below works on your own server, free, with no account or API key.
 
 When someone clicks a link to your site in ChatGPT, Perplexity, Claude, Gemini, Copilot, Meta AI, DeepSeek, Grok or another AI product, WebDecoy counts the visit.
 
-* **By AI product**: which assistants send you the most visitors, on the dashboard (7 days) and the Statistics page (30 days)
+* **By AI product**: which assistants send you the most visitors, on the dashboard (7 days) and the AI Traffic & Analytics page (30 days)
 * **By landing page**: the pages AI assistants send people to, so you can see what content they recommend
 
 Only a count per AI product and landing page per day is kept. Nothing about the visitor is stored.
@@ -133,7 +133,7 @@ Registration spam and comment spam are the same disease: automation pointed at y
 
 **Local Dashboard & Analytics**
 * Detection log with threat scores and MITRE tactic mapping
-* Statistics page with 30-day trend charts
+* AI Traffic & Analytics page with 30-day trend charts
 * Separate request counters: actual blocks, throttles, challenges and withheld enforcement, including repeat IP blocks
 * Blocked IPs management
 * Dashboard widget: bots seen in the last 24 hours, checkout bot signals, threat overview
@@ -266,11 +266,11 @@ WebDecoy automatically recognizes and allows more than 130 legitimate bots inclu
 
 = Can I see which AI crawlers visit my site without an account? =
 
-Yes. The WebDecoy widget on your WordPress dashboard shows known bot visits from the last 24 hours, with AI crawlers and agents counted separately, and the Statistics page lists every known bot from the last 7 days. Search engine crawlers are checked with reverse DNS, so you can tell a real Googlebot from an impersonator. It is counted on your own server; no account is needed and nothing is sent anywhere.
+Yes. The WebDecoy widget on your WordPress dashboard shows known bot visits from the last 24 hours, with AI crawlers and agents counted separately, and the AI Traffic & Analytics page lists every known bot from the last 7 days. Search engine crawlers are checked with reverse DNS, so you can tell a real Googlebot from an impersonator. It is counted on your own server; no account is needed and nothing is sent anywhere.
 
 = Can I see how many visitors ChatGPT and other AI assistants send me? =
 
-Yes, with no account. WebDecoy counts page visits that arrive from a link in ChatGPT, Perplexity, Claude, Gemini, Copilot and other AI products, and shows them by AI product and landing page on your dashboard and Statistics page. Only counts are kept, nothing about the visitor. Pages served from a page cache never reach WordPress, so the numbers are minimums.
+Yes, with no account. WebDecoy counts page visits that arrive from a link in ChatGPT, Perplexity, Claude, Gemini, Copilot and other AI products, and shows them by AI product and landing page on your dashboard and AI Traffic & Analytics page. Only counts are kept, nothing about the visitor. Pages served from a page cache never reach WordPress, so the numbers are minimums.
 
 = Does WebDecoy change my robots.txt? =
 
@@ -311,10 +311,10 @@ All requests are made server-side over HTTPS. This is an optional cloud service 
 Terms of Service: https://webdecoy.com/terms
 Privacy Policy: https://webdecoy.com/privacy
 
-**Without an API key, the plugin operates 100% locally, with no external connections on the front end or back end.** Chart.js (used for the admin Statistics charts) is bundled with the plugin, not loaded from a CDN.
+**Without an API key, the plugin operates 100% locally, with no external connections on the front end or back end.** Chart.js (used for the admin analytics charts) is bundled with the plugin, not loaded from a CDN.
 
 = Bundled third-party libraries =
-Chart.js v4.5.1 (MIT license) is included at admin/js/vendor/chart.umd.min.js for the admin Statistics charts. It is the official distribution build; the human-readable source is available at https://github.com/chartjs/Chart.js/releases/tag/v4.5.1 . No other third-party libraries are bundled.
+Chart.js v4.5.1 (MIT license) is included at admin/js/vendor/chart.umd.min.js for the admin analytics charts. It is the official distribution build; the human-readable source is available at https://github.com/chartjs/Chart.js/releases/tag/v4.5.1 . No other third-party libraries are bundled.
 
 = Reference URLs in the good-bot database =
 The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL for each known bot (e.g. developer.amazon.com/amazonbot, api.slack.com/robots) purely as reference metadata shown alongside detections. These URLs are never requested by the plugin. No connection of any kind is made to them.
@@ -322,7 +322,7 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 == Screenshots ==
 
 1. Protection settings: configure detection and blocking
-2. Statistics page: 30-day detection trends and threat distribution
+2. AI Traffic & Analytics page: 30-day detection trends and threat distribution
 3. Detections log: view threats with scores and MITRE tactics
 4. Blocked IPs: manage blocked addresses with expiration
 5. Dashboard widget: threat overview at a glance
