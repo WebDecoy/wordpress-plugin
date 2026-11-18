@@ -285,7 +285,8 @@ if ($wd_intel_connected && !empty($detections) && class_exists('WebDecoy_Actor_I
             <p><?php esc_html_e('No detections found.', 'webdecoy'); ?></p>
         <?php endif; ?>
     <?php else : ?>
-        <table class="wp-list-table widefat fixed striped">
+        <div class="wd-detections-scroll" role="region" aria-label="<?php esc_attr_e('Bot detections', 'webdecoy'); ?>" tabindex="0">
+        <table class="wp-list-table widefat fixed striped wd-detections-table">
             <thead>
                 <tr>
                     <th class="check-column"><input type="checkbox" id="webdecoy-select-all" /></th>
@@ -527,6 +528,7 @@ if ($wd_intel_connected && !empty($detections) && class_exists('WebDecoy_Actor_I
                 <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
 
         <?php if ($total_pages > 1) : ?>
         <div class="tablenav bottom">
