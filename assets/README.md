@@ -38,6 +38,7 @@ rsvg-convert -w 772 -h 250 banner.svg > banner-772x250.png
   `#111C26`, bill orange `#F99717`.
 - The banner embeds the approved raster artwork at 1544 × 500, including its
   typography. Rendering does not depend on installed fonts. The campaign reads
-  “Stop bots. Keep customers.” with WordPress + WooCommerce and capability copy.
+  “Understand your AI traffic.” with WordPress + WooCommerce. Supporting copy: “See the crawlers. Explore the activity. Choose your protection.”
+- Banner artwork uses an abstract analytics motif rather than product screenshots or invented statistics. Protection is secondary to visibility. The SVG embeds the raster master; render both exact directory sizes from this source.
 - Upload the generated PNGs (not the SVGs) to the WordPress.org SVN `assets/`
   directory. SVG files are kept here as editable sources only.
