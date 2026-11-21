@@ -53,6 +53,12 @@ class WebDecoy_Activator
         wp_clear_scheduled_hook('webdecoy_sync_entitlements');
         wp_clear_scheduled_hook('webdecoy_sync_actor_feed');
 
+        // Take back exactly what "Count crawlers on cached pages" added to
+        // cache plugins, so nothing of ours is left behind.
+        if (class_exists('WebDecoy_Page_Cache')) {
+            WebDecoy_Page_Cache::remove_all();
+        }
+
         // Flush rewrite rules
         // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.flush_rewrite_rules_flush_rewrite_rules -- Lifecycle only; soft flush updates rewrite options without writing .htaccess.
         flush_rewrite_rules(false);
@@ -336,6 +342,8 @@ class WebDecoy_Activator
         delete_option('webdecoy_entitlements');
         delete_option('webdecoy_actor_feed_cursor');
         delete_option('webdecoy_critical_moment_last');
+        delete_option('webdecoy_cached_crawler_counts');
+        delete_option('webdecoy_cache_bypass_state');
 
         // Clear scheduled events
         wp_clear_scheduled_hook('webdecoy_cleanup_expired');

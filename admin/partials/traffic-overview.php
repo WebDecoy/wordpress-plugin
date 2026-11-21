@@ -25,6 +25,7 @@ $wd_ref_total = (int) ($ai_referral_summary['total'] ?? 0);
     </nav>
 </header>
 <div class="wd-report-caption"><span class="wd-status-dot" aria-hidden="true"></span><?php esc_html_e('Local reporting', 'webdecoy'); ?><span>·</span><?php esc_html_e('UTC calendar days, including today', 'webdecoy'); ?><span>·</span><?php esc_html_e('Refreshes within a minute', 'webdecoy'); ?></div>
+<?php include WEBDECOY_PLUGIN_DIR . 'admin/partials/page-cache-notice.php'; ?>
 <div class="wd-metrics">
     <?php foreach ([
         [__('Known bot visits', 'webdecoy'), $crawler_summary !== null ? $wd_bot_total : null, __('Observed crawler requests', 'webdecoy'), 'bots'],
