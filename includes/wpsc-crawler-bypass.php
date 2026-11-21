@@ -27,7 +27,7 @@ if (function_exists('add_cacheaction') && !function_exists('webdecoy_wpsc_cache_
     {
         global $cache_enabled;
 
-        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- compared as a lower-cased substring only, never stored or output.
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput, WordPressVIPMinimum.Variables.RestrictedVariables.cache_constraints___SERVER__HTTP_USER_AGENT__ -- Decides only whether this request skips the page cache; compared as a lower-cased substring, never stored or output.
         $ua = isset($_SERVER['HTTP_USER_AGENT']) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
         if ($ua === '') {
             return;
