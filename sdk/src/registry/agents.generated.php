@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 return [
     'schema' => 2,
-    'agent_count' => 252,
+    'agent_count' => 251,
     'categories' => ['training_crawler', 'ai_search_crawler', 'ai_agent', 'ai_assistant', 'search_crawler', 'seo_crawler', 'security_scanner', 'generic_scraper', 'archiver', 'fetcher', 'monitoring', 'headless_browser', 'feed_reader', 'commercial_scraper', 'none'],
     'agents' => [
         [
@@ -2641,19 +2641,6 @@ return [
             'website' => 'https://betteruptime.com',
             'base_score' => 20,
             'respects_robots' => true,
-            'http_client' => false,
-        ],
-        [
-            'id' => 'checkoutmonitor',
-            'name' => 'Checkout Monitor',
-            'category' => 'monitoring',
-            'behavior' => 'monitoring',
-            'organization' => 'Checkout Monitor',
-            'patterns' => ['checkoutmonitor'],
-            'robots_name' => 'CheckoutMonitor',
-            'website' => 'https://checkoutmonitor.app/bot',
-            'base_score' => 20,
-            'respects_robots' => false,
             'http_client' => false,
         ],
         [
