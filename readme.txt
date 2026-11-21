@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: ai crawlers, robots.txt, bot analytics, geo, bot detection
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.14.1
+Stable tag: 2.15.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -331,6 +331,13 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 8. Dashboard widget: local crawler counts, AI referrals and detection activity (demo data)
 
 == Changelog ==
+
+= 2.15.0 =
+* New: after you first activate WebDecoy, it opens the AI Traffic page. Until crawlers arrive, the page says what it counts and that crawlers usually show up within a few hours.
+* New: if your site serves cached pages, the AI Traffic page says so. Cached page views never reach WordPress, so crawler visits to them were missing from your counts.
+* New: an optional setting counts crawlers on cached pages with WP Super Cache, W3 Total Cache, LiteSpeed Cache or WP Rocket. Known crawlers skip the page cache so their visits are counted, while people still get cached pages. Off by default, because crawler requests then use your server.
+* Fixed: the CRITICAL notice said a deception trap was tripped for any serious detection. It now says what happened, for example a visitor claiming to be Googlebot from an address that failed Google's check. The Detections page shows the same sentence.
+* Security: the in-page bot check can no longer raise the CRITICAL notice. Its score comes from the visitor's browser, so any visitor could trigger one.
 
 = 2.14.1 =
 * Fixed: readable User Agent and other detection columns, with horizontal table scrolling on smaller screens.
