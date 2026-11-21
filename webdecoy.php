@@ -2078,6 +2078,7 @@ final class WebDecoy_Plugin
             return;
         }
 
+        $collector = $this->get_detector()->getSignalCollector();
         $detection = \WebDecoy\Detection::fromArray([
             'scanner_id' => $this->get_scanner_id(),
             'ip_address' => $ip,
@@ -2088,10 +2089,10 @@ final class WebDecoy_Plugin
             'referer' => isset($_SERVER['HTTP_REFERER']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_REFERER'])) : null,
             'client_score' => $result->getScore(),
             'flags' => $result->getFlags(),
-            'fingerprint' => $this->get_detector()->getSignalCollector()->buildFingerprint(),
+            'fingerprint' => $collector->buildFingerprint(),
             'source' => 'wordpress_plugin',
             'metadata' => $result->getMetadata(),
-        ]);
+        ])->setClientSignals($collector->getClientSignals());
 
         // Built now, while the request is in hand; sent at shutdown, after the
         // visitor has their response (WebDecoy/app#1245).
