@@ -1076,6 +1076,7 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-behavioral-scorer.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-violation-reporter.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-detection-sender.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-browser-report.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ai-referrals.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-crawler-visits.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-detection-summary.php';
@@ -2955,7 +2956,7 @@ final class WebDecoy_Plugin
 
         // Forward to WebDecoy ingest service if premium
         if ($this->is_premium()) {
-            $this->forward_to_ingest($detection, $ip);
+            $this->forward_to_ingest($detection, $ip, $collector);
         }
 
         wp_send_json_success(['received' => true]);
@@ -3052,7 +3053,7 @@ final class WebDecoy_Plugin
      * The ingest service authenticates via the API key in the Authorization header.
      * Organization ID and Property ID are looked up from the API key automatically.
      */
-    private function forward_to_ingest(array $detection, string $ip): void
+    private function forward_to_ingest(array $detection, string $ip, \WebDecoy\SignalCollector $collector): void
     {
         $ingest_url = 'https://in.webdecoy.com/api/v1/detect';
 
@@ -3067,35 +3068,16 @@ final class WebDecoy_Plugin
             return;
         }
 
-        // Build payload for ingest service
-        // Note: aid is deprecated - org_id comes from API key authentication
-        // sid is optional - just identifies this as a WordPress plugin
-        $payload = [
-            'sid' => $this->get_scanner_id(),
-            'v' => 1,
-            's' => $detection['s'] ?? 0,
-            'f' => $detection['f'] ?? [],
-            'fp' => $detection['fp'] ?? [],
-            'url' => $detection['url'] ?? '',
-            'ref' => $detection['ref'] ?? '',
-            'ts' => $detection['ts'] ?? (time() * 1000),
-            'ai' => $detection['ai'] ?? '',
-            'hp' => $detection['hp'] ?? '',
-            'timing' => $detection['timing'] ?? null,
-            // Add server-side data
-            'ip' => $ip,
-            'source' => 'wordpress_plugin',
-            // The visitor's own fingerprint material.
-            //
-            // This is a server-to-server beacon, so the ingest service sees THIS
-            // site's outbound request headers on it, not the visitor's. It used
-            // to identify visitors from those — identical on every beacon this
-            // site sends — which collapsed every visitor we ever reported into a
-            // single shared "actor". Header names only, plus Accept-Language and
-            // Accept-Encoding; no header values otherwise, so nothing sensitive
-            // leaves the site.
-            'cs' => $this->build_client_signals(),
-        ];
+        $user_agent = substr(sanitize_text_field($collector->getUserAgent()), 0, 512);
+        $payload = WebDecoy_Browser_Report::build($detection, $user_agent);
+        $payload['sid'] = $this->get_scanner_id();
+        $payload['ip'] = $ip;
+        // Forward the visitor's header shape, never the relay connection's.
+        try {
+            $payload['cs'] = $collector->getClientSignals();
+        } catch (\Throwable $e) {
+            // Header collection should not prevent delivery of the browser report.
+        }
 
         // Send to ingest (fire-and-forget, don't block)
         // Authentication is via API key in Authorization header
@@ -3108,32 +3090,6 @@ final class WebDecoy_Plugin
             ],
             'body' => wp_json_encode($payload),
         ]);
-    }
-
-    /**
-     * The visitor's fingerprint material for a forwarded detection (`cs`).
-     *
-     * Delegates to the SDK's SignalCollector, which is the canonical
-     * implementation and is shared with any other host framework. Falls back to
-     * an empty array if the SDK is unavailable for any reason — the ingest
-     * service treats absent client signals as "compose no network identity",
-     * which is correct: no actor is better than one shared by every visitor.
-     *
-     * @return array
-     */
-    private function build_client_signals(): array
-    {
-        if (!class_exists('\\WebDecoy\\SignalCollector')) {
-            return [];
-        }
-
-        try {
-            $collector = new \WebDecoy\SignalCollector();
-            return $collector->getClientSignals();
-        } catch (\Throwable $e) {
-            // A detection beacon is never worth breaking the page over.
-            return [];
-        }
     }
 
     /**

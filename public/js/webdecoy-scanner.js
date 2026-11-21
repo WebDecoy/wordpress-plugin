@@ -753,12 +753,12 @@
       var fields = document.querySelectorAll(honeypotSelectors[i]);
       for (var j = 0; j < fields.length; j++) {
         if (fields[j].value && fields[j].value.trim() !== '') {
-          return fields[j].value;
+          return true;
         }
       }
     }
 
-    return '';
+    return false;
   }
 
   var detectionSent = false;
@@ -1062,11 +1062,7 @@
           lieDetection: detectLies()
         };
 
-        var honeypotValue = checkHoneypot();
-        if (honeypotValue) {
-          signals.honeypotTriggered = true;
-        }
-        signals.honeypotValue = honeypotValue;
+        signals.honeypotTriggered = checkHoneypot();
 
         // Run async checks in parallel with timeout
         var permissionPromise = detectPermissionInconsistency();
@@ -1205,7 +1201,7 @@
           ref: document.referrer,
           ts: Date.now(),
           ai: signals.aiBot || '',
-          hp: signals.honeypotValue || '',
+          hp: signals.honeypotTriggered ? 'filled' : '',
           timing: signals.apiTiming ? signals.apiTiming.timing : null,
           behavior: signals.behavioral ? signals.behavioral.metrics : null
         }
