@@ -56,6 +56,8 @@ if (file_exists($activator_file)) {
     delete_option('webdecoy_cloud_policy');
     delete_option('webdecoy_actor_feed_cursor');
     delete_option('webdecoy_critical_moment_last');
+    delete_option('webdecoy_cached_crawler_counts');
+    delete_option('webdecoy_cache_bypass_state');
 
     // Clear scheduled events
     wp_clear_scheduled_hook('webdecoy_cleanup_expired');
@@ -113,6 +115,8 @@ if (is_multisite()) {
         delete_option('webdecoy_entitlements');
         delete_option('webdecoy_actor_feed_cursor');
         delete_option('webdecoy_critical_moment_last');
+        delete_option('webdecoy_cached_crawler_counts');
+        delete_option('webdecoy_cache_bypass_state');
 
         // Clear scheduled events for this site
         wp_clear_scheduled_hook('webdecoy_cleanup_expired');

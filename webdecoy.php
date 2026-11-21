@@ -1127,6 +1127,11 @@ final class WebDecoy_Plugin
         // virtual robots.txt. Adds nothing until the owner picks a category.
         WebDecoy_Robots_Txt::register($this->options['robots_disallow_categories'] ?? []);
 
+        // Opt-in: let known crawlers skip supported page caches so their page
+        // views are counted. Changes nothing until the owner turns it on.
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-page-cache.php';
+        WebDecoy_Page_Cache::register();
+
         if (class_exists('WooCommerce')) {
             require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-woocommerce.php';
         }
