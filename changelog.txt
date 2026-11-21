@@ -1,5 +1,8 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.15.1 - 2026-11-21 =
+* Changed: the plugin is now listed as "WebDecoy – AI Crawler Analytics, Block AI Bots & Robots.txt", with a clearer description. No changes to how it works.
+
 = 2.15.0 - 2026-11-21 =
 * New: after you first activate WebDecoy, it opens the AI Traffic page. Until crawlers arrive, the page says what it counts and that crawlers usually show up within a few hours.
 * New: if your site serves cached pages, the AI Traffic page says so. Cached page views never reach WordPress, so crawler visits to them were missing from your counts.

@@ -1,15 +1,15 @@
-=== WebDecoy - AI Crawler Analytics, Robots.txt & Bot Protection ===
+=== WebDecoy – AI Crawler Analytics, Block AI Bots & Robots.txt ===
 Contributors: webdecoy1
 Donate link: https://webdecoy.com
-Tags: ai crawlers, robots.txt, bot analytics, geo, bot detection
+Tags: ai crawlers, block ai bots, gptbot, robots.txt, bot detection
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.15.0
+Stable tag: 2.15.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-See which AI crawlers and bots visit your site, which AI assistants send you visitors, and control them with automatic robots.txt. Free, no account.
+See which AI crawlers like GPTBot and ClaudeBot visit your site, block AI bots or keep them out with robots.txt, and count AI referrals. Free.
 
 == Description ==
 
@@ -331,6 +331,9 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 8. Dashboard widget: local crawler counts, AI referrals and detection activity (demo data)
 
 == Changelog ==
+
+= 2.15.1 =
+* Changed: the plugin is now listed as "WebDecoy – AI Crawler Analytics, Block AI Bots & Robots.txt", with a clearer description. No changes to how it works.
 
 = 2.15.0 =
 * New: after you first activate WebDecoy, it opens the AI Traffic page. Until crawlers arrive, the page says what it counts and that crawlers usually show up within a few hours.
