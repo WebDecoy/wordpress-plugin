@@ -893,6 +893,7 @@ final class WebDecoy_Plugin
             }
             add_action('admin_init', [$this, 'register_settings']);
             add_action('admin_init', [$this, 'maybe_upgrade']);
+            add_action('admin_init', [$this, 'maybe_first_run_redirect']);
             // Sample "are we behind a proxy" from a trusted (admin) request, so the
             // front end never has to consult a client-controlled header.
             add_action('admin_init', [$this, 'maybe_flag_proxy']);
@@ -1077,6 +1078,7 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-detection-sender.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ai-referrals.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-crawler-visits.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-detection-summary.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-robots-txt.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-request-counts.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-honeytoken.php';
@@ -1137,6 +1139,43 @@ final class WebDecoy_Plugin
     {
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-activator.php';
         WebDecoy_Activator::activate();
+
+        // First activation only: open the AI Traffic page once, so a new
+        // owner lands on what they installed the plugin for instead of the
+        // plugin list.
+        if (get_option(self::FIRST_RUN_OPTION, false) === false) {
+            add_option(self::FIRST_RUN_OPTION, time(), '', false);
+            set_transient(self::FIRST_RUN_REDIRECT, 1, 60);
+        }
+    }
+
+    /** Set on first activation; never removed, so re-activating never redirects. */
+    private const FIRST_RUN_OPTION = 'webdecoy_first_activated';
+
+    /** One-shot redirect flag, consumed by {@see self::maybe_first_run_redirect()}. */
+    private const FIRST_RUN_REDIRECT = 'webdecoy_first_run_redirect';
+
+    /**
+     * Send the admin who just activated the plugin to the AI Traffic page,
+     * once. Skipped for bulk and network activation, AJAX, WP-CLI and anyone
+     * who can't see the page, so it never hijacks someone else's request.
+     */
+    public function maybe_first_run_redirect(): void
+    {
+        if (!get_transient(self::FIRST_RUN_REDIRECT)) {
+            return;
+        }
+        delete_transient(self::FIRST_RUN_REDIRECT);
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only check of WordPress core's own bulk-activation marker.
+        if (isset($_GET['activate-multi']) || wp_doing_ajax() || is_network_admin() || (defined('WP_CLI') && WP_CLI)) {
+            return;
+        }
+        if (!current_user_can('manage_options') || WebDecoy_Runtime_Config::hide_admin_ui()) {
+            return;
+        }
+        wp_safe_redirect(admin_url('admin.php?page=webdecoy-statistics'));
+        exit;
     }
 
     /**
@@ -1462,8 +1501,10 @@ final class WebDecoy_Plugin
      *
      * @param string $ip
      * @param string $threat_level
+     * @param string $what One plain sentence for what happened
+     *                     ({@see WebDecoy_Detection_Summary::sentence()}).
      */
-    private function flag_critical_moment(string $ip, string $threat_level): void
+    private function flag_critical_moment(string $ip, string $threat_level, string $what = ''): void
     {
         if ($this->critical_moment === null) {
             return;
@@ -1471,7 +1512,7 @@ final class WebDecoy_Plugin
         if ($threat_level !== \WebDecoy\DetectionResult::THREAT_CRITICAL) {
             return;
         }
-        $this->critical_moment->maybe_queue($ip);
+        $this->critical_moment->maybe_queue($ip, $what);
     }
 
     /**
@@ -2009,7 +2050,11 @@ final class WebDecoy_Plugin
             'created_at' => gmdate('Y-m-d H:i:s'),
         ]);
 
-        $this->flag_critical_moment($ip, $result->getThreatLevel());
+        $this->flag_critical_moment(
+            $ip,
+            $result->getThreatLevel(),
+            WebDecoy_Detection_Summary::sentence((string) wp_json_encode($flags_data))
+        );
     }
 
     /**
@@ -2230,7 +2275,11 @@ final class WebDecoy_Plugin
             ]);
 
             // Confirmed decoy exfiltration is always CRITICAL — surface the moment.
-            $this->flag_critical_moment($ip, \WebDecoy\DetectionResult::THREAT_CRITICAL);
+            $this->flag_critical_moment(
+                $ip,
+                \WebDecoy\DetectionResult::THREAT_CRITICAL,
+                WebDecoy_Detection_Summary::sentence((string) wp_json_encode(['flags' => ['canary_credential_use']]))
+            );
 
             $this->enforce_block($ip, 'Canary credential use (decoy exfiltration)');
 
@@ -2953,7 +3002,12 @@ final class WebDecoy_Plugin
             $user_agent = substr($user_agent, 0, 512);
         }
 
-        $flags_json = wp_json_encode($detection['f'] ?? []);
+        // Stored as a plain list of strings, never an object. The visitor's
+        // browser chose these, so they must not take the {flags, metadata}
+        // shape the server writes, which the Detections page puts into words.
+        $client_flags = is_array($detection['f'] ?? null) ? $detection['f'] : [];
+        $client_flags = array_values(array_filter($client_flags, 'is_string'));
+        $flags_json = wp_json_encode($client_flags);
         if (!is_string($flags_json) || strlen($flags_json) > 2048) {
             $flags_json = is_string($flags_json) ? substr($flags_json, 0, 2048) : '[]';
         }
@@ -2981,7 +3035,9 @@ final class WebDecoy_Plugin
             'created_at' => gmdate('Y-m-d H:i:s'),
         ]);
 
-        $this->flag_critical_moment($ip, $threat_level);
+        // No CRITICAL admin notice from here. The score was sent by the
+        // visitor's own browser to an endpoint anyone can call, so a notice
+        // would let any visitor raise an alarm on the owner's dashboard.
     }
 
     /**
