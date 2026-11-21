@@ -314,12 +314,12 @@ if ($wd_intel_connected && !empty($detections) && class_exists('WebDecoy_Actor_I
                     </td>
                     <td class="column-what">
                         <?php
-                        // Plain-language sentence for a decoy hit (WebDecoy/app#443), the
-                        // same words the WordPress digest email uses for it. Rows that
-                        // are not decoy hits have no sentence; their detail is in the
-                        // technical columns.
-                        $wd_what = class_exists('\WebDecoy\HitExplanation')
-                            ? \WebDecoy\HitExplanation::forLocalFlags(isset($detection['flags']) ? (string) $detection['flags'] : null)
+                        // One plain sentence for what the row was: decoy hits in the
+                        // same words as the digest email (WebDecoy/app#443), plus the
+                        // common server findings. Rows with nothing more specific to
+                        // say keep their detail in the technical columns.
+                        $wd_what = class_exists('WebDecoy_Detection_Summary')
+                            ? WebDecoy_Detection_Summary::sentence(isset($detection['flags']) ? (string) $detection['flags'] : null)
                             : '';
                         if ($wd_what !== '') :
                             ?>

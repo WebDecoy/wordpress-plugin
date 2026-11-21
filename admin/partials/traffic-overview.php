@@ -43,7 +43,15 @@ $wd_ref_total = (int) ($ai_referral_summary['total'] ?? 0);
     <section class="wd-panel wd-panel-main" aria-labelledby="wd-crawler-title">
         <div class="wd-panel-heading"><div><span class="wd-eyebrow"><?php esc_html_e('CRAWL ACTIVITY', 'webdecoy'); ?></span><h2 id="wd-crawler-title"><?php esc_html_e('Bots over time', 'webdecoy'); ?></h2></div><span class="wd-panel-meta"><?php esc_html_e('Requests / day', 'webdecoy'); ?></span></div>
         <?php if ($crawler_summary === null || $wd_bot_total === 0) : ?>
-        <div class="wd-chart-empty"><span class="dashicons dashicons-chart-area" aria-hidden="true"></span><h3><?php echo $crawler_summary === null ? esc_html__('Counters are getting ready', 'webdecoy') : esc_html__('Waiting for crawler activity', 'webdecoy'); ?></h3><p><?php esc_html_e('Known crawler requests appear here as they reach WordPress. No account or API key needed.', 'webdecoy'); ?></p></div>
+        <div class="wd-chart-empty"><span class="dashicons dashicons-chart-area" aria-hidden="true"></span><h3><?php echo $crawler_summary === null ? esc_html__('Counters are getting ready', 'webdecoy') : esc_html__('Crawlers usually show up within a few hours', 'webdecoy'); ?></h3><p><?php
+            $wd_known_agents = class_exists('\WebDecoy\AgentRegistry') ? \WebDecoy\AgentRegistry::count() : 0;
+            echo esc_html(
+                $wd_known_agents > 0
+                    /* translators: %s: number of known bots, e.g. 250 */
+                    ? sprintf(__('WebDecoy is counting now. GPTBot, ClaudeBot, Googlebot and %s other known bots appear here as they reach your site. No account or API key needed.', 'webdecoy'), number_format_i18n(max(0, $wd_known_agents - 3)))
+                    : __('WebDecoy is counting now. GPTBot, ClaudeBot, Googlebot and other known bots appear here as they reach your site. No account or API key needed.', 'webdecoy')
+            );
+        ?></p></div>
         <?php else : ?>
         <div class="wd-chart-canvas wd-chart-large"><canvas id="wdCrawlerChart" role="img" aria-label="<?php esc_attr_e('Daily crawler requests by AI, search engines and other known bots. Exact totals appear in the cards and detail tables.', 'webdecoy'); ?>"></canvas></div>
         <?php endif; ?>

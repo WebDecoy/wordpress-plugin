@@ -60,7 +60,7 @@ class WebDecoy_Critical_Moment
      * Queue a moment for a CRITICAL detection's IP, subject to the throttle.
      * Makes no external request — only local option/transient writes.
      */
-    public function maybe_queue(string $ip): void
+    public function maybe_queue(string $ip, string $what = ''): void
     {
         if ($ip === '' || !filter_var($ip, FILTER_VALIDATE_IP)) {
             return;
@@ -71,7 +71,7 @@ class WebDecoy_Critical_Moment
             return;
         }
 
-        set_transient(self::NOTICE_TRANSIENT, ['ip' => $ip, 'at' => time()], self::NOTICE_TTL);
+        set_transient(self::NOTICE_TRANSIENT, ['ip' => $ip, 'at' => time(), 'what' => $what], self::NOTICE_TTL);
         update_option(self::LAST_OPTION, time(), false);
     }
 
@@ -97,7 +97,8 @@ class WebDecoy_Critical_Moment
             return;
         }
 
-        $notice = $this->build_notice($ip);
+        $what = isset($pending['what']) && is_string($pending['what']) ? $pending['what'] : '';
+        $notice = $this->build_notice($ip, $what);
         if ($notice['message'] === '') {
             return;
         }
@@ -126,7 +127,7 @@ class WebDecoy_Critical_Moment
      *
      * @return array{message:string,cta_label:string,cta_url:string,type:string}
      */
-    private function build_notice(string $ip): array
+    private function build_notice(string $ip, string $what = ''): array
     {
         $connected = class_exists('WebDecoy_Cloud_Connect') && WebDecoy_Cloud_Connect::is_connected();
 
@@ -208,7 +209,7 @@ class WebDecoy_Critical_Moment
 
             case 'connected_unknown':
                 return [
-                    'message'   => __('A CRITICAL deception trap was just tripped on your site. Review the detection for the full picture.', 'webdecoy'),
+                    'message'   => self::headline($what) . ' ' . __('Review the detection for the full picture.', 'webdecoy'),
                     'cta_label' => __('View detections', 'webdecoy'),
                     'cta_url'   => admin_url('admin.php?page=webdecoy-detections'),
                     'type'      => 'warning',
@@ -222,12 +223,27 @@ class WebDecoy_Critical_Moment
                     // and writes nothing to the block list (#476). The unconnected pitch
                     // was the last place in this file still promising it, three variants
                     // below a comment forbidding exactly that claim.
-                    'message'   => __('A CRITICAL deception trap was just tripped. Connect to WebDecoy Cloud to see whether this attacker is already known across the network, and what it has been doing to other sites.', 'webdecoy'),
+                    'message'   => self::headline($what) . ' ' . __('Connect to WebDecoy Cloud to see whether this visitor is already known across the network, and what it has been doing to other sites.', 'webdecoy'),
                     'cta_label' => __('Connect to WebDecoy Cloud', 'webdecoy'),
                     'cta_url'   => admin_url('admin.php?page=webdecoy&tab=cloud'),
                     'type'      => 'warning',
                 ];
         }
+    }
+
+    /**
+     * What happened, in the detection's own words. It used to say "a deception
+     * trap was just tripped" for every CRITICAL row, including a visitor that
+     * only claimed to be Googlebot; that claim is now made only when the row
+     * really was a trap.
+     */
+    public static function headline(string $what): string
+    {
+        $what = trim($what);
+        return $what === ''
+            ? __('A CRITICAL detection was recorded on your site.', 'webdecoy')
+            /* translators: %s: one sentence describing what happened */
+            : sprintf(__('A CRITICAL detection on your site: %s', 'webdecoy'), $what);
     }
 
     // ---------------------------------------------------------------------
