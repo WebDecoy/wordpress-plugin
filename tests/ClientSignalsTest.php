@@ -23,6 +23,7 @@ declare(strict_types=1);
  */
 
 require_once dirname(__DIR__) . '/sdk/src/SignalCollector.php';
+require_once dirname(__DIR__) . '/sdk/src/Detection.php';
 
 $t = ['TestRunner', 'test'];
 $same = ['TestRunner', 'assertSame'];
@@ -148,4 +149,30 @@ $t('keys match what the ingest service reads', function () use ($same, $true) {
     sort($keys);
     $same(['ae', 'al', 'hn'], $keys, 'wire keys are hn/al/ae');
     $true(is_array($cs['hn']), 'hn is a list');
+});
+
+$t('deferred origin reports include the visitor header block', function () use ($same, $true) {
+    $src = (string) file_get_contents(dirname(__DIR__) . '/webdecoy.php');
+    $start = strpos($src, 'private function submit_detection(');
+    $defer = strpos($src, 'WebDecoy_Detection_Sender::defer(', $start);
+    $before_defer = substr($src, $start, $defer - $start);
+    $true(strpos($before_defer, '->setClientSignals($collector->getClientSignals())') !== false);
+
+    $cs = wd_signals_for([
+        'HTTP_USER_AGENT' => 'FixtureBrowser/1.0',
+        'HTTP_ACCEPT_LANGUAGE' => 'en-US',
+        'HTTP_ACCEPT_ENCODING' => 'br',
+        'HTTP_COOKIE' => 'private-fixture-value',
+    ]);
+    $payload = \WebDecoy\Detection::fromArray([
+        'source' => 'wordpress_plugin',
+        'ip_address' => '192.0.2.10',
+        'user_agent' => 'FixtureBrowser/1.0',
+        'client_score' => 45,
+    ])->setClientSignals($cs)->toApiPayload('fixture-org');
+
+    $same(['hn' => ['accept-encoding', 'accept-language', 'cookie', 'user-agent'], 'al' => 'en-US', 'ae' => 'br'], $payload['cs']);
+    $same('wordpress_plugin', $payload['source']);
+    $same(45, $payload['s']);
+    $true(strpos(json_encode($payload), 'private-fixture-value') === false);
 });
