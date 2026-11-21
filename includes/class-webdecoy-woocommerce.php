@@ -17,6 +17,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/class-webdecoy-checkout-monitor.php';
+
 /**
  * WebDecoy WooCommerce Class
  */
@@ -53,6 +55,11 @@ class WebDecoy_WooCommerce
     public function check_checkout(): void
     {
         if (!$this->options['protect_checkout']) {
+            return;
+        }
+
+        // A signed Checkout Monitor test order the store owner scheduled.
+        if (WebDecoy_Checkout_Monitor::is_verified_test_request()) {
             return;
         }
 
@@ -228,6 +235,13 @@ class WebDecoy_WooCommerce
     {
         $order = wc_get_order($order_id);
         if (!$order) {
+            return;
+        }
+
+        // Checkout Monitor test orders never count toward velocity or card
+        // testing. At one every 3 minutes from one address they would trip both
+        // within the hour, and refuse the next real customer on that address.
+        if (WebDecoy_Checkout_Monitor::is_verified_test_request() || WebDecoy_Checkout_Monitor::is_test_order($order)) {
             return;
         }
 
@@ -826,6 +840,11 @@ add_action('woocommerce_blocks_loaded', function () {
         function ($order, $request) {
             $options = webdecoy()->get_options();
             if (empty($options['protect_checkout'])) {
+                return;
+            }
+
+            // A signed Checkout Monitor test order: same rule as the classic path.
+            if (WebDecoy_Checkout_Monitor::is_verified_test_request()) {
                 return;
             }
 
