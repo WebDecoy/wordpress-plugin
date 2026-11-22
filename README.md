@@ -46,6 +46,19 @@ Three rapid synthetic failed orders. The fourth checkout attempt refused. Separa
 3. Upload the ZIP file and click **Install Now**
 4. Activate the plugin
 
+## Coverage on cached pages
+
+A cache can answer the page request before WebDecoy's PHP detection or crawler
+counter runs. Supported WordPress caches expose an opt-in for known AI and search
+crawlers on **WebDecoy → AI Traffic**. Use a WebDecoy edge sensor when an upstream
+cache serves requests before WordPress.
+
+Cached pages can still report browser signals if the scanner script loads and
+the site's same-origin `wp-admin/admin-ajax.php` accepts POST requests. If
+WordPress rejects an expired scanner nonce, the scanner fetches a current one
+and retries the report once. Keep this AJAX endpoint out of cache and purge
+cached HTML after upgrading so it loads the updated scanner.
+
 ## Development
 
 ### Prerequisites

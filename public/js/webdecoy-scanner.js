@@ -1188,44 +1188,81 @@
 
       var clientScore = calculateScore(signals);
 
-      // Build payload for WordPress AJAX endpoint
-      var payload = {
-        action: 'webdecoy_client_detection',
-        nonce: config.nonce,
-        detection: {
-          v: 1,
-          s: clientScore,
-          f: flags,
-          fp: fingerprint,
-          url: window.location.href,
-          ref: document.referrer,
-          ts: Date.now(),
-          ai: signals.aiBot || '',
-          hp: signals.honeypotTriggered ? 'filled' : '',
-          timing: signals.apiTiming ? signals.apiTiming.timing : null,
-          behavior: signals.behavioral ? signals.behavioral.metrics : null
-        }
-      };
-
-      // Send to WordPress AJAX endpoint
-      if (navigator.sendBeacon) {
-        var formData = new FormData();
-        formData.append('action', 'webdecoy_client_detection');
-        formData.append('nonce', config.nonce);
-        formData.append('detection', JSON.stringify(payload.detection));
-        navigator.sendBeacon(config.ajaxUrl, formData);
-      } else {
-        // Fallback for older browsers
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', config.ajaxUrl, true);
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        var params = 'action=webdecoy_client_detection&nonce=' + encodeURIComponent(config.nonce) +
-                     '&detection=' + encodeURIComponent(JSON.stringify(payload.detection));
-        xhr.send(params);
-      }
+      submitScannerReport({
+        v: 1,
+        s: clientScore,
+        f: flags,
+        fp: fingerprint,
+        url: window.location.href,
+        ref: document.referrer,
+        ts: Date.now(),
+        ai: signals.aiBot || '',
+        hp: signals.honeypotTriggered ? 'filled' : '',
+        timing: signals.apiTiming ? signals.apiTiming.timing : null,
+        behavior: signals.behavioral ? signals.behavioral.metrics : null
+      });
     } catch (error) {
       // Silently fail
     }
+  }
+
+  function submitScannerReport(detection) {
+    var serialized = JSON.stringify(detection);
+    function reportBody(nonce) {
+      return 'action=webdecoy_client_detection&nonce=' + encodeURIComponent(nonce) +
+        '&detection=' + encodeURIComponent(serialized);
+    }
+
+    if (typeof window.fetch === 'function' && typeof URL === 'function' &&
+        typeof Request === 'function' && 'keepalive' in Request.prototype) {
+      var ajax = new URL(config.ajaxUrl, window.location.href);
+      if (ajax.origin === window.location.origin) {
+        function post(body) {
+          return window.fetch(ajax.href, {
+            method: 'POST',
+            mode: 'same-origin',
+            credentials: 'same-origin',
+            redirect: 'error',
+            cache: 'no-store',
+            keepalive: true,
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body
+          });
+        }
+
+        // A nonce rejection is emitted before any report side effects. Retry
+        // only once, after that explicit response and a successful renewal.
+        return post(reportBody(config.nonce)).then(function(response) {
+          if (response.status !== 403) return;
+          return response.json().then(function(result) {
+            if (!result || !result.data || result.data.code !== 'invalid_scanner_nonce') return;
+            return post('action=webdecoy_scanner_nonce').then(function(refresh) {
+              if (!refresh.ok) return;
+              return refresh.json().then(function(result) {
+                var nonce = result && result.success && result.data && result.data.nonce;
+                if (typeof nonce === 'string' && nonce && nonce !== config.nonce) {
+                  return post(reportBody(nonce));
+                }
+              });
+            });
+          });
+        }).catch(function() {});
+      }
+    }
+
+    if (navigator.sendBeacon) {
+      var formData = new FormData();
+      formData.append('action', 'webdecoy_client_detection');
+      formData.append('nonce', config.nonce);
+      formData.append('detection', serialized);
+      navigator.sendBeacon(config.ajaxUrl, formData);
+      return;
+    }
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', config.ajaxUrl, true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.send(reportBody(config.nonce));
   }
 
   /**

@@ -91,3 +91,10 @@ jobs:
       # were not committed with it, fails here.
       - name: Run tests
         run: php tests/run.php
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Replay scanner report transport
+        run: node --test tests/ScannerReportTest.cjs
