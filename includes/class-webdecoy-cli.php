@@ -50,6 +50,10 @@ class WebDecoy_CLI_Command
         'rate_limit_window'    => ['type' => 'int', 'min' => 1, 'max' => 86400],
         'behind_cloudflare'    => ['type' => 'bool'],
         'robots_disallow_categories' => ['type' => 'categories'],
+        'llms_txt_enabled'     => ['type' => 'bool'],
+        'llms_txt_summary'     => ['type' => 'text'],
+        'llms_txt_post_types'  => ['type' => 'post_types'],
+        'llms_txt_max_items'   => ['type' => 'int', 'min' => 1, 'max' => 200],
     ];
 
     /**
@@ -133,6 +137,8 @@ class WebDecoy_CLI_Command
      *     wp webdecoy config set block_ai_crawlers true
      *     wp webdecoy config set robots_disallow_categories training_crawler,seo_crawler
      *     wp webdecoy config set robots_disallow_categories none
+     *     wp webdecoy config set llms_txt_enabled true
+     *     wp webdecoy config set llms_txt_post_types page,post,product
      *     wp webdecoy config get sensitivity
      *
      * @when after_wp_load
@@ -345,6 +351,17 @@ class WebDecoy_CLI_Command
                 // Refuse the whole value when any id is unknown, rather than
                 // silently dropping a typo.
                 return count($selected) === count(array_unique($requested)) ? [$key, $selected] : null;
+            case 'post_types':
+                // Comma-separated public post types; `none` or empty clears.
+                $lowered = strtolower(trim($raw));
+                if ($lowered === '' || $lowered === 'none') {
+                    return [$key, []];
+                }
+                $requested = array_values(array_filter(array_map('trim', explode(',', $lowered)), 'strlen'));
+                $selected = WebDecoy_Llms_Txt::sanitize_post_types($requested);
+                return count($selected) === count(array_unique($requested)) ? [$key, $selected] : null;
+            case 'text':
+                return [$key, WebDecoy_Llms_Txt::truncate(sanitize_text_field($raw), WebDecoy_Llms_Txt::SUMMARY_CHARS)];
             default:
                 return null;
         }
@@ -360,11 +377,15 @@ class WebDecoy_CLI_Command
         if ($key === 'mode') {
             return empty($options['monitor_mode']) ? 'block' : 'monitor';
         }
+        if (strpos($key, 'llms_txt_') === 0) {
+            // Unset llms.txt settings show the default actually in effect.
+            $options = WebDecoy_Llms_Txt::effective_options($options) + $options;
+        }
         $value = $options[$key] ?? null;
         if (is_bool($value)) {
             return $value ? 'true' : 'false';
         }
-        if (is_array($value) || (self::CONFIG_KEYS[$key]['type'] ?? '') === 'categories') {
+        if (is_array($value) || in_array(self::CONFIG_KEYS[$key]['type'] ?? '', ['categories', 'post_types'], true)) {
             return (array) $value === [] ? 'none' : implode(',', array_map('strval', (array) $value));
         }
         return (string) ($value ?? '');
@@ -391,6 +412,13 @@ class WebDecoy_CLI_Command
                     $raw,
                     $key,
                     implode(', ', array_keys(WebDecoy_Robots_Txt::choices()))
+                );
+            case 'post_types':
+                return sprintf(
+                    "'%s' is not valid for %s. Use none, or a comma-separated list of: %s.",
+                    $raw,
+                    $key,
+                    implode(', ', array_keys(WebDecoy_Llms_Txt::post_type_choices()))
                 );
             default:
                 return "'{$raw}' is not valid for {$key}.";

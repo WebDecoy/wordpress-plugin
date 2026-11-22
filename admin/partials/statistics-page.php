@@ -209,6 +209,20 @@ $options = get_option('webdecoy_options', []);
                 <?php esc_html_e('To refuse AI crawlers, turn on Block AI crawlers under Settings, Good Bots. Pages served from a page cache are not counted, so these are minimums.', 'webdecoy'); ?>
             </p>
         <?php endif; ?>
+        <p class="description">
+            <?php if (WebDecoy_Llms_Txt::settings($options)['enabled']) : ?>
+                <?php
+                echo esc_html(sprintf(
+                    /* translators: %s: the llms.txt address */
+                    __('Your llms.txt is on at %s. Crawler fetches of it are counted here with each bot\'s other visits.', 'webdecoy'),
+                    home_url('/' . WebDecoy_Llms_Txt::FILE)
+                ));
+                ?>
+            <?php else : ?>
+                <?php esc_html_e('Help AI tools find your best pages with an llms.txt file.', 'webdecoy'); ?>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=webdecoy#tab-bots')); ?>"><?php esc_html_e('Turn it on under Settings, Good Bots', 'webdecoy'); ?></a>
+            <?php endif; ?>
+        </p>
     </div>
     <?php endif; ?>
 

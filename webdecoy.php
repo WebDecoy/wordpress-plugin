@@ -243,6 +243,11 @@ final class WebDecoy_Plugin
             // upgrade never changes a site's robots.txt on its own.
             'robots_disallow_categories' => [],
 
+            // llms.txt generator. Off by default, so an upgrade never adds a
+            // file to a site. Its other settings take their defaults from
+            // the generator's settings() reader, the one place they live.
+            'llms_txt_enabled' => false,
+
             // Blocking Settings
             // Monitor mode is the safe default: everything is detected, logged and
             // reported, and nothing is ever blocked, throttled or 403'd. Turn it off
@@ -1081,6 +1086,7 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-crawler-visits.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-detection-summary.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-robots-txt.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-llms-txt.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-request-counts.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-honeytoken.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-ip-enrichment.php';
@@ -1127,6 +1133,10 @@ final class WebDecoy_Plugin
         // Automatic robots.txt: appends the chosen categories' agents to the
         // virtual robots.txt. Adds nothing until the owner picks a category.
         WebDecoy_Robots_Txt::register($this->options['robots_disallow_categories'] ?? []);
+
+        // llms.txt generator: answers /llms.txt with a Markdown map of the
+        // site. Serves nothing until the owner turns it on.
+        WebDecoy_Llms_Txt::register($this->options);
 
         // Opt-in: let known crawlers skip supported page caches so their page
         // views are counted. Changes nothing until the owner turns it on.
@@ -2562,6 +2572,9 @@ final class WebDecoy_Plugin
 
         // Automatic robots.txt: only categories the bundled registry offers.
         $sanitized['robots_disallow_categories'] = WebDecoy_Robots_Txt::sanitize_categories($input['robots_disallow_categories'] ?? []);
+
+        // llms.txt generator: on/off, summary, intro, public post types, cap.
+        $sanitized = array_merge($sanitized, WebDecoy_Llms_Txt::sanitize_settings($input));
 
         // Blocking Settings
         // Allowlist: validate as IPs/CIDRs (reuses the trusted-proxy validator),
