@@ -926,6 +926,7 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
             <div id="tab-scanner-tab" class="webdecoy-tab-content">
                 <h2><?php esc_html_e('Client-Side Bot Scanner', 'webdecoy'); ?></h2>
                 <p class="description"><?php esc_html_e('The bot scanner runs in visitors\' browsers to detect automation tools, headless browsers, and other bot indicators.', 'webdecoy'); ?></p>
+                <p class="description"><?php esc_html_e('Full-page cache hits can bypass PHP detection and crawler counts. Cached pages can still report browser signals when the scanner loads and the same-origin WordPress AJAX endpoint is reachable. Use the cache bypass setting for supported plugins or an edge sensor to see requests served upstream.', 'webdecoy'); ?></p>
 
                 <table class="form-table">
                     <tr>

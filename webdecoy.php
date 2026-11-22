@@ -948,6 +948,8 @@ final class WebDecoy_Plugin
         // AJAX handlers for client-side scanner (both logged-in and guests)
         add_action('wp_ajax_webdecoy_client_detection', [$this, 'ajax_client_detection']);
         add_action('wp_ajax_nopriv_webdecoy_client_detection', [$this, 'ajax_client_detection']);
+        add_action('wp_ajax_webdecoy_scanner_nonce', [$this, 'ajax_scanner_nonce']);
+        add_action('wp_ajax_nopriv_webdecoy_scanner_nonce', [$this, 'ajax_scanner_nonce']);
 
         // PoW challenge AJAX handlers
         add_action('wp_ajax_webdecoy_pow_challenge', [$this, 'ajax_pow_challenge']);
@@ -2803,12 +2805,7 @@ final class WebDecoy_Plugin
      */
     public function frontend_scripts(): void
     {
-        if (!$this->options['scanner_enabled']) {
-            return;
-        }
-
-        // Skip for logged-in users if configured
-        if ($this->options['scanner_exclude_logged_in'] && is_user_logged_in()) {
+        if (!$this->scanner_enabled_for_visitor()) {
             return;
         }
 
@@ -2922,6 +2919,35 @@ final class WebDecoy_Plugin
         ]);
     }
 
+    private function scanner_enabled_for_visitor(): bool
+    {
+        return !empty($this->options['scanner_enabled'])
+            && (empty($this->options['scanner_exclude_logged_in']) || !is_user_logged_in());
+    }
+
+    /** Return a current scanner nonce to a same-origin browser on a cached page. */
+    public function ajax_scanner_nonce(): void
+    {
+        $method = isset($_SERVER['REQUEST_METHOD']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD'])) : '';
+        $ajax = wp_parse_url(admin_url('admin-ajax.php'));
+        $scheme = strtolower($ajax['scheme'] ?? '');
+        $host = strtolower($ajax['host'] ?? '');
+        $port = $ajax['port'] ?? null;
+        $origin = $scheme . '://' . $host;
+        if ($port !== null && $port !== ($scheme === 'https' ? 443 : 80)) {
+            $origin .= ':' . $port;
+        }
+
+        if ($method !== 'POST' || !in_array($scheme, ['http', 'https'], true) || $host === ''
+            || get_http_origin() !== $origin || !$this->scanner_enabled_for_visitor()) {
+            wp_send_json_error(['message' => 'Scanner nonce unavailable'], 403);
+            return;
+        }
+
+        nocache_headers();
+        wp_send_json_success(['nonce' => wp_create_nonce('webdecoy_scanner')]);
+    }
+
     /**
      * AJAX: Handle client-side detection
      * Receives detection from JavaScript scanner and forwards to WebDecoy ingest
@@ -2931,7 +2957,7 @@ final class WebDecoy_Plugin
         // Verify nonce
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verification handles sanitization
         if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'webdecoy_scanner')) {
-            wp_send_json_error(['message' => 'Invalid nonce'], 403);
+            wp_send_json_error(['message' => 'Invalid nonce', 'code' => 'invalid_scanner_nonce'], 403);
             return;
         }
 
