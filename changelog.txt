@@ -1,5 +1,9 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.15.2 - 2026-11-21 =
+* WebDecoy Cloud now receives the visitor’s request-header signals from server-side WordPress detections.
+* Browser detections sent through WordPress now include bounded mouse, click, and scroll observations. Honeypot contents and URL query values are omitted.
+
 = 2.15.1 - 2026-11-21 =
 * Changed: the plugin is now listed as "WebDecoy – AI Crawler Analytics, Block AI Bots & Robots.txt", with a clearer description. No changes to how it works.
 

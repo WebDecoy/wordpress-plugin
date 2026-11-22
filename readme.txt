@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: ai crawlers, block ai bots, gptbot, robots.txt, bot detection
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.15.1
+Stable tag: 2.15.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -331,6 +331,10 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 8. Dashboard widget: local crawler counts, AI referrals and detection activity (demo data)
 
 == Changelog ==
+
+= 2.15.2 =
+* WebDecoy Cloud now receives the visitor’s request-header signals from server-side WordPress detections.
+* Browser detections sent through WordPress now include bounded mouse, click, and scroll observations. Honeypot contents and URL query values are omitted.
 
 = 2.15.1 =
 * Changed: the plugin is now listed as "WebDecoy – AI Crawler Analytics, Block AI Bots & Robots.txt", with a clearer description. No changes to how it works.
