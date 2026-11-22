@@ -597,6 +597,165 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                         </td>
                     </tr>
                 </table>
+
+                <?php
+                $wd_llms = WebDecoy_Llms_Txt::settings($options);
+                $wd_llms_url = home_url('/' . WebDecoy_Llms_Txt::FILE);
+                $wd_llms_conflict = WebDecoy_Llms_Txt::conflict();
+                $wd_llms_file = WebDecoy_Llms_Txt::physical_file();
+                $wd_llms_choices = WebDecoy_Llms_Txt::post_type_choices();
+                $wd_llms_preview = WebDecoy_Llms_Txt::body();
+                ?>
+                <h3 id="webdecoy-llms-txt"><?php esc_html_e('llms.txt', 'webdecoy'); ?></h3>
+                <p class="description">
+                    <?php esc_html_e('Publish an llms.txt file: a short Markdown guide to your site for AI tools, following the llms.txt proposal (llmstxt.org). WebDecoy lists your published pages and posts with a one-line summary of each and keeps the file current as you publish. No account needed.', 'webdecoy'); ?>
+                </p>
+                <p class="description">
+                    <?php esc_html_e('llms.txt is a guide, not an access rule. To keep crawlers out, use robots.txt above or Block AI crawlers.', 'webdecoy'); ?>
+                </p>
+
+                <?php if ($wd_llms_conflict !== null) : ?>
+                    <div class="notice notice-info inline">
+                        <p>
+                            <?php
+                            echo esc_html(sprintf(
+                                /* translators: %s: name of another plugin, e.g. Yoast SEO */
+                                __('%1$s already provides llms.txt on this site, so WebDecoy leaves it alone and does not serve one. To use this one instead, turn off llms.txt in %1$s.', 'webdecoy'),
+                                $wd_llms_conflict
+                            ));
+                            ?>
+                        </p>
+                    </div>
+                <?php elseif ($wd_llms_file !== null) : ?>
+                    <div class="notice notice-warning inline">
+                        <p>
+                            <?php
+                            printf(
+                                /* translators: %s: path to the llms.txt file on the server */
+                                esc_html__('An llms.txt file exists on the server (%s). Your web server sends that file instead of the one WordPress builds. To use this one, delete or rename that file, or copy the preview below into it. WebDecoy never changes that file.', 'webdecoy'),
+                                '<code>' . esc_html($wd_llms_file) . '</code>'
+                            );
+                            ?>
+                        </p>
+                    </div>
+                <?php elseif (WebDecoy_Robots_Txt::home_is_subdirectory(home_url('/'))) : ?>
+                    <div class="notice notice-warning inline">
+                        <p>
+                            <?php
+                            echo esc_html(sprintf(
+                                /* translators: %s: the llms.txt address WordPress serves */
+                                __('This site lives in a subfolder of its domain. WebDecoy serves llms.txt at %s, but AI tools usually look for it at the root of the domain. Copy the preview below into an llms.txt file at your domain root.', 'webdecoy'),
+                                $wd_llms_url
+                            ));
+                            ?>
+                        </p>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($wd_llms['enabled'] && (string) get_option('permalink_structure') === '') : ?>
+                    <div class="notice notice-info inline">
+                        <p><?php esc_html_e('This site uses plain permalinks. Some web servers, such as Apache without WordPress rewrite rules, answer /llms.txt with their own "not found" page before WordPress runs. Use the link below to check, or choose another structure under Settings, Permalinks.', 'webdecoy'); ?></p>
+                    </div>
+                <?php endif; ?>
+                <?php if ($wd_llms['enabled'] && (string) get_option('blog_public') === '0') : ?>
+                    <div class="notice notice-info inline">
+                        <p><?php esc_html_e('This site asks search engines not to index it (Settings, Reading). llms.txt is still served, so AI tools that fetch it can read it.', 'webdecoy'); ?></p>
+                    </div>
+                <?php endif; ?>
+                <?php if ($wd_llms['enabled'] && !empty($options['block_ai_crawlers'])) : ?>
+                    <div class="notice notice-info inline">
+                        <p><?php esc_html_e('Block AI crawlers is on. When blocking is active, AI training crawlers and AI agents are refused before they can read llms.txt.', 'webdecoy'); ?></p>
+                    </div>
+                <?php endif; ?>
+
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Serve llms.txt', 'webdecoy'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="webdecoy_options[<?php echo esc_attr(WebDecoy_Llms_Txt::ENABLED_KEY); ?>]" value="1"
+                                       <?php checked($wd_llms['enabled']); ?> />
+                                <?php
+                                echo esc_html(sprintf(
+                                    /* translators: %s: the llms.txt address */
+                                    __('Serve an llms.txt file at %s', 'webdecoy'),
+                                    $wd_llms_url
+                                ));
+                                ?>
+                            </label>
+                            <p class="description"><?php esc_html_e('Off by default.', 'webdecoy'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="webdecoy_llms_txt_summary"><?php esc_html_e('Summary', 'webdecoy'); ?></label></th>
+                        <td>
+                            <input type="text" id="webdecoy_llms_txt_summary" class="large-text"
+                                   name="webdecoy_options[<?php echo esc_attr(WebDecoy_Llms_Txt::SUMMARY_KEY); ?>]"
+                                   value="<?php echo esc_attr($wd_llms['summary']); ?>"
+                                   maxlength="<?php echo esc_attr((string) WebDecoy_Llms_Txt::SUMMARY_CHARS); ?>"
+                                   placeholder="<?php echo esc_attr((string) get_bloginfo('description')); ?>" />
+                            <p class="description"><?php esc_html_e('One line under the site name. Leave empty to use the site tagline.', 'webdecoy'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="webdecoy_llms_txt_intro"><?php esc_html_e('Introduction', 'webdecoy'); ?></label></th>
+                        <td>
+                            <textarea id="webdecoy_llms_txt_intro" rows="4" class="large-text"
+                                      name="webdecoy_options[<?php echo esc_attr(WebDecoy_Llms_Txt::INTRO_KEY); ?>]"
+                                      maxlength="<?php echo esc_attr((string) WebDecoy_Llms_Txt::INTRO_CHARS); ?>"><?php echo esc_textarea($wd_llms['intro']); ?></textarea>
+                            <p class="description"><?php esc_html_e('Optional text after the summary, such as what the site covers or how to cite it. Markdown links and lists work; headings are not allowed here.', 'webdecoy'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Content to list', 'webdecoy'); ?></th>
+                        <td>
+                            <fieldset>
+                                <legend class="screen-reader-text"><?php esc_html_e('Content types to list in llms.txt', 'webdecoy'); ?></legend>
+                                <?php foreach ($wd_llms_choices as $wd_type => $wd_label) : ?>
+                                    <label style="display:block;margin-bottom:6px;">
+                                        <input type="checkbox" name="webdecoy_options[<?php echo esc_attr(WebDecoy_Llms_Txt::POST_TYPES_KEY); ?>][]"
+                                               value="<?php echo esc_attr($wd_type); ?>"
+                                               <?php checked(in_array($wd_type, $wd_llms['post_types'], true)); ?> />
+                                        <?php echo esc_html($wd_label); ?>
+                                    </label>
+                                <?php endforeach; ?>
+                            </fieldset>
+                            <p class="description"><?php esc_html_e('Each type is one section. Only published, public content is listed: drafts, private and password-protected posts, and posts Yoast SEO, Rank Math or SEOPress mark noindex are left out.', 'webdecoy'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="webdecoy_llms_txt_max_items"><?php esc_html_e('Links per section', 'webdecoy'); ?></label></th>
+                        <td>
+                            <input type="number" id="webdecoy_llms_txt_max_items" class="small-text" min="1"
+                                   max="<?php echo esc_attr((string) WebDecoy_Llms_Txt::MAX_ITEMS_CAP); ?>"
+                                   name="webdecoy_options[<?php echo esc_attr(WebDecoy_Llms_Txt::MAX_ITEMS_KEY); ?>]"
+                                   value="<?php echo esc_attr((string) $wd_llms['max_items']); ?>" />
+                            <p class="description">
+                                <?php
+                                echo esc_html(sprintf(
+                                    /* translators: %d: the highest number allowed */
+                                    __('Pages are listed in menu order, everything else newest first. Up to %d.', 'webdecoy'),
+                                    WebDecoy_Llms_Txt::MAX_ITEMS_CAP
+                                ));
+                                ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Preview', 'webdecoy'); ?></th>
+                        <td>
+                            <pre class="code" style="max-height:320px;overflow:auto;background:#f6f7f7;padding:8px;white-space:pre-wrap;"><?php echo esc_html($wd_llms_preview); ?></pre>
+                            <p class="description"><?php esc_html_e('Shows the saved settings. Save changes to update it.', 'webdecoy'); ?></p>
+                            <p>
+                                <?php if ($wd_llms['enabled'] && $wd_llms_conflict === null) : ?>
+                                    <a href="<?php echo esc_url($wd_llms_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('View your live llms.txt', 'webdecoy'); ?></a>
+                                    &middot;
+                                <?php endif; ?>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=webdecoy-statistics')); ?>"><?php esc_html_e('See which AI crawlers visit, llms.txt fetches included, on the AI Traffic page', 'webdecoy'); ?></a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
             </div>
 
             <!-- Blocking Tab -->

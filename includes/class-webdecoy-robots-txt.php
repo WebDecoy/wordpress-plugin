@@ -252,10 +252,12 @@ class WebDecoy_Robots_Txt
      * A physical robots.txt that the web server serves instead of WordPress's
      * virtual one, or null when there is none. Checks the WordPress directory
      * and, when WordPress lives in a subdirectory of the site, the site root.
+     * The llms.txt generator asks the same question through $name.
      *
      * @param list<string> $roots Directories to check; defaults to the WordPress ones.
+     * @param string       $name  File name to look for.
      */
-    public static function physical_file(array $roots = []): ?string
+    public static function physical_file(array $roots = [], string $name = 'robots.txt'): ?string
     {
         if ($roots === []) {
             $roots[] = ABSPATH;
@@ -264,7 +266,7 @@ class WebDecoy_Robots_Txt
             }
         }
         foreach (array_unique($roots) as $root) {
-            $path = rtrim($root, '/\\') . '/robots.txt';
+            $path = rtrim($root, '/\\') . '/' . $name;
             if (is_file($path)) {
                 return $path;
             }

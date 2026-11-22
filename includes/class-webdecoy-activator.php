@@ -227,6 +227,7 @@ class WebDecoy_Activator
             'block_ai_crawlers' => false,
             'custom_allowlist' => [],
             'robots_disallow_categories' => [],
+            'llms_txt_enabled' => false,
 
             // Blocking Settings
             // Monitor mode on by default: detect and log everything, block nothing,
@@ -344,6 +345,7 @@ class WebDecoy_Activator
         delete_option('webdecoy_critical_moment_last');
         delete_option('webdecoy_cached_crawler_counts');
         delete_option('webdecoy_cache_bypass_state');
+        delete_transient('webdecoy_llms_txt');
 
         // Clear scheduled events
         wp_clear_scheduled_hook('webdecoy_cleanup_expired');

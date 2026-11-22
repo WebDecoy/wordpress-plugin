@@ -44,7 +44,21 @@ Choose whole categories of bots to keep out, such as AI training crawlers, SEO t
 
 robots.txt is a request: well-behaved crawlers follow it, and others ignore it. For those, turn on **Block AI crawlers** to refuse them outright, with search engines unaffected.
 
-= 4. Stop spam, fake signups and checkout bots =
+= 4. llms.txt generator =
+
+Publish an llms.txt file, the short Markdown guide to a site that AI tools read (llmstxt.org), and see which AI crawlers come to read it.
+
+* Lists your published pages and posts (and WooCommerce products, or any public content type you choose) with a one-line summary of each, in the format the llms.txt proposal describes
+* Keeps itself current: the file updates when you publish, edit or remove content, with no regeneration button and no files written to your server
+* Leaves out drafts, private and password-protected posts, and posts marked noindex in Yoast SEO, Rank Math or SEOPress
+* Set the summary line and an optional introduction, and choose how many links each section holds
+* Works with any permalink setting and needs no permalink refresh
+* Steps aside if Yoast SEO, Rank Math, All in One SEO or Website LLMs.txt already provides llms.txt, or if an llms.txt file is already on your server, and tells you which
+* Off until you turn it on under Settings > Good Bots
+
+AI crawler fetches of llms.txt are counted on the AI Traffic page along with each crawler's other visits.
+
+= 5. Stop spam, fake signups and checkout bots =
 
 The same plugin protects your forms and WooCommerce checkout from automation: invisible honeypot fields and proof-of-work instead of CAPTCHAs, hidden traps that only bots touch, and card-testing protection at checkout. Monitor mode is on by default, so you can see what it would block before it blocks anything.
 
@@ -275,6 +289,10 @@ Yes, with no account. WebDecoy counts page visits that arrive from a link in Cha
 = Does WebDecoy change my robots.txt? =
 
 Only if you choose categories under Settings > Good Bots > Automatic robots.txt. WebDecoy then adds one clearly marked group of rules after what WordPress and other plugins already write. If your server has a physical robots.txt file, WordPress cannot add to it; the settings page tells you and shows the rules to copy into it.
+
+= Does WebDecoy create llms.txt? =
+
+Yes, if you turn it on under Settings > Good Bots > llms.txt. WordPress then answers /llms.txt with a Markdown list of your published pages and posts (you choose the content types), following the llms.txt proposal at llmstxt.org. It updates itself as you publish. WebDecoy never writes a file to your server: if an llms.txt file is already there, your web server keeps sending it, and the settings page shows the generated version to copy. If Yoast SEO, Rank Math, All in One SEO or Website LLMs.txt already provides llms.txt, WebDecoy leaves theirs in place.
 
 = Can I block AI training crawlers like GPTBot and ClaudeBot? =
 
