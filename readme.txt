@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: ai crawlers, block ai bots, gptbot, robots.txt, llms.txt
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.16.0
+Stable tag: 2.16.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -349,6 +349,9 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 8. Dashboard widget: local crawler counts, AI referrals and detection activity (demo data)
 
 == Changelog ==
+
+= 2.16.1 =
+* Fixed: browser bot reports on cached pages can recover when their WordPress nonce expires. The scanner settings explain when page caching bypasses PHP detection.
 
 = 2.16.0 =
 * New: llms.txt generator. Turn it on under Settings > Good Bots > llms.txt and WordPress answers /llms.txt with a list of your published pages and posts in the llms.txt format, kept current as you publish. Private, draft, password-protected and noindex content is left out. If another plugin or a file on your server already provides llms.txt, WebDecoy leaves it in place and tells you which. Off until you turn it on.
