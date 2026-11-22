@@ -1,5 +1,9 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.16.0 - 2026-11-21 =
+* New: llms.txt generator under Settings > Good Bots > llms.txt. Serves /llms.txt with your published pages and posts in the llms.txt format, kept current as you publish. Leaves an existing llms.txt file or another plugin's llms.txt in place. Off by default.
+* Changed: plugin name now includes llms.txt.
+
 = 2.15.2 - 2026-11-21 =
 * WebDecoy Cloud now receives the visitor’s request-header signals from server-side WordPress detections.
 * Browser detections sent through WordPress now include bounded mouse, click, and scroll observations. Honeypot contents and URL query values are omitted.

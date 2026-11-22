@@ -1,15 +1,15 @@
-=== WebDecoy – AI Crawler Analytics, Block AI Bots & Robots.txt ===
+=== WebDecoy – AI Crawler Analytics, Block AI Bots, Robots.txt & llms.txt ===
 Contributors: webdecoy1
 Donate link: https://webdecoy.com
-Tags: ai crawlers, block ai bots, gptbot, robots.txt, bot detection
+Tags: ai crawlers, block ai bots, gptbot, robots.txt, llms.txt
 Requires at least: 6.1
 Tested up to: 7.1
-Stable tag: 2.15.2
+Stable tag: 2.16.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-See which AI crawlers like GPTBot and ClaudeBot visit your site, block AI bots or keep them out with robots.txt, and count AI referrals. Free.
+See which AI crawlers like GPTBot and ClaudeBot visit your site, block AI bots, manage robots.txt and llms.txt, and count AI referrals. Free.
 
 == Description ==
 
@@ -349,6 +349,10 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 8. Dashboard widget: local crawler counts, AI referrals and detection activity (demo data)
 
 == Changelog ==
+
+= 2.16.0 =
+* New: llms.txt generator. Turn it on under Settings > Good Bots > llms.txt and WordPress answers /llms.txt with a list of your published pages and posts in the llms.txt format, kept current as you publish. Private, draft, password-protected and noindex content is left out. If another plugin or a file on your server already provides llms.txt, WebDecoy leaves it in place and tells you which. Off until you turn it on.
+* Changed: the plugin is now listed as "WebDecoy – AI Crawler Analytics, Block AI Bots, Robots.txt & llms.txt".
 
 = 2.15.2 =
 * WebDecoy Cloud now receives the visitor’s request-header signals from server-side WordPress detections.
