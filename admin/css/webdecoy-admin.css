@@ -1145,7 +1145,7 @@
 }
 
 /* Analytics landing page: scoped so settings, forms and other admin pages retain WP styles. */
-.wd-analytics { --wd-pink: #f90289; --wd-ink: #1a1823; --wd-muted: #706b7a; --wd-border: #e9e5ec; max-width: 1480px; margin: 24px 28px 40px 8px; color: var(--wd-ink); }
+.wd-analytics { --wd-pink: #f90289; --wd-ink: #1a1823; --wd-muted: #706b7a; --wd-border: #e9e5ec; margin-block: 24px 40px; margin-inline: 8px 28px; color: var(--wd-ink); }
 .wd-analytics-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding: 12px 0 28px; }
 .wd-analytics .wd-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 20px; font-weight: 750; font-size: 17px; letter-spacing: -.3px; }
 .wd-brand img { object-fit: contain; }
@@ -1208,7 +1208,8 @@
 .wd-analytics .notice-info .button { font-size: 11px; min-height: 26px; line-height: 24px; }
 @media (min-width: 1280px) { .wd-chart-grid { grid-template-columns: 1.6fr 1fr; } .wd-panel-main { grid-column: 1; } .wd-panel-main:last-child { grid-column: 2; } }
 @media (max-width: 1000px) { .wd-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); } .wd-chart-grid { grid-template-columns: 1fr; } .wd-analytics-header { align-items: flex-start; } .wd-brand .wd-eyebrow { display: none; } }
-@media (max-width: 600px) { .wd-analytics { margin: 18px 10px 30px 0; } .wd-analytics-header { flex-direction: column; padding-bottom: 20px; } .wd-analytics .wd-brand { margin-bottom: 16px; } .wd-metric { padding: 16px; } .wd-metrics { gap: 10px; } .wd-metric strong { font-size: 29px; } .wd-panel { padding: 18px; } .wd-panel-heading { gap: 8px; } .wd-chart-large { height: 220px; } .wd-panel-meta { white-space: normal; text-align: right; } .wd-detail-panel { padding: 0 14px; overflow-x: auto; } }
+@media (max-width: 782px) { .wd-analytics { margin-inline-end: 18px; } }
+@media (max-width: 600px) { .wd-analytics { margin-block: 18px 30px; margin-inline: 0 10px; } .wd-analytics-header { flex-direction: column; padding-bottom: 20px; } .wd-analytics .wd-brand { margin-bottom: 16px; } .wd-metric { padding: 16px; } .wd-metrics { gap: 10px; } .wd-metric strong { font-size: 29px; } .wd-panel { padding: 18px; } .wd-panel-heading { gap: 8px; } .wd-chart-large { height: 220px; } .wd-panel-meta { white-space: normal; text-align: right; } .wd-detail-panel { padding: 0 14px; overflow-x: auto; } }
 
 .wd-analytics .webdecoy-cloud-upsell h3 { color: var(--wd-ink); }
 .wd-analytics .notice-info p { display: inline-block; margin: 8px 8px 8px 0; }
