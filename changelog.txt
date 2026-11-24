@@ -1,5 +1,8 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.16.2 - 2026-11-23 =
+* Fixed: AI Traffic & Analytics fills the available WordPress admin pane with even gutters on desktop, tablet, and mobile.
+
 = 2.16.1 - 2026-11-22 =
 * Fixed: browser bot reports on cached pages can recover when their WordPress nonce expires. The scanner settings explain when page caching bypasses PHP detection.
 
