@@ -74,26 +74,9 @@ Card-testing bots run stolen card numbers through your checkout. You pay a gatew
 
 Suspicious checkouts are refused and recorded, not silently allowed. And by default the whole plugin runs in monitor mode, so you can watch exactly what it would have done before you let it act.
 
-= Why WebDecoy? =
+= Detect bots with tripwires and decoys =
 
-* **Zero friction**: humans never see CAPTCHAs or challenges
-* **Zero configuration**: install, activate, done
-* **Zero dependencies**: everything runs locally on your server
-* **Deception, not just filtering**: hidden tripwires and honeytokens that only bots can touch, so a catch is a certainty, not a guess
-* **Multi-layer detection**: server-side + client-side + proof-of-work challenges
-* **Free forever**: full protection at no cost. Premium cloud features are optional.
-
-= Deception: the zero-false-positive layer =
-
-Most security plugins guess whether a visitor is a bot from signatures and scores. WebDecoy also sets traps that no legitimate visitor can trigger:
-
-* **Tripwires**: hidden honeypot paths that only crawlers and scanners request
-* **Honeytoken links**: invisible decoy links injected into your pages; following one is a deterministic bot signal
-* **Deceptive responses**: fake .env, wp-config, SQL dump, and phpinfo responses seeded with per-site canary credentials; anyone who uses those credentials is flagged as critical
-* **WordPress-native traps**: fake vulnerable-plugin paths, an optional XML-RPC trap, and an author-enumeration canary
-* **WooCommerce honeytoken coupon**: a hidden decoy coupon code; applying it at checkout is proof of a bot
-
-A visitor that touches a trap was not browsing your site. That is what makes deception the highest-confidence signal in the plugin: it does not need to guess.
+WebDecoy records requests to hidden honeypot paths, interactions with decoy links and form fields, and use of a WooCommerce decoy coupon. These signals appear in the local detection log alongside the score and MITRE tactic.
 
 = An invisible reCAPTCHA alternative =
 
@@ -103,74 +86,16 @@ Every form WebDecoy protects works without a visible challenge. Instead of askin
 
 Registration spam and comment spam are the same disease: automation pointed at your forms. WebDecoy puts invisible honeypot fields on comment, login, and registration forms, scores each submission's behavior, and adds login brute force protection with rate limiting on top. Real visitors notice nothing; the fake accounts and spam comments stop arriving.
 
-= Free Features (No API Key Needed) =
+= More local controls =
 
-**Deception & Traps**
-* Tripwires on hidden honeypot paths (on by default)
-* Auto-injected honeytoken decoy links
-* Deceptive fake-file responses with canary credentials
-* WordPress-native traps and author-enumeration canary
-* WooCommerce decoy coupon
+* User-agent and header checks, browser automation signals, and behavior analysis
+* Rate limits, expiring IP or CIDR blocks, and an IP allowlist
+* Request counts for blocks, throttles, challenges, and withheld enforcement
+* Detection history, blocked IP management, and CSV export
 
-**WooCommerce Protection**
-* Checkout carding attack prevention
-* Velocity limiting (configurable attempts per time window)
-* Card testing pattern detection
-* WooCommerce Blocks compatible
+= Local data and privacy =
 
-**Server-Side Detection**
-* User-Agent analysis and HTTP header inspection
-* Good bot verification (reverse DNS for Googlebot, Bingbot, etc.)
-* MITRE ATT&CK path analysis (admin probing, config file access)
-* Rate limiting with automatic blocking
-* IP blocking (individual + CIDR, IPv4/IPv6, expiration)
-
-**Client-Side Detection**
-* WebDriver detection (Selenium, Puppeteer, Playwright)
-* Headless browser detection (Chrome headless, PhantomJS)
-* Automation framework detection
-* Behavioral analysis (mouse movement, click patterns, scroll behavior)
-* Canvas/WebGL fingerprinting
-* AI crawler detection (GPTBot, ClaudeBot, PerplexityBot)
-
-**Invisible Proof-of-Work Challenges**
-* SHA-256 challenges solved in background (no user interaction)
-* Challenge mode for suspicious requests (checkbox widget, auto-solves)
-* Difficulty scales based on threat signals
-* No external CAPTCHA service needed
-
-**Form Protection**
-* Comment spam protection
-* Login brute force protection
-* Registration spam prevention
-* Invisible honeypot fields on comment, login, and registration forms
-
-**Local Dashboard & Analytics**
-* Detection log with threat scores and MITRE tactic mapping
-* AI Traffic & Analytics page with 30-day trend charts
-* Separate request counters: actual blocks, throttles, challenges and withheld enforcement, including repeat IP blocks
-* Blocked IPs management
-* Dashboard widget: bots seen in the last 24 hours, checkout bot signals, threat overview
-* CSV export
-* Automatic data cleanup (30 days)
-
-**Smart Bot Recognition**
-* More than 130 known good bots recognized and allowed
-* Search engines, AI crawlers, social media, monitoring services, SEO tools, feed readers
-* Local counts of every known bot visit, verified, claimed or failed
-* Optional AI crawler blocking
-* Custom allowlist support
-
-= Private by design: 100% local, GDPR-friendly =
-
-Until you deliberately connect a WebDecoy Cloud account, the plugin makes **zero external connections**:
-
-* No visitor IP addresses sent to external servers
-* No US data transfers and no third-party data processor to disclose
-* No third-party cookies and no external CAPTCHA service
-* No CDN-loaded scripts (even Chart.js for the admin charts is bundled locally)
-
-Detection data lives in your own WordPress database and is cleaned up automatically after 30 days (configurable). If you build privacy-conscious or GDPR-focused sites, this is the architecture you have been filtering for: cloud CAPTCHAs and cloud WAFs make your visitors someone else's data; WebDecoy keeps them yours.
+Detection data stays in your WordPress database and is cleaned up after 30 days by default. Chart.js is bundled with the plugin. WebDecoy Cloud receives data only after you connect the site with an API key. See External Services for what the connection sends.
 
 = Built for agencies: configure everything in code =
 
