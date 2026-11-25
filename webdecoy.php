@@ -3,7 +3,7 @@
  * Plugin Name: WebDecoy – AI Crawler Analytics, Block AI Bots, Robots.txt & llms.txt
  * Plugin URI: https://webdecoy.com/wordpress
  * Description: Understand AI crawler visits and bot identity evidence in WordPress, with local analytics and protection against spam, login abuse, and WooCommerce card testing.
- * Version: 2.16.2
+ * Version: 2.16.3
  * Requires at least: 6.1
  * Requires PHP: 7.4
  * Author: WebDecoy
@@ -41,7 +41,7 @@ if (!function_exists('str_starts_with')) {
 }
 
 // Plugin constants
-define('WEBDECOY_VERSION', '2.16.2');
+define('WEBDECOY_VERSION', '2.16.3');
 define('WEBDECOY_PLUGIN_FILE', __FILE__);
 define('WEBDECOY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WEBDECOY_PLUGIN_URL', plugin_dir_url(__FILE__));
