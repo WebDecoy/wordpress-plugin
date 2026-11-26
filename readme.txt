@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: ai crawlers, block ai bots, gptbot, robots.txt, llms.txt
 Requires at least: 6.1
 Tested up to: 7.2
-Stable tag: 2.16.3
+Stable tag: 2.16.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -274,6 +274,9 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 8. Dashboard widget: local crawler counts, AI referrals and detection activity (demo data)
 
 == Changelog ==
+
+= 2.16.4 =
+* Improved: Resolved WordPress Plugin Check errors and warnings in the directory build.
 
 = 2.16.3 =
 * Improved: Names 26 more bots and crawlers, including GeneralRetrievalBot, Andi, BitSight and LeakIX.

@@ -1,5 +1,8 @@
 *** WebDecoy Bot Detection Changelog ***
 
+= 2.16.4 - 2026-11-25 =
+* Improved: Resolved WordPress Plugin Check errors and warnings in the directory build.
+
 = 2.16.3 - 2026-11-25 =
 * Improved: Names 26 more bots and crawlers, including GeneralRetrievalBot, Andi, BitSight and LeakIX.
 
