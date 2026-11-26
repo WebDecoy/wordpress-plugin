@@ -190,7 +190,7 @@ class WebDecoy_Violation_Reporter
     private static function drain_locked(string $apiKey): void
     {
         global $wpdb;
-        $table = $wpdb->prefix . 'webdecoy_violation_queue';
+        $table = esc_sql($wpdb->prefix . 'webdecoy_violation_queue');
 
         // Enforce the hard cap first: discard the oldest overflow so a prolonged
         // ingest outage can't grow the table without bound.

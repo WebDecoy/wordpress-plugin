@@ -1,5 +1,7 @@
 <?php
 /** Chart-first local traffic overview. @package WebDecoy */
+
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- This partial is included through statistics_page(). Its variables stay in that method.
 if (!defined('ABSPATH')) {
     exit;
 }

@@ -40,7 +40,7 @@ if (function_exists('add_cacheaction') && !function_exists('webdecoy_wpsc_cache_
         require_once __DIR__ . '/class-webdecoy-page-cache.php';
 
         if (WebDecoy_Page_Cache::ua_matches($ua, WebDecoy_Page_Cache::crawler_tokens())) {
-            $cache_enabled = false; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- WP Super Cache's own per-request switch.
+            $cache_enabled = false; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- WP Super Cache's own per-request switch.
         }
     }
 

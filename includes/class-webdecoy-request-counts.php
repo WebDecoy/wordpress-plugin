@@ -71,7 +71,7 @@ class WebDecoy_Request_Counts
     public static function table(): string
     {
         global $wpdb;
-        return esc_sql($wpdb->prefix . 'webdecoy_request_counts');
+        return $wpdb->prefix . 'webdecoy_request_counts';
     }
 
     /** Final response accounting cannot interfere with the protection response. */
@@ -97,7 +97,7 @@ class WebDecoy_Request_Counts
             if (!self::ready()) {
                 return;
             }
-            $table = self::table();
+            $table = esc_sql(self::table());
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Plugin-owned outcome counters; writes/retention must persist and setup/status summaries deliberately read current receipt totals.
             $wpdb->query($wpdb->prepare(
                 // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Identifier derives only from the trusted WordPress table prefix; values remain prepared.
@@ -162,7 +162,7 @@ class WebDecoy_Request_Counts
             return $result;
         }
         global $wpdb;
-        $table = self::table();
+        $table = esc_sql(self::table());
         $detections = esc_sql($wpdb->prefix . 'webdecoy_detections');
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Plugin-owned outcome counters; writes/retention must persist and setup/status summaries deliberately read current receipt totals.
         $rows = $wpdb->get_results($wpdb->prepare(
@@ -188,7 +188,7 @@ class WebDecoy_Request_Counts
             return;
         }
         global $wpdb;
-        $table = self::table();
+        $table = esc_sql(self::table());
         $window = self::window(self::RETENTION_DAYS);
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table identifier comes only from the trusted WordPress prefix; cutoff is prepared.
         $wpdb->query($wpdb->prepare("DELETE FROM {$table} WHERE bucket < %s", $window['from']));

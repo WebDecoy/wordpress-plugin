@@ -16,9 +16,9 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 global $wpdb;
 
 // Load the activator class if not already loaded
-$activator_file = __DIR__ . '/includes/class-webdecoy-activator.php';
-if (file_exists($activator_file)) {
-    require_once $activator_file;
+$webdecoy_activator_file = __DIR__ . '/includes/class-webdecoy-activator.php';
+if (file_exists($webdecoy_activator_file)) {
+    require_once $webdecoy_activator_file;
 
     // Use the uninstall method if available
     if (class_exists('WebDecoy_Activator') && method_exists('WebDecoy_Activator', 'uninstall')) {
@@ -28,7 +28,7 @@ if (file_exists($activator_file)) {
     // Fallback: manually clean up if activator not available
 
     // Drop custom tables
-    $tables = [
+    $webdecoy_tables = [
         $wpdb->prefix . 'webdecoy_blocked_ips',
         $wpdb->prefix . 'webdecoy_detections',
         $wpdb->prefix . 'webdecoy_rate_limits',
@@ -39,9 +39,9 @@ if (file_exists($activator_file)) {
         $wpdb->prefix . 'webdecoy_ai_referral_days',
     ];
 
-    foreach ($tables as $table) {
+    foreach ($webdecoy_tables as $webdecoy_table) {
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Table name is safe, built from $wpdb->prefix
-        $wpdb->query("DROP TABLE IF EXISTS {$table}");
+        $wpdb->query("DROP TABLE IF EXISTS {$webdecoy_table}");
     }
 
     // Delete plugin options
@@ -83,13 +83,13 @@ $wpdb->query(
 
 // For multisite, clean up each site
 if (is_multisite()) {
-    $sites = get_sites(['fields' => 'ids']);
+    $webdecoy_sites = get_sites(['fields' => 'ids']);
 
-    foreach ($sites as $site_id) {
-        switch_to_blog($site_id);
+    foreach ($webdecoy_sites as $webdecoy_site_id) {
+        switch_to_blog($webdecoy_site_id);
 
         // Drop tables for this site
-        $tables = [
+        $webdecoy_tables = [
             $wpdb->prefix . 'webdecoy_blocked_ips',
             $wpdb->prefix . 'webdecoy_detections',
             $wpdb->prefix . 'webdecoy_rate_limits',
@@ -100,9 +100,9 @@ if (is_multisite()) {
             $wpdb->prefix . 'webdecoy_ai_referral_days',
         ];
 
-        foreach ($tables as $table) {
+        foreach ($webdecoy_tables as $webdecoy_table) {
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Table name is safe, built from $wpdb->prefix
-            $wpdb->query("DROP TABLE IF EXISTS {$table}");
+            $wpdb->query("DROP TABLE IF EXISTS {$webdecoy_table}");
         }
 
         // Delete options for this site

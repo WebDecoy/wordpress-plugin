@@ -134,6 +134,7 @@ class WebDecoy_Page_Cache
         if (defined('W3TC') && self::w3tc_page_cache_enabled()) {
             return self::plugin('W3 Total Cache', 'w3tc', true);
         }
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Read LiteSpeed Cache configuration through its published filter.
         if (defined('LSCWP_V') && function_exists('apply_filters') && apply_filters('litespeed_conf', 'cache')) {
             return self::plugin('LiteSpeed Cache', 'litespeed', true);
         }
@@ -455,12 +456,14 @@ class WebDecoy_Page_Cache
                 },
                 'wanted' => $same,
                 'read' => static function (): array {
+                    // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Read LiteSpeed Cache configuration through its published filter.
                     $list = apply_filters('litespeed_conf', self::LITESPEED_UA_KEY);
                     return is_array($list) ? array_values(array_map('strval', $list)) : [];
                 },
                 'write' => static function (array $list): bool {
                     // LiteSpeed's public API: saves the option and rewrites
                     // its .htaccess "no cache" rule for these agents.
+                    // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Invoke LiteSpeed Cache's settings action.
                     do_action('litespeed_save_conf', [self::LITESPEED_UA_KEY => $list]);
                     return true;
                 },
@@ -479,9 +482,11 @@ class WebDecoy_Page_Cache
                 'write' => static function (array $list, array $old): bool {
                     // WP Super Cache's own add and remove for plugin files it loads.
                     foreach (array_diff($old, $list) as $file) {
+                        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Invoke WP Super Cache's own cache-plugin registration action.
                         do_action('wpsc_delete_plugin', $file);
                     }
                     foreach (array_diff($list, $old) as $file) {
+                        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Invoke WP Super Cache's own cache-plugin registration action.
                         do_action('wpsc_add_plugin', $file);
                     }
                     return true;

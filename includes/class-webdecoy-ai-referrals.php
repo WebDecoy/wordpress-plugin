@@ -52,19 +52,19 @@ class WebDecoy_AI_Referrals
     private static bool $cloud = false;
 
     /**
-     * The ai_referrals table name, prefixed and escaped for interpolation.
+     * The ai_referrals table name, including the current WordPress site prefix.
      */
     public static function table(): string
     {
         global $wpdb;
-        return esc_sql($wpdb->prefix . 'webdecoy_ai_referrals');
+        return $wpdb->prefix . 'webdecoy_ai_referrals';
     }
 
-    /** The local daily counts table name, prefixed and escaped for interpolation. */
+    /** The local daily counts table name, including the current WordPress site prefix. */
     public static function days_table(): string
     {
         global $wpdb;
-        return esc_sql($wpdb->prefix . 'webdecoy_ai_referral_days');
+        return $wpdb->prefix . 'webdecoy_ai_referral_days';
     }
 
     /**
@@ -141,7 +141,7 @@ class WebDecoy_AI_Referrals
             return;
         }
         global $wpdb;
-        $table = self::days_table();
+        $table = esc_sql(self::days_table());
         $day = self::day(time());
         // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix
         $known = (int) $wpdb->get_var($wpdb->prepare(
@@ -179,7 +179,7 @@ class WebDecoy_AI_Referrals
             return self::summarize([]);
         }
         global $wpdb;
-        $table = self::days_table();
+        $table = esc_sql(self::days_table());
         // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix
         $rows = $wpdb->get_results($wpdb->prepare(
             "SELECT platform, landing_path, SUM(referrals) AS referrals FROM {$table} WHERE day >= %s GROUP BY platform, landing_path",
@@ -235,7 +235,7 @@ class WebDecoy_AI_Referrals
             return;
         }
         global $wpdb;
-        $table = self::days_table();
+        $table = esc_sql(self::days_table());
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix
         $wpdb->query($wpdb->prepare("DELETE FROM {$table} WHERE day < %s", self::day(time() - self::LOCAL_RETENTION_DAYS * DAY_IN_SECONDS)));
     }
@@ -281,7 +281,7 @@ class WebDecoy_AI_Referrals
     private static function increment(string $platform, string $path): void
     {
         global $wpdb;
-        $table = self::table();
+        $table = esc_sql(self::table());
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix
         $rows = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table}");
         $key = sha1($platform . "\n" . $path);
@@ -316,7 +316,7 @@ class WebDecoy_AI_Referrals
             return;
         }
         global $wpdb;
-        $table = self::table();
+        $table = esc_sql(self::table());
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $batch = (string) $wpdb->get_var("SELECT batch_id FROM {$table} WHERE batch_id <> '' LIMIT 1");
         if ($batch === '') {
