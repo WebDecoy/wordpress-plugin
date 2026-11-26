@@ -111,6 +111,7 @@ require $repo.'/includes/class-webdecoy-runtime-config.php';
 require $repo.'/webdecoy.php';
 require $repo.'/includes/class-webdecoy-blocker.php';
 require $repo.'/includes/class-webdecoy-detector.php';
+require $repo.'/includes/class-webdecoy-detection-summary.php';
 // Only this plugin's bootstrap callbacks are omitted: companion classes have
 // already been required above. The actual constructor, detection methods and
 // WordPress hook dispatcher are unmodified.
