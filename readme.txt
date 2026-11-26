@@ -3,7 +3,7 @@ Contributors: webdecoy1
 Donate link: https://webdecoy.com
 Tags: ai crawlers, block ai bots, gptbot, robots.txt, llms.txt
 Requires at least: 6.1
-Tested up to: 7.1
+Tested up to: 7.2
 Stable tag: 2.16.3
 Requires PHP: 7.4
 License: GPLv2 or later
