@@ -95,6 +95,13 @@ if [ "$ORG_BUILD" = "1" ]; then
     rm -rf "${BUILD_DIR}/${PLUGIN_SLUG}/cdn-files"
     rm -f  "${BUILD_DIR}/${PLUGIN_SLUG}/release.sh"
     rm -rf "${BUILD_DIR}/${PLUGIN_SLUG}/bin"
+
+    # These documentation URLs are crawler metadata. Plugin Check also matches
+    # them as offsite resources, so annotate just these generated data lines.
+    registry="${BUILD_DIR}/${PLUGIN_SLUG}/sdk/src/registry/agents.generated.php"
+    sed -E -i '' \
+        "/^[[:space:]]*'(patterns|website)' => .*developers\.cloudflare\.com\/(security-center|browser-rendering\/rest-api\/crawl-endpoint)/s|$| // phpcs:ignore PluginCheck.CodeAnalysis.Offloading.OffloadedContent -- Crawler match or documentation metadata.|" \
+        "$registry"
 fi
 
 # Create ZIP file (folder inside is always the slug, as WordPress requires)

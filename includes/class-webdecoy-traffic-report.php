@@ -35,7 +35,7 @@ class WebDecoy_Traffic_Report
         $referral_ready = version_compare($version, WebDecoy_AI_Referrals::SINCE_DB_VERSION, '>=');
         // phpcs:disable WordPress.DB.DirectDatabaseQuery -- Admin-only aggregates cached for 60 seconds below.
         if ($crawler_ready) {
-            $table = WebDecoy_Crawler_Visits::table();
+            $table = esc_sql(WebDecoy_Crawler_Visits::table());
             $crawler_rows = $wpdb->get_results($wpdb->prepare(
                 "SELECT DATE(bucket) AS day, agent_id, verification, SUM(hits) AS hits FROM {$table} WHERE bucket >= %s GROUP BY DATE(bucket), agent_id, verification", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Escaped plugin-owned table name.
                 $start . ' 00:00:00'
@@ -43,7 +43,7 @@ class WebDecoy_Traffic_Report
             $crawler_ready = is_array($crawler_rows);
         }
         if ($referral_ready) {
-            $table = WebDecoy_AI_Referrals::days_table();
+            $table = esc_sql(WebDecoy_AI_Referrals::days_table());
             $referral_rows = $wpdb->get_results($wpdb->prepare(
                 "SELECT day, platform, landing_path, SUM(referrals) AS referrals FROM {$table} WHERE day >= %s GROUP BY day, platform, landing_path", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Escaped plugin-owned table name.
                 $start

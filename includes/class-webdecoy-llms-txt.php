@@ -142,6 +142,7 @@ class WebDecoy_Llms_Txt
         // Full-page caches (WP Super Cache, W3TC, WP Rocket, LiteSpeed) honour
         // this: a cached copy would be served as HTML and stop crawler counts.
         if (!defined('DONOTCACHEPAGE')) {
+            // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Full-page caches read this shared constant.
             define('DONOTCACHEPAGE', true);
         }
         status_header(200);

@@ -8,6 +8,8 @@
  * @package WebDecoy
  */
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- This template is included by block_request(). Its variables stay in that method.
+
 // Prevent direct access
 if (!defined('ABSPATH')) {
     exit;

@@ -5,6 +5,8 @@
  * @package WebDecoy
  */
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- This partial is included by blocked_ips_page(). Its variables stay in that method.
+
 // Prevent direct access
 if (!defined('ABSPATH')) {
     exit;

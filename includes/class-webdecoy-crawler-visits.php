@@ -47,12 +47,12 @@ class WebDecoy_Crawler_Visits
     private const SEARCH_CATEGORIES = ['search_crawler'];
 
     /**
-     * The counters table name, prefixed and escaped for interpolation.
+     * The counters table name, including the current WordPress site prefix.
      */
     public static function table(): string
     {
         global $wpdb;
-        return esc_sql($wpdb->prefix . 'webdecoy_crawler_visits');
+        return $wpdb->prefix . 'webdecoy_crawler_visits';
     }
 
     /**
@@ -99,7 +99,7 @@ class WebDecoy_Crawler_Visits
         }
 
         global $wpdb;
-        $table = self::table();
+        $table = esc_sql(self::table());
         // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix
         $wpdb->query($wpdb->prepare(
             "INSERT INTO {$table} (bucket, agent_id, verification, hits) VALUES (%s, %s, %s, 1)
@@ -132,7 +132,7 @@ class WebDecoy_Crawler_Visits
             return self::summarize([]);
         }
         global $wpdb;
-        $table = self::table();
+        $table = esc_sql(self::table());
         // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix
         $rows = $wpdb->get_results($wpdb->prepare(
             "SELECT agent_id, verification, SUM(hits) AS hits FROM {$table} WHERE bucket >= %s GROUP BY agent_id, verification",
@@ -250,7 +250,7 @@ class WebDecoy_Crawler_Visits
             return;
         }
         global $wpdb;
-        $table = self::table();
+        $table = esc_sql(self::table());
         // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix
         $wpdb->query($wpdb->prepare(
             "DELETE FROM {$table} WHERE bucket < %s",

@@ -42,10 +42,7 @@ final class AgentRegistry
         if (self::$table === null) {
             $loaded = require __DIR__ . '/registry/agents.generated.php';
             if (!is_array($loaded) || (int) ($loaded['schema'] ?? 0) !== self::SCHEMA) {
-                throw new \RuntimeException(
-                    'WebDecoy agent registry schema mismatch: expected ' . self::SCHEMA
-                    . ', found ' . (string) ($loaded['schema'] ?? 'none')
-                );
+                throw new \RuntimeException('WebDecoy agent registry schema mismatch. Rebuild the plugin with a compatible registry.');
             }
             self::$table = $loaded;
         }

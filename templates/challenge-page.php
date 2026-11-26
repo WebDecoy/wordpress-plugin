@@ -16,6 +16,8 @@
  * @package WebDecoy
  */
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- This template is included by serve_challenge_page(). Its variables stay in that method.
+
 // Prevent direct access
 if (!defined('ABSPATH')) {
     exit;

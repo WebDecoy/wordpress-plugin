@@ -442,7 +442,7 @@ class WebDecoy_Blocker
 
         $offset = ($args['page'] - 1) * $args['per_page'];
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Filtered, paginated operator block list needs current entries after block/unblock actions.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- The live block list uses an escaped table, a prepared time condition and allowlisted sort options.
         $results = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$table} WHERE {$where} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d",
             $args['per_page'],
@@ -469,7 +469,7 @@ class WebDecoy_Blocker
             $where .= $wpdb->prepare(" AND (expires_at IS NULL OR expires_at > %s)", gmdate('Y-m-d H:i:s'));
         }
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Operator list pagination uses current plugin block counts, including time-dependent expirations.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- The live count uses an escaped table and a prepared time condition.
         return (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE {$where}");
     }
 

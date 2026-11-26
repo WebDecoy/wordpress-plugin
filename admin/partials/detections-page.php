@@ -5,6 +5,8 @@
  * @package WebDecoy
  */
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- This partial is included by detections_page(). Its variables stay in that method.
+
 // Prevent direct access
 if (!defined('ABSPATH')) {
     exit;
@@ -90,7 +92,7 @@ if (isset($_GET['action']) && sanitize_text_field(wp_unslash($_GET['action'])) =
     fputcsv($output, ['Date', 'IP Address', 'Score', 'Threat Level', 'Source', 'User Agent', 'Flags']);
 
     $export_query = "SELECT * FROM {$table} WHERE {$where} ORDER BY created_at DESC";
-    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Query built dynamically with safe table/column names
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Filter SQL uses only literal clauses; every request value is bound by wpdb::prepare().
     $export_results = $wpdb->get_results($wpdb->prepare($export_query, $params), ARRAY_A);
 
     foreach ($export_results as $row) {
@@ -112,14 +114,14 @@ if (isset($_GET['action']) && sanitize_text_field(wp_unslash($_GET['action'])) =
 
 // Get total - always use prepare()
 $total_query = "SELECT COUNT(*) FROM {$table} WHERE {$where}";
-// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Query built dynamically with safe table/column names
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Filter SQL uses only literal clauses; every request value is bound by wpdb::prepare().
 $total = $wpdb->get_var($wpdb->prepare($total_query, $params));
 $total_pages = ceil($total / $wd_per_page);
 
 // Get detections - always use prepare()
 $query = "SELECT * FROM {$table} WHERE {$where} ORDER BY created_at DESC LIMIT %d OFFSET %d";
 $query_params = array_merge($params, [$wd_per_page, $offset]);
-// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Query built dynamically with safe table/column names
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Filter SQL uses only literal clauses; every request value is bound by wpdb::prepare().
 $detections = $wpdb->get_results($wpdb->prepare($query, $query_params), ARRAY_A);
 
 // Get stats

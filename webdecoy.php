@@ -53,51 +53,51 @@ require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-runtime-config.php';
 require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-diagnostics.php';
 
 // Load the SDK (bundled)
-$sdk_paths = [
+$webdecoy_sdk_paths = [
     WEBDECOY_PLUGIN_DIR . 'sdk/',
 ];
 
-$sdk_loaded = false;
-foreach ($sdk_paths as $sdk_path) {
+$webdecoy_sdk_loaded = false;
+foreach ($webdecoy_sdk_paths as $webdecoy_sdk_path) {
     // Try Composer autoloader first
-    if (file_exists($sdk_path . 'vendor/autoload.php')) {
-        require_once $sdk_path . 'vendor/autoload.php';
-        $sdk_loaded = true;
+    if (file_exists($webdecoy_sdk_path . 'vendor/autoload.php')) {
+        require_once $webdecoy_sdk_path . 'vendor/autoload.php';
+        $webdecoy_sdk_loaded = true;
         break;
     }
     // Fall back to manual includes
-    if (file_exists($sdk_path . 'src/Client.php')) {
-        require_once $sdk_path . 'src/Exception/WebDecoyException.php';
-        require_once $sdk_path . 'src/Detection.php';
-        require_once $sdk_path . 'src/DetectionResult.php';
-        require_once $sdk_path . 'src/AgentRegistry.php';
-        require_once $sdk_path . 'src/LlmReferral.php';
-        require_once $sdk_path . 'src/HitExplanation.php';
-        require_once $sdk_path . 'src/GoodBotList.php';
-        require_once $sdk_path . 'src/RouteResolution.php';
-        require_once $sdk_path . 'src/SignalCollector.php';
-        require_once $sdk_path . 'src/BotDetector.php';
-        require_once $sdk_path . 'src/Client.php';
+    if (file_exists($webdecoy_sdk_path . 'src/Client.php')) {
+        require_once $webdecoy_sdk_path . 'src/Exception/WebDecoyException.php';
+        require_once $webdecoy_sdk_path . 'src/Detection.php';
+        require_once $webdecoy_sdk_path . 'src/DetectionResult.php';
+        require_once $webdecoy_sdk_path . 'src/AgentRegistry.php';
+        require_once $webdecoy_sdk_path . 'src/LlmReferral.php';
+        require_once $webdecoy_sdk_path . 'src/HitExplanation.php';
+        require_once $webdecoy_sdk_path . 'src/GoodBotList.php';
+        require_once $webdecoy_sdk_path . 'src/RouteResolution.php';
+        require_once $webdecoy_sdk_path . 'src/SignalCollector.php';
+        require_once $webdecoy_sdk_path . 'src/BotDetector.php';
+        require_once $webdecoy_sdk_path . 'src/Client.php';
         // Rules engine (tripwires, filters, rate-limit rules) — pure logic.
-        require_once $sdk_path . 'src/Rules/RuleInterface.php';
-        require_once $sdk_path . 'src/Rules/RuleContext.php';
-        require_once $sdk_path . 'src/Rules/RuleResult.php';
-        require_once $sdk_path . 'src/Rules/RuleEngineResult.php';
-        require_once $sdk_path . 'src/Rules/ViolationEvent.php';
-        require_once $sdk_path . 'src/Rules/RuleEngine.php';
-        require_once $sdk_path . 'src/Rules/TripwireRule.php';
+        require_once $webdecoy_sdk_path . 'src/Rules/RuleInterface.php';
+        require_once $webdecoy_sdk_path . 'src/Rules/RuleContext.php';
+        require_once $webdecoy_sdk_path . 'src/Rules/RuleResult.php';
+        require_once $webdecoy_sdk_path . 'src/Rules/RuleEngineResult.php';
+        require_once $webdecoy_sdk_path . 'src/Rules/ViolationEvent.php';
+        require_once $webdecoy_sdk_path . 'src/Rules/RuleEngine.php';
+        require_once $webdecoy_sdk_path . 'src/Rules/TripwireRule.php';
         // Filter expression language (tokenizer → parser → evaluator).
-        require_once $sdk_path . 'src/Rules/Filter/FilterSyntaxException.php';
-        require_once $sdk_path . 'src/Rules/Filter/Tokenizer.php';
-        require_once $sdk_path . 'src/Rules/Filter/Parser.php';
-        require_once $sdk_path . 'src/Rules/Filter/Evaluator.php';
-        require_once $sdk_path . 'src/Rules/FilterRule.php';
-        $sdk_loaded = true;
+        require_once $webdecoy_sdk_path . 'src/Rules/Filter/FilterSyntaxException.php';
+        require_once $webdecoy_sdk_path . 'src/Rules/Filter/Tokenizer.php';
+        require_once $webdecoy_sdk_path . 'src/Rules/Filter/Parser.php';
+        require_once $webdecoy_sdk_path . 'src/Rules/Filter/Evaluator.php';
+        require_once $webdecoy_sdk_path . 'src/Rules/FilterRule.php';
+        $webdecoy_sdk_loaded = true;
         break;
     }
 }
 
-if (!$sdk_loaded) {
+if (!$webdecoy_sdk_loaded) {
     add_action('admin_notices', function () {
         echo '<div class="notice notice-error"><p>';
         echo '<strong>' . esc_html__('WebDecoy:', 'webdecoy') . '</strong> ' . esc_html__('SDK not found. Please reinstall the plugin.', 'webdecoy');
