@@ -5,7 +5,7 @@
     "author": "<a href=\"https://webdecoy.com\">WebDecoy</a>",
     "author_profile": "https://webdecoy.com",
     "requires": "6.1",
-    "tested": "7.1",
+    "tested": "7.2",
     "requires_php": "7.4",
     "download_url": "https://cdn.webdecoy.com/wordpress/webdecoy-2.16.4.zip",
     "sections": {
