@@ -1059,7 +1059,9 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                     $wd_plan_slug = isset($options['plan']) ? (string) $options['plan'] : '';
                     $wd_plan_label = WebDecoy_Cloud_Connect::plan_label($wd_plan_slug);
                     $wd_digest_on = !empty($wd_entitlements['digest']['enabled']);
-                    $wd_alerts_on = !empty($wd_entitlements['features']['alerts']);
+                    // The entitlement says configuration and delivery are available;
+                    // it does not say that either channel is configured or active.
+                    $wd_alerts_available = !empty($wd_entitlements['features']['alerts']);
                     ?>
                     <div class="webdecoy-connected-card">
                         <div class="webdecoy-connected-head">
@@ -1090,11 +1092,15 @@ $wd_entitlements = class_exists('WebDecoy_Cloud_Connect') ? WebDecoy_Cloud_Conne
                         // it would get, without either having to guess.
                         ?>
                         <p class="webdecoy-alerts-status">
-                            <span class="dashicons <?php echo esc_attr($wd_alerts_on ? 'dashicons-bell' : 'dashicons-lock'); ?>"></span>
-                            <?php if ($wd_alerts_on) : ?>
-                                <?php esc_html_e('Slack and webhook alerts: On.', 'webdecoy'); ?>
-                                <a href="https://app.webdecoy.com/enforcement/actions" target="_blank" rel="noopener">
-                                    <?php esc_html_e('Configure them in your dashboard', 'webdecoy'); ?>
+                            <span class="dashicons <?php echo esc_attr($wd_alerts_available ? 'dashicons-bell' : 'dashicons-lock'); ?>"></span>
+                            <?php if ($wd_alerts_available) : ?>
+                                <?php esc_html_e('Slack and webhook alerts are available with your plan.', 'webdecoy'); ?>
+                                <a href="https://app.webdecoy.com/integrations/slack" target="_blank" rel="noopener">
+                                    <?php esc_html_e('Configure Slack', 'webdecoy'); ?>
+                                </a>
+                                <span aria-hidden="true">&middot;</span>
+                                <a href="https://app.webdecoy.com/integrations/webhooks" target="_blank" rel="noopener">
+                                    <?php esc_html_e('Configure webhooks', 'webdecoy'); ?>
                                 </a>
                             <?php else : ?>
                                 <?php esc_html_e('Slack and webhook alerts: available on Pro. Detection, blocking and the monthly report stay free.', 'webdecoy'); ?>

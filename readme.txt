@@ -278,6 +278,7 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 = 2.17.0 =
 * New: while your site is not connected to WebDecoy Cloud, administrators see one notice offering a free connection, with what WebDecoy counted on the site this week. Choose Connect free, Not now (hides it for 14 days) or Don't show again. Nothing leaves your site until you click Connect.
 * Changed: uninstalling also removes the review and connect notice settings.
+* Fixed: the Cloud tab describes Slack and webhook alerts as available with an eligible plan instead of claiming they are already on, and links to each channel's configuration page.
 
 = 2.16.4 =
 * Improved: Resolved WordPress Plugin Check errors and warnings in the directory build.
