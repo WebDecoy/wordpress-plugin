@@ -1108,6 +1108,7 @@ final class WebDecoy_Plugin
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-actor-feed.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-critical-moment.php';
         require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-review-ask.php';
+        require_once WEBDECOY_PLUGIN_DIR . 'includes/class-webdecoy-connect-invite.php';
 
         // One-click Cloud connect + entitlements sync. Makes no external request
         // until the admin explicitly clicks "Connect".
@@ -1131,6 +1132,10 @@ final class WebDecoy_Plugin
 
         // One wordpress.org review ask, after a week with bots counted. Admin only.
         (new WebDecoy_Review_Ask())->register();
+
+        // One dismissible Connect offer while the site is not connected. Admin only;
+        // the review ask stands aside on a page view that shows it.
+        (new WebDecoy_Connect_Invite())->register();
 
         // Automatic robots.txt: appends the chosen categories' agents to the
         // virtual robots.txt. Adds nothing until the owner picks a category.
