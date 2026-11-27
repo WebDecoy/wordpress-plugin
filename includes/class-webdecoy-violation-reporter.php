@@ -21,6 +21,9 @@ if (!defined('ABSPATH')) {
  *  2. As a safety net, by a cron job (webdecoy_flush_violations) that drains
  *     anything left behind if the ingest service was briefly unreachable.
  *
+ * Each event gets an id when it is spooled, so a retried batch that ingest
+ * already saved is stored once (WebDecoy/app#1945).
+ *
  * Delivery is retried once then dropped, and the queue is hard-capped, so
  * reporting can never become a reliability or storage liability (best-effort,
  * matching @webdecoy/node).
@@ -107,13 +110,33 @@ class WebDecoy_Violation_Reporter
         foreach ($events as $event) {
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Persist a security event or state mutation in a plugin-owned table; a cached result cannot replace this write.
             $wpdb->insert($table, [
-                'payload' => wp_json_encode($event->toApiPayload()),
+                'payload' => wp_json_encode(self::with_event_id($event->toApiPayload(), wp_generate_uuid4())),
                 'attempts' => 0,
                 'created_at' => $now,
             ]);
         }
 
         $this->ensureShutdownDrain();
+    }
+
+    /**
+     * Give a spooled violation its event id.
+     *
+     * The id is stamped once, when the event is spooled, and travels with the
+     * stored payload, so every resend of the row carries the same id. Ingest
+     * stores an event id once per organization, so a batch that was saved
+     * before its response was lost (a timeout, then a retry) is not stored
+     * twice and does not trip a second deny.
+     *
+     * @param array<string,mixed> $payload
+     * @return array<string,mixed>
+     */
+    public static function with_event_id(array $payload, string $eventId): array
+    {
+        if (!isset($payload['eventId']) && $eventId !== '') {
+            $payload['eventId'] = $eventId;
+        }
+        return $payload;
     }
 
     /**
