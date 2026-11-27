@@ -4,7 +4,7 @@ Donate link: https://webdecoy.com
 Tags: ai crawlers, block ai bots, gptbot, robots.txt, llms.txt
 Requires at least: 6.1
 Tested up to: 7.2
-Stable tag: 2.17.0
+Stable tag: 2.17.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -275,10 +275,12 @@ The bundled good-bot list (sdk/src/GoodBotList.php) stores a documentation URL f
 
 == Changelog ==
 
+= 2.17.1 =
+* Fixed: the Cloud tab describes Slack and webhook alerts as available with an eligible plan instead of claiming they are already on, and links to each channel's configuration page.
+
 = 2.17.0 =
 * New: while your site is not connected to WebDecoy Cloud, administrators see one notice offering a free connection, with what WebDecoy counted on the site this week. Choose Connect free, Not now (hides it for 14 days) or Don't show again. Nothing leaves your site until you click Connect.
 * Changed: uninstalling also removes the review and connect notice settings.
-* Fixed: the Cloud tab describes Slack and webhook alerts as available with an eligible plan instead of claiming they are already on, and links to each channel's configuration page.
 
 = 2.16.4 =
 * Improved: Resolved WordPress Plugin Check errors and warnings in the directory build.
