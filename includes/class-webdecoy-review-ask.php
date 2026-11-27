@@ -61,6 +61,10 @@ class WebDecoy_Review_Ask
         if (!current_user_can('manage_options') || !self::on_relevant_screen()) {
             return;
         }
+        // One ask per page view: the connect invite goes first when it shows.
+        if (class_exists('WebDecoy_Connect_Invite') && WebDecoy_Connect_Invite::rendered()) {
+            return;
+        }
 
         $now = time();
         $first_seen = (int) get_option(self::FIRST_SEEN_OPTION, 0);

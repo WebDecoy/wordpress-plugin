@@ -58,6 +58,9 @@ if (file_exists($webdecoy_activator_file)) {
     delete_option('webdecoy_critical_moment_last');
     delete_option('webdecoy_cached_crawler_counts');
     delete_option('webdecoy_cache_bypass_state');
+    delete_option('webdecoy_connect_invite');
+    delete_option('webdecoy_review_ask');
+    delete_option('webdecoy_review_first_seen');
     delete_transient('webdecoy_llms_txt');
 
     // Clear scheduled events
@@ -118,6 +121,9 @@ if (is_multisite()) {
         delete_option('webdecoy_critical_moment_last');
         delete_option('webdecoy_cached_crawler_counts');
         delete_option('webdecoy_cache_bypass_state');
+    delete_option('webdecoy_connect_invite');
+    delete_option('webdecoy_review_ask');
+    delete_option('webdecoy_review_first_seen');
     delete_transient('webdecoy_llms_txt');
 
         // Clear scheduled events for this site

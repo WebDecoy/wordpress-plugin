@@ -123,6 +123,11 @@ class WebDecoy_Cloud_Connect
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- boolean presence only; nonce already verified above
         $digest = !empty($_POST['digest']) ? '1' : '0';
 
+        // Which control started the flow, so the app can count connects by
+        // entry point. An allowlisted label, never free text.
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- allowlisted below; nonce already verified above
+        $source = self::connect_source(isset($_POST['source']) ? sanitize_key(wp_unslash($_POST['source'])) : '');
+
         // Build the query with http_build_query so every value is encoded
         // exactly once (WP's add_query_arg does not encode appended args).
         $query = http_build_query([
@@ -130,6 +135,7 @@ class WebDecoy_Cloud_Connect
             'site_name'  => get_bloginfo('name'),
             'nonce'      => $nonce,
             'digest'     => $digest,
+            'source'     => $source,
             'return_url' => admin_url('admin.php?page=webdecoy&tab=cloud&wd_connect=1'),
         ]);
         $url = self::CONNECT_URL . '?' . $query;
@@ -401,6 +407,15 @@ class WebDecoy_Cloud_Connect
     {
         $cached = get_option(self::ENTITLEMENTS_OPTION, []);
         return self::normalize_entitlements(is_array($cached) ? $cached : [], time());
+    }
+
+    /**
+     * The entry point label sent with a connect: 'invite' for the activation
+     * notice, 'settings' for everything else.
+     */
+    public static function connect_source(string $posted): string
+    {
+        return $posted === 'invite' ? 'invite' : 'settings';
     }
 
     /**
